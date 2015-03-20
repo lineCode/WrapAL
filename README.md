@@ -20,5 +20,5 @@ this repo provided a pre-build libmpg123.dll for x86 in
 'Bin/libmpg123_x86.dll'
 
 ## License
-License of this Sample Program suppose MIT License.
+Under the MIT License.  
 Please refer to License.txt.

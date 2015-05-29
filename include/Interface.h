@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 /**
 * Copyright (c) 2014-2015 dustpg   mailto:dustpg@gmail.com
 *
@@ -27,7 +27,7 @@
 
 // wrapal namespace
 namespace WrapAL {
-    // ¼ì²é
+    // æ£€æŸ¥
 #ifndef WRAPAL_NOVTABLE
 #   if (_MSC_VER >= 1100) && defined(__cplusplus)
 #       define WRAPAL_NOVTABLE __declspec(novtable)

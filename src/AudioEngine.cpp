@@ -1,9 +1,9 @@
-#include "wrapal.h"
+ï»¿#include "wrapal.h"
 
-// ÒôÆµ´¦Àí¿ªÊ¼
+// éŸ³é¢‘å¤„ç†å¼€å§‹
 void WrapAL::AudioSourceClipReal::OnVoiceProcessingPassStart(UINT32 SamplesRequired) noexcept {
     if (SamplesRequired && this->playing) {
-        // Á÷Ä£Ê½
+        // æµæ¨¡å¼
         if (this->flags & WrapAL::Flag_StreamingReading) {
             this->source_voice->FlushSourceBuffers();
             auto id = this->buffer_index + 1;
@@ -16,11 +16,11 @@ void WrapAL::AudioSourceClipReal::OnVoiceProcessingPassStart(UINT32 SamplesRequi
     
 }
 
-// ÒôÆµÁ÷½áÊø
+// éŸ³é¢‘æµç»“æŸ
 void WrapAL::AudioSourceClipReal::OnStreamEnd() noexcept {
-    // Á÷Ä£Ê½£¿
+    // æµæ¨¡å¼ï¼Ÿ
     if (this->flags & WrapAL::Flag_StreamingReading) {
-        // ÎŞÏßÂÖ»Ø?
+        // æ— çº¿è½®å›?
         if (this->flags & WrapAL::Flag_LoopInfinite) {
             this->stream->Seek(0);
         }
@@ -34,7 +34,7 @@ void WrapAL::AudioSourceClipReal::OnStreamEnd() noexcept {
 }
 
 
-// »º³åÇø½áÊø
+// ç¼“å†²åŒºç»“æŸ
 void WrapAL::AudioSourceClipReal::OnBufferEnd(void * pBufferContext) noexcept {
     end_of_buffer = true; 
     if (this->flags & WrapAL::Flag_StreamingReading) {
@@ -45,29 +45,29 @@ void WrapAL::AudioSourceClipReal::OnBufferEnd(void * pBufferContext) noexcept {
     }
 }
 
-// ¼Ó¹¤ĞÂµÄ»º³åÇø
+// åŠ å·¥æ–°çš„ç¼“å†²åŒº
 auto WrapAL::AudioSourceClipReal::ProcessBufferData(XAUDIO2_BUFFER& buffer, bool eos) noexcept -> HRESULT {
-    // »º³åÇøÅäÖÃ
+    // ç¼“å†²åŒºé…ç½®
     buffer.LoopCount = 0;
     // EOS?
     if (eos) {
         buffer.Flags = XAUDIO2_END_OF_STREAM;
     }
-    // Á÷Ä£Ê½
+    // æµæ¨¡å¼
     if (flags & WrapAL::Flag_StreamingReading) {
         // todo
     }
     else {
-        // ÎŞÏŞÂÖ»Ø?
+        // æ— é™è½®å›?
         if (flags & WrapAL::Flag_LoopInfinite) {
             buffer.LoopCount = XAUDIO2_LOOP_INFINITE;
         }
     }
-    // Ìá½»
+    // æäº¤
     return this->source_voice->SubmitSourceBuffer(&buffer);
 }
 
-// ¶ÁÈ¡ÏÂÒ»¶Î
+// è¯»å–ä¸‹ä¸€æ®µ
 auto WrapAL::AudioSourceClipReal::LoadAndBufferData(int id) noexcept ->HRESULT {
     assert(stream);
     XAUDIO2_BUFFER buffer;
@@ -79,13 +79,13 @@ auto WrapAL::AudioSourceClipReal::LoadAndBufferData(int id) noexcept ->HRESULT {
 }
 
 #define LoadFunction(a, b, c) a = reinterpret_cast<decltype(a)>(::GetProcAddress(c, #b))
-// ÔØÈë
+// è½½å…¥
 
-// ³õÊ¼»¯
+// åˆå§‹åŒ–
 auto WrapAL::CAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESULT {
     wchar_t error[ErrorInfoLength]; error[0] = 0;
     HRESULT hr = S_OK;
-    // ¼ì²éÅäÖÃĞÅÏ¢
+    // æ£€æŸ¥é…ç½®ä¿¡æ¯
 #ifdef WRAPAL_INCLUDE_DEFAULT_CONFIGURE
     force_cast(this->configure) = config ? config : &m_config;
 #else
@@ -93,7 +93,7 @@ auto WrapAL::CAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESULT 
 #endif
     assert(this->configure && "none configure");
     if (!this->configure) hr = E_INVALIDARG;
-    // ÔØÈëXAudio¶¯Ì¬Á´½Ó¿â
+    // è½½å…¥XAudioåŠ¨æ€é“¾æ¥åº“
     if (SUCCEEDED(hr)) {
         m_hXAudio2 = ::LoadLibraryW(L"XAudio2_8.dll");
         if (m_hXAudio2) {
@@ -107,29 +107,29 @@ auto WrapAL::CAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESULT 
                 );
         }
     }
-    // ´´½¨ XAudio2 ÒıÇæ
+    // åˆ›å»º XAudio2 å¼•æ“
     if (SUCCEEDED(hr)) {
         assert(!m_pXAudio2Engine && "m_pXAudio2 must be null");
         hr = CAudioEngine::XAudio2Create(&m_pXAudio2Engine, 0, XAUDIO2_DEFAULT_PROCESSOR);
     }
-    // ´´½¨ Mastering Voice ½Ó¿Ú
+    // åˆ›å»º Mastering Voice æ¥å£
     if (SUCCEEDED(hr)) {
         hr = m_pXAudio2Engine->CreateMasteringVoice(
             &m_pMasterVoice,
             0, 0, 0, 0, nullptr
             );
     }
-    // »ñÈ¡libmpg123.dll¾ä±ú
+    // è·å–libmpg123.dllå¥æŸ„
     if (SUCCEEDED(hr)) {
         wchar_t path[MAX_PATH]; path[0] = 0;
         this->configure->GetLibmpg123_dllPath(path);
         force_cast(this->libmpg123) = ::LoadLibraryW(path);
-        // ³õÊ¼»¯libmpg123
+        // åˆå§‹åŒ–libmpg123
         if (this->libmpg123) {
             Mpg123::Init(this->libmpg123);
             Mpg123::mpg123_init();
         }
-        // Ã»ÓĞ libmpg123.dll ÒÀÈ»ÔÊĞíÔËĞĞ, Ìá¹©ÁËÂ·¾¶Ôò±¨´í
+        // æ²¡æœ‰ libmpg123.dll ä¾ç„¶å…è®¸è¿è¡Œ, æä¾›äº†è·¯å¾„åˆ™æŠ¥é”™
         else if(path[0]){
             ::swprintf(error, ErrorInfoLength,
                 L"<%S>:libmpg123 library not found ---> %ls",
@@ -137,7 +137,7 @@ auto WrapAL::CAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESULT 
                 );
         }
     }
-    // ±¨´í
+    // æŠ¥é”™
     if (!error[0] && FAILED(hr)) {
         ::swprintf(error, ErrorInfoLength,
             L"<%S>: Failed with HRESULT code : 0x%08X",
@@ -150,9 +150,9 @@ auto WrapAL::CAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESULT 
 }
 
 
-// ·´³õÊ¼»¯
+// ååˆå§‹åŒ–
 void WrapAL::CAudioEngine::UnInitialize() noexcept {
-    // ´İ»ÙËùÓĞÓĞĞ§Æ¬¶Î
+    // æ‘§æ¯æ‰€æœ‰æœ‰æ•ˆç‰‡æ®µ
 #ifdef _DEBUG
     m_acAllocator.Release([this](AudioSourceClipReal* real) {
         real->Release();
@@ -169,7 +169,7 @@ void WrapAL::CAudioEngine::UnInitialize() noexcept {
     WrapAL::SafeDestroyVoice(m_pMasterVoice);
     WrapAL::SafeRelease(m_pXAudio2Engine);
     WrapAL::SafeRelease(force_cast(this->configure));
-    // ÊÍ·ÅdllÎÄ¼ş
+    // é‡Šæ”¾dllæ–‡ä»¶
     if (this->libmpg123) {
         Mpg123::mpg123_exit();
         ::FreeLibrary(this->libmpg123);
@@ -181,66 +181,66 @@ void WrapAL::CAudioEngine::UnInitialize() noexcept {
     }
 }
 
-// ´´½¨ÒôÆµÆ¬¶Î
+// åˆ›å»ºéŸ³é¢‘ç‰‡æ®µ
 auto WrapAL::CAudioEngine::CreateClip(IALAudioStream* stream, AudioClipFlag flags) noexcept -> ClipID {
     assert(stream && "bad argument");
     wchar_t error[ErrorInfoLength];
     wchar_t error_total[ErrorInfoLength]; error[0] = 0;
     ClipID id = ClipIDError;
-    // »ñÈ¡´íÎóĞÅÏ¢
+    // è·å–é”™è¯¯ä¿¡æ¯
     if (!stream->GetLastErrorInfo(error)) {
-        // Á÷Ä£Ê½?
+        // æµæ¨¡å¼?
         if (flags & WrapAL::Flag_StreamingReading) {
             auto buffer = reinterpret_cast<uint8_t*>(::malloc(StreamingBufferSize*StreamingBufferCount));
             AudioSourceClipReal* real = m_acAllocator.Alloc();
 #ifdef _DEBUG
             if (real) m_listAC.push_back(real);
 #endif
-            // ÉêÇë³É¹¦
+            // ç”³è¯·æˆåŠŸ
             if (buffer && (id = reinterpret_cast<ClipID>(real))) {
-                // ÖÃ»»¹¹Ôì
+                // ç½®æ¢æ„é€ 
                 new(real) AudioSourceClipReal();
-                // ÉèÖÃ
+                // è®¾ç½®
                 stream->GetFormat().MakeWave(real->wave);
                 real->stream = stream;
                 real->audio_data = buffer;
                 buffer = nullptr;
                 real->flags = flags;
                 real->buffer_length = StreamingBufferSize*StreamingBufferCount * 2;
-                // ´´½¨source
+                // åˆ›å»ºsource
                 auto hr = m_pXAudio2Engine->CreateSourceVoice(
                     &real->source_voice,
                     &real->wave,
                     0, XAUDIO2_DEFAULT_FREQ_RATIO,
                     real, nullptr, nullptr
                     );
-                // ÊäÈëÊı¾İ
+                // è¾“å…¥æ•°æ®
                 for (unsigned int i = 0; i < StreamingBufferCount-1; ++i) {
                     if (SUCCEEDED(hr)) {
                         hr = real->LoadAndBufferData(i);
                     }
                 }
-                // ¼ì²é´íÎó
+                // æ£€æŸ¥é”™è¯¯
                 if (FAILED(hr)) {
                     ::swprintf(error, ErrorInfoLength, L"HRESULT code -> 0x%08X\n", hr);
                 }
             }
-            // ´íÎó
+            // é”™è¯¯
             else {
                 ::wcscpy(error, L"Out of memory");
             }
-            // ÊÍ·Å
+            // é‡Šæ”¾
             if (buffer) {
                 ::free(buffer);
                 buffer = nullptr;
             }
             
         }
-        // ÕûÆ¬¶ÁÈ¡
+        // æ•´ç‰‡è¯»å–
         else {
             auto size_in_byte = stream->GetSizeInByte();
             auto buffer = reinterpret_cast<uint8_t*>(::malloc(size_in_byte));
-            // ÉêÇë³É¹¦
+            // ç”³è¯·æˆåŠŸ
             if (buffer) {
                 stream->ReadNext(size_in_byte, buffer);
                 stream->GetLastErrorInfo(error);
@@ -252,83 +252,83 @@ auto WrapAL::CAudioEngine::CreateClip(IALAudioStream* stream, AudioClipFlag flag
             }
         }
     }
-    // ÓĞ´íÎóµÄÇé¿ö
+    // æœ‰é”™è¯¯çš„æƒ…å†µ
     if (error[0]) {
-        // Ìí¼ÓĞÅÏ¢
+        // æ·»åŠ ä¿¡æ¯
         ::swprintf(
             error_total, ErrorInfoLength, L"<%S>: Error -> %ls\n",
             __func__, error
             );
-        // ÏÔÊ¾´íÎóĞÅÏ¢
+        // æ˜¾ç¤ºé”™è¯¯ä¿¡æ¯
         this->configure->OutputError(error_total);
     }
     return id;
 }
 
-// ´´½¨ÒôÆµÆ¬¶Î
+// åˆ›å»ºéŸ³é¢‘ç‰‡æ®µ
 auto WrapAL::CAudioEngine::CreateClip(AudioFormat format, const wchar_t* file_path, AudioClipFlag flags) noexcept ->ClipID {
     ClipID clip(ClipIDError);
     IALAudioStream* stream = nullptr;
-    // ´´½¨ÒôÆµÁ÷
+    // åˆ›å»ºéŸ³é¢‘æµ
     if ((stream = this->configure->CreateAudioStream(format, file_path))) {
         clip = this->CreateClip(stream, flags);
-        // °²È«ÊÍ·Å
+        // å®‰å…¨é‡Šæ”¾
         AudioSourceClip clip_handle(clip);
         if (!clip_handle->stream) {
             WrapAL::SafeRelease(stream);
         }
     }
-    // ³öÏÖ´íÎó
+    // å‡ºç°é”™è¯¯
     else {
         wchar_t error[ErrorInfoLength]; error[0] = 0;
         wchar_t error_total[ErrorInfoLength];
-        // »ñÈ¡»ù±¾´íÎóĞÅÏ¢
+        // è·å–åŸºæœ¬é”™è¯¯ä¿¡æ¯
         this->configure->GetLastErrorInfo(error);
-        // Ìí¼ÓĞÅÏ¢
+        // æ·»åŠ ä¿¡æ¯
         ::swprintf(
             error_total, ErrorInfoLength, L"<%S>: Error -> %ls\n",
             __func__, error
             );
-        // ÏÔÊ¾´íÎóĞÅÏ¢
+        // æ˜¾ç¤ºé”™è¯¯ä¿¡æ¯
         this->configure->OutputError(error_total);
     }
     return clip;
 }
 
-// ´´½¨ÒôÆµÆ¬¶Î
+// åˆ›å»ºéŸ³é¢‘ç‰‡æ®µ
 auto WrapAL::CAudioEngine::CreateClipMove(const PCMFormat& format, uint8_t*& buf, size_t len, AudioClipFlag flags) noexcept -> ClipID {
-    // Ö±½ÓÊ¹ÓÃ»º³åÇø²»ÄÜÖ»ÓÃÁ÷Ä£Ê½
+    // ç›´æ¥ä½¿ç”¨ç¼“å†²åŒºä¸èƒ½åªç”¨æµæ¨¡å¼
     assert(!(flags & WrapAL::Flag_StreamingReading) && "directly buffer can't be streaming mode");
     AudioSourceClipReal* real = m_acAllocator.Alloc();
 #ifdef _DEBUG
     if (real) m_listAC.push_back(real);
 #endif
-    // ´´½¨ÅĞ¶Ï
+    // åˆ›å»ºåˆ¤æ–­
     if (real) {
-        // ÖÃ»»¹¹Ôì
+        // ç½®æ¢æ„é€ 
         new(real) AudioSourceClipReal();
-        // ÅäÖÃĞÅÏ¢
+        // é…ç½®ä¿¡æ¯
         real->flags = flags;
-        // ÉèÖÃ
+        // è®¾ç½®
         format.MakeWave(real->wave);
         real->buffer_length = len;
         real->audio_data = buf;
         buf = nullptr;
-        // ´´½¨source
+        // åˆ›å»ºsource
         auto hr = m_pXAudio2Engine->CreateSourceVoice(
             &real->source_voice,
             &real->wave,
             0, XAUDIO2_DEFAULT_FREQ_RATIO,
             real, nullptr, nullptr
             );
-        // Ìá½»»º³åÇø
+        // æäº¤ç¼“å†²åŒº
         if (SUCCEEDED(hr)) {
             XAUDIO2_BUFFER buffer; ZeroMemory(&buffer, sizeof(buffer));
             buffer.pAudioData = real->audio_data;
             buffer.AudioBytes = real->buffer_length;
             hr = real->ProcessBufferData(buffer);
         }
-        // ¼ì²é´íÎó
+        // æ£€æŸ¥é”™è¯¯
         if (FAILED(hr)) {
             wchar_t error[ErrorInfoLength];
             ::swprintf(
@@ -342,7 +342,7 @@ auto WrapAL::CAudioEngine::CreateClipMove(const PCMFormat& format, uint8_t*& buf
 }
 
 
-// ´´½¨Æ¬¶Î
+// åˆ›å»ºç‰‡æ®µ
 auto WrapAL::CAudioEngine::CreateClip(const PCMFormat & format, const uint8_t* src, size_t size, AudioClipFlag config) noexcept ->ClipID {
     uint8_t* new_src = reinterpret_cast< uint8_t*>(::malloc(size));
     if (new_src) {
@@ -355,7 +355,7 @@ auto WrapAL::CAudioEngine::CreateClip(const PCMFormat & format, const uint8_t* s
     return ClipIDError;
 }
 
-// ´İ»ÙÖ¸¶¨Æ¬¶Î
+// æ‘§æ¯æŒ‡å®šç‰‡æ®µ
 bool WrapAL::CAudioEngine::ac_destroy(ClipID id) noexcept {
     assert(id != ClipIDError);
     auto clip = reinterpret_cast<AudioSourceClipReal*>(id);
@@ -370,7 +370,7 @@ bool WrapAL::CAudioEngine::ac_destroy(ClipID id) noexcept {
     return true;
 }
 
-// ²¥·ÅÖ¸¶¨Æ¬¶Î
+// æ’­æ”¾æŒ‡å®šç‰‡æ®µ
 bool WrapAL::CAudioEngine::ac_play(ClipID id) noexcept {
     assert(id != ClipIDError);
     if (id != ClipIDError) {
@@ -383,7 +383,7 @@ bool WrapAL::CAudioEngine::ac_play(ClipID id) noexcept {
     return false;
 }
 
-// ÔİÍ£Ö¸¶¨Æ¬¶Î
+// æš‚åœæŒ‡å®šç‰‡æ®µ
 bool WrapAL::CAudioEngine::ac_pause(ClipID id) noexcept{
     assert(id != ClipIDError);
     if (id != ClipIDError) {
@@ -396,28 +396,28 @@ bool WrapAL::CAudioEngine::ac_pause(ClipID id) noexcept{
     return false;
 }
 
-// ÒôÆµ¶¨Î»
+// éŸ³é¢‘å®šä½
 bool WrapAL::CAudioEngine::ac_seek(ClipID id, float pos) noexcept {
     assert(id != ClipIDError);
     if (id != ClipIDError) {
         auto* __restrict clip = reinterpret_cast<AudioSourceClipReal*>(id);
         assert(clip->source_voice);
-        // ±£Áô»ù±¾
+        // ä¿ç•™åŸºæœ¬
         bool playing = clip->playing;
         clip->source_voice->Stop(0);
         clip->source_voice->FlushSourceBuffers();
-        // ¼ì²é²ÉÑùÎ»ÖÃ
+        // æ£€æŸ¥é‡‡æ ·ä½ç½®
         uint32_t pos_in_sample = static_cast<uint32_t>(static_cast<double>(pos) *
             static_cast<double>(clip->wave.nSamplesPerSec));
-        // Á÷Ä£Ê½?
+        // æµæ¨¡å¼?
         if (clip->flags & WrapAL::Flag_StreamingReading) {
-            // ÊäÈë
+            // è¾“å…¥
             clip->stream->Seek(pos_in_sample *clip->wave.nBlockAlign);
             for (unsigned int i = 0; i < StreamingBufferCount - 1; ++i) {
                 clip->LoadAndBufferData(i);
             }
         }
-        // Ö±½Ó²¥·Å
+        // ç›´æ¥æ’­æ”¾
         else {
             XAUDIO2_BUFFER buffer; ZeroMemory(&buffer, sizeof(buffer));
             buffer.PlayBegin = pos_in_sample;
@@ -425,7 +425,7 @@ bool WrapAL::CAudioEngine::ac_seek(ClipID id, float pos) noexcept {
             buffer.AudioBytes = clip->buffer_length;
             clip->ProcessBufferData(buffer);
         }
-        // ²¥·Å?
+        // æ’­æ”¾?
         if (playing) {
             clip->source_voice->Start();
         }
@@ -434,7 +434,7 @@ bool WrapAL::CAudioEngine::ac_seek(ClipID id, float pos) noexcept {
     return false;
 }
 
-// »ñÈ¡Æ¬¶ÎÎ»ÖÃ
+// è·å–ç‰‡æ®µä½ç½®
 auto WrapAL::CAudioEngine::ac_tell(ClipID id) noexcept -> float {
     assert(id != ClipIDError);
     float pos = 0.0f;
@@ -444,28 +444,28 @@ auto WrapAL::CAudioEngine::ac_tell(ClipID id) noexcept -> float {
         XAUDIO2_VOICE_STATE state ;
         state.SamplesPlayed = 0;
         clip->source_voice->GetState(&state);
-        // ¼ÆËã
+        // è®¡ç®—
         pos = static_cast<float>(static_cast<double>(state.SamplesPlayed) /
             static_cast<double>(clip->wave.nSamplesPerSec));
     }
     return pos;
 }
 
-// »ñÈ¡Æ¬¶Î³ÖĞøÊ±¼ä
+// è·å–ç‰‡æ®µæŒç»­æ—¶é—´
 auto WrapAL::CAudioEngine::ac_duration(ClipID id) noexcept -> float {
     assert(id != ClipIDError);
     float duration = 0.f;
     if (id != ClipIDError) {
         auto* __restrict clip = reinterpret_cast<AudioSourceClipReal*>(id);
         register uint32_t length;
-        // »ñÈ¡×Ö½Ú³¤¶È
+        // è·å–å­—èŠ‚é•¿åº¦
         if (clip->flags & WrapAL::Flag_StreamingReading) {
             length = clip->stream->GetSizeInByte();
         }
         else {
             length = clip->buffer_index;
         }
-        // ¼ÆËãÊ±¼ä
+        // è®¡ç®—æ—¶é—´
         duration = static_cast<float>(static_cast<double>(length)/
             static_cast<double>(clip->wave.nAvgBytesPerSec)
             );
@@ -474,7 +474,7 @@ auto WrapAL::CAudioEngine::ac_duration(ClipID id) noexcept -> float {
 }
 
 
-// ÉèÖÃ»ò»ñÈ¡Æ¬¶ÎÒôÁ¿
+// è®¾ç½®æˆ–è·å–ç‰‡æ®µéŸ³é‡
 auto WrapAL::CAudioEngine::ac_volume(ClipID id, float volume) noexcept -> float {
     assert(id != ClipIDError);
     if (id != ClipIDError) {
@@ -493,7 +493,7 @@ auto WrapAL::CAudioEngine::ac_volume(ClipID id, float volume) noexcept -> float 
 }
 
 
-// ÉèÖÃ»ò»ñÈ¡Æ¬¶Î»Ø·ÅËÙÂÊ
+// è®¾ç½®æˆ–è·å–ç‰‡æ®µå›æ”¾é€Ÿç‡
 auto WrapAL::CAudioEngine::ac_ratio(ClipID id, float ratio) noexcept -> float {
     assert(id != ClipIDError);
     if (id != ClipIDError) {
@@ -512,7 +512,7 @@ auto WrapAL::CAudioEngine::ac_ratio(ClipID id, float ratio) noexcept -> float {
 }
 
 
-// ÉèÖÃ»ò»ñÈ¡×ÜÒôÁ¿
+// è®¾ç½®æˆ–è·å–æ€»éŸ³é‡
 auto WrapAL::CAudioEngine::Master_Volume(float volume) noexcept -> float {
     assert(m_pMasterVoice);
     // Get

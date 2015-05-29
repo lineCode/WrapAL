@@ -1,9 +1,9 @@
-# 创建
+﻿# 鍒涘缓
 Project::Toolchain.new(:clang) do |conf|
-  # clang 基本兼容gcc
+  # clang 鍩烘湰鍏煎gcc
   toolchain :gcc
-  # C++ 编译器
+  # C++ 缂栬疟鍣?
   conf.cxx.command = ENV['CXX'] || 'clang++'
-  # 链接器
+  # 阈炬帴鍣?
   conf.linker.command = ENV['LD'] || 'clang'
 end

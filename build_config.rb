@@ -1,4 +1,4 @@
-toolchain_using = :gcc
+﻿toolchain_using = :gcc
 # OGG
 Project::Build.new("ogg") { |conf| 
   toolchain toolchain_using

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #ifndef _XAUDIO2_DIY_H_
 #define _XAUDIO2_DIY_H_
 // mingw-w64(MinGW-W64-builds-4.2.0) no "XAudio.h", so, do it myself

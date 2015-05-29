@@ -1,6 +1,6 @@
-# 创建
+﻿# 鍒涘缓
 Project::Toolchain.new(:gcc) do |conf|
-  # C 编译器
+  # C 缂栬疟鍣?
   [conf.cc].each do |cc|
     cc.command = ENV['CC'] || 'gcc'
     cc.flags = [ENV['CFLAGS'] || %w(-std=gnu99 -O3 -Wall -DNDEBUG -Werror-implicit-function-declaration -Wdeclaration-after-statement)]
@@ -9,7 +9,7 @@ Project::Toolchain.new(:gcc) do |conf|
     cc.option_define = '-D%s'
     cc.compile_options = '%{flags} -MMD -o %{outfile} -c %{infile}'
   end
-  # C++ 编译器
+  # C++ 缂栬疟鍣?
   [conf.cxx].each do |cxx|
     cxx.command = ENV['CXX'] || 'g++'
     cxx.flags = [ENV['CXXFLAGS'] || ENV['CFLAGS'] || %w(-std=c++1y -O3 -Wall -DNDEBUG -Werror-implicit-function-declaration)]
@@ -18,7 +18,7 @@ Project::Toolchain.new(:gcc) do |conf|
     cxx.option_define = '-D%s'
     cxx.compile_options = '%{flags} -MMD -o %{outfile} -c %{infile}'
   end
-  # 链接器
+  # 阈炬帴鍣?
   conf.linker do |linker|
     linker.command = ENV['LD'] || 'g++'
     linker.flags = [ENV['LDFLAGS'] || %w()]
@@ -30,7 +30,7 @@ Project::Toolchain.new(:gcc) do |conf|
     #linker.flags_after_libraries = %w(-Wl,-end-group)
     linker.link_options = '%{flags} -o %{outfile} -Wl,-start-group %{objs} -Wl,-end-group %{flags_before_libraries} %{libs} %{flags_after_libraries}'
   end
-  # 资源编译器
+  # 璧勬簮缂栬疟鍣?
   conf.rc do |rc|
     rc.command = ENV['RC'] || 'windres'
     rc.flags = [ENV['RCFLAGS']  || %w()]
@@ -39,7 +39,7 @@ Project::Toolchain.new(:gcc) do |conf|
     rc.option_define = '-D%s'
     rc.compile_options = '%{flags} -o %{outfile} %{infile}'
   end
-  # 归档器
+  # 褰掓。鍣?
   conf.rc do |ar|
     
   end

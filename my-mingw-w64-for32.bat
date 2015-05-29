@@ -1,4 +1,4 @@
-echo off
+﻿echo off
 set PATH=F:\mingw-w64\\mingw32\bin;%PATH%
 rem echo %PATH%
 rem cd "F:\mingw-w64\\mingw32\bin"

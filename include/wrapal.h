@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 /*
 WrapAL designed for static link, because of lightweight

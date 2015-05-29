@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 // THIS FILE IS NONE-LICENSE
 
 // include CALDefConfigure

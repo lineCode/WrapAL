@@ -1,4 +1,4 @@
-TODO:
+﻿TODO:
   Get the PCM(32bit-float) data
   Adding support for the OpenAL
   Adding support for the DirectSound

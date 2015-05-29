@@ -1,4 +1,4 @@
-#include "wrapal.h"
+ï»¿#include "wrapal.h"
 
 // Ogg Vorbis
 #include "../3rdparty/libvorbis/include/vorbis/codec.h"
@@ -114,7 +114,7 @@ namespace WrapAL {
     ObjectPool<DefAudioStreamBuffer, AudioStreamBucketSize> ASPool;
 }
 
-// mpg123 ±àÂë
+// mpg123 ç¼–ç 
 enum ENCODE_ENUM {
     ENCODE_ENUM_8 = 0x00f, ENCODE_ENUM_16 = 0x040, ENCODE_ENUM_24 = 0x4000, ENCODE_ENUM_32 = 0x100,
     ENCODE_ENUM_SIGNED = 0x080, ENCODE_ENUM_FLOAT = 0xe00,
@@ -134,7 +134,7 @@ enum ENCODE_ENUM {
     | ENCODE_ENUM_FLOAT_32 | ENCODE_ENUM_FLOAT_64)
 };
 
-// »ù±¾ÊÍ·Å
+// åŸºæœ¬é‡Šæ”¾
 auto WrapAL::BasicAudioStream::Release() noexcept -> int32_t {
     if (m_pFile) {
         ::fclose(m_pFile);
@@ -144,7 +144,7 @@ auto WrapAL::BasicAudioStream::Release() noexcept -> int32_t {
     return 0;
 }
 
-// »ñÈ¡×î½üÒ»´Î´íÎó
+// è·å–æœ€è¿‘ä¸€æ¬¡é”™è¯¯
 bool WrapAL::BasicAudioStream::GetLastErrorInfo(wchar_t des_info[]) noexcept {
     if (m_code != DefErrorCode::Code_Ok) {
         const wchar_t* info = nullptr;
@@ -177,24 +177,24 @@ bool WrapAL::BasicAudioStream::GetLastErrorInfo(wchar_t des_info[]) noexcept {
     return false;
 }
 
-// WavAudioStream ¹¹Ôìº¯Êı
+// WavAudioStream æ„é€ å‡½æ•°
 WrapAL::WavAudioStream::WavAudioStream(const wchar_t* file_path) noexcept : Super(file_path) {
-    // ¼ì²é´íÎó
+    // æ£€æŸ¥é”™è¯¯
     if (m_code != DefErrorCode::Code_Ok) return;
-    // ½âÎöÊı¾İ½á¹¹
+    // è§£ææ•°æ®ç»“æ„
 #pragma pack(push)
-    // ±£´æ¶ÔÆë×´Ì¬
+    // ä¿å­˜å¯¹é½çŠ¶æ€
 #pragma pack(1)
-    // WAVE ÎÄ¼şÍ·
+    // WAVE æ–‡ä»¶å¤´
     struct {
-        // RIFF ÎÄ¼şÍ·
+        // RIFF æ–‡ä»¶å¤´
         char    szRiffID[4];        // 'R','I','F','F'
-        DWORD   dwRiffSize;         // Õû¸öwavÎÄ¼ş´óĞ¡¼õÈ¥ "RIFF"ÒÔ¼°±¾¶ÔÏó(ÎÄ¼ş´óĞ¡-8)
+        DWORD   dwRiffSize;         // æ•´ä¸ªwavæ–‡ä»¶å¤§å°å‡å» "RIFF"ä»¥åŠæœ¬å¯¹è±¡(æ–‡ä»¶å¤§å°-8)
         char    szRiffFormat[4];    // 'W','A','V','E'
-        // FMT Çø¿é
+        // FMT åŒºå—
         char    szFmtID[4];         // 'f','m','t', 0x20
-        DWORD   dwFmtSize;          // fmt Çø¿é´óĞ¡(16?18?)
-        // WAVE¸ñÊ½
+        DWORD   dwFmtSize;          // fmt åŒºå—å¤§å°(16?18?)
+        // WAVEæ ¼å¼
         WORD    wFormatTag;         // format type
         WORD    nChannels;          // number of channels (i.e. mono, stereo...)
         DWORD   nSamplesPerSec;     // sample rate
@@ -202,52 +202,52 @@ WrapAL::WavAudioStream::WavAudioStream(const wchar_t* file_path) noexcept : Supe
         WORD    nBlockAlign;        // block size of data 
         WORD    wBitsPerSample;     // number of bits per sample of mono data
     } header;
-    // FACT ¿é ¿ÉÑ¡ / Êı¾İ´óĞ¡
+    // FACT å— å¯é€‰ / æ•°æ®å¤§å°
     union {       
         struct {
             char    szFactID[4];    // 'f','a','c','t'
-            DWORD   dwFactSize;     // fact ´óĞ¡(Ò»°ãÎª4?)
+            DWORD   dwFactSize;     // fact å¤§å°(ä¸€èˆ¬ä¸º4?)
         };
         struct {
             char    szDataID[4];    // 'd','a','t','a'
-            DWORD   dwDataSize;     // Êı¾İ´óĞ¡
+            DWORD   dwDataSize;     // æ•°æ®å¤§å°
         } ;
     } fact_data;
-    // »Ö¸´¶ÔÆë×´Ì¬
+    // æ¢å¤å¯¹é½çŠ¶æ€
 #pragma pack(pop)
     auto code = DefErrorCode::Code_Ok;
-    // ¶ÁÈ¡ÎÄ¼şÍ·
+    // è¯»å–æ–‡ä»¶å¤´
     if (!::fread(&header, sizeof(header), 1, m_pFile)) {
         code = DefErrorCode::Code_IllegalFile;
     }
-    // ¼ì²éºÏ·¨ĞÔ
+    // æ£€æŸ¥åˆæ³•æ€§
     if (code == DefErrorCode::Code_Ok) {
         if ((*reinterpret_cast<uint32_t*>(header.szRiffID) !=  "RIFF"_wrapal32)   ||
             (*reinterpret_cast<uint32_t*>(header.szRiffFormat) != "WAVE"_wrapal32) ||
             (*reinterpret_cast<uint32_t*>(header.szFmtID) != "fmt\x20"_wrapal32))
         code = DefErrorCode::Code_IllegalFile;
     }
-    // ¼ì²é¸ñÊ½Ö§³Ö
+    // æ£€æŸ¥æ ¼å¼æ”¯æŒ
     if (code == DefErrorCode::Code_Ok) {
         if (header.wFormatTag != WAVE_FORMAT_PCM) {
             code = DefErrorCode::Code_UnsupportedFormat;
         }
     }
-    // ¼ì²éÊ£Óà²¿·Ö
+    // æ£€æŸ¥å‰©ä½™éƒ¨åˆ†
     if (code == DefErrorCode::Code_Ok) {
         ::fseek(m_pFile, header.dwFmtSize - 16, SEEK_CUR);
         if (!::fread(&fact_data, sizeof(fact_data), 1, m_pFile)) {
             code = DefErrorCode::Code_IllegalFile;
         }
     }
-    // fact »¹ÊÇ data
+    // fact è¿˜æ˜¯ data
     if (code == DefErrorCode::Code_Ok) {
-        // fact ¿é?
+        // fact å—?
         if ((*reinterpret_cast<uint32_t*>(fact_data.szFactID) == "face"_wrapal32)) {
             ::fseek(m_pFile, fact_data.dwFactSize - 4, SEEK_CUR);
             ::fread(&fact_data, sizeof(fact_data), 1, m_pFile);
         }
-        // data ¿é?
+        // data å—?
         if ((*reinterpret_cast<uint32_t*>(fact_data.szDataID) == "data"_wrapal32)) {
             this->total_size = fact_data.dwDataSize;
             m_zeroPosOffset = ::ftell(m_pFile);
@@ -256,7 +256,7 @@ WrapAL::WavAudioStream::WavAudioStream(const wchar_t* file_path) noexcept : Supe
             code = DefErrorCode::Code_IllegalFile;
         }
     }
-    // ¸´ÖÆÊı¾İ
+    // å¤åˆ¶æ•°æ®
     if (code == DefErrorCode::Code_Ok) {
         this->pcm_format.nSamplesPerSec = header.nSamplesPerSec;
         this->pcm_format.nAvgBytesPerSec = header.nAvgBytesPerSec;
@@ -266,7 +266,7 @@ WrapAL::WavAudioStream::WavAudioStream(const wchar_t* file_path) noexcept : Supe
     m_code = code;
 }
 
-// ÉèÖÃ¶ÁÈ¡Î»ÖÃ
+// è®¾ç½®è¯»å–ä½ç½®
 auto WrapAL::WavAudioStream::Seek(uint32_t pos) noexcept -> bool {
     if (pos >= this->total_size) return false;
     m_pos = pos;
@@ -274,38 +274,38 @@ auto WrapAL::WavAudioStream::Seek(uint32_t pos) noexcept -> bool {
     return true;
 }
 
-// OggAudioStream ¹¹Ôìº¯Êı
+// OggAudioStream æ„é€ å‡½æ•°
 WrapAL::OggAudioStream::OggAudioStream(const wchar_t* file_path) noexcept : Super(file_path) {
-    // ¼ì²é´íÎó
+    // æ£€æŸ¥é”™è¯¯
     if (m_code != DefErrorCode::Code_Ok) return;
     if (::ov_open_callbacks(m_pFile, &m_ovfile, nullptr, 0, OV_CALLBACKS_NOCLOSE) >= 0) {
         //char **ptr = ov_comment(&ovfile, -1)->user_comments;
         vorbis_info *vi = ov_info(&m_ovfile, -1);
-        // »ñÈ¡ÉùµÀÊı
+        // è·å–å£°é“æ•°
         this->pcm_format.nChannels = vi->channels;
-        // »ñÈ¡²ÉÑùÂÊ
+        // è·å–é‡‡æ ·ç‡
         this->pcm_format.nSamplesPerSec = vi->rate;
-        // Çø¿é¶ÔÆë
+        // åŒºå—å¯¹é½
         this->pcm_format.nBlockAlign = this->pcm_format.nChannels * sizeof(int16_t);
         // bps
         this->pcm_format.nAvgBytesPerSec = this->pcm_format.nSamplesPerSec * this->pcm_format.nBlockAlign;
-        // Êı¾İ´óĞ¡
+        // æ•°æ®å¤§å°
         this->total_size = static_cast<decltype(this->total_size)>(::ov_pcm_total(&m_ovfile, -1)) *
             static_cast<decltype(this->total_size)>(this->pcm_format.nBlockAlign);
     }
-    // ·Ç·¨ÎÄ¼ş
+    // éæ³•æ–‡ä»¶
     else {
         m_code = DefErrorCode::Code_IllegalFile;
     }
 }
 
-// OggAudioStream ÊÍ·ÅÊı¾İ
+// OggAudioStream é‡Šæ”¾æ•°æ®
 auto WrapAL::OggAudioStream::Release() noexcept -> int32_t {
     ::ov_clear(&m_ovfile);
     return Super::Release();
 }
 
-// OggAudioStream ¶¨Î»
+// OggAudioStream å®šä½
 auto WrapAL::OggAudioStream::Seek(uint32_t pos) noexcept -> bool {
     if (pos >= this->total_size) return false;
     auto code = ::ov_pcm_seek(&m_ovfile, pos / this->pcm_format.nBlockAlign);
@@ -316,12 +316,12 @@ auto WrapAL::OggAudioStream::Seek(uint32_t pos) noexcept -> bool {
     return true;
 }
 
-// OggAudioStream ¶ÁÈ¡Êı¾İ
+// OggAudioStream è¯»å–æ•°æ®
 auto WrapAL::OggAudioStream::ReadNext(uint32_t len, uint8_t* buf) noexcept -> bool {
 #ifdef _DEBUG
     uint32_t total_len = 0, target_len = len;
     bool recode = true;
-    // Ñ­»·¶ÁÈ¡Êı¾İ
+    // å¾ªç¯è¯»å–æ•°æ®
     while (len) {
         int bitstream = 0;
         auto code = ::ov_read(&m_ovfile, reinterpret_cast<char*>(buf), len, 0, 2, 1, &bitstream);
@@ -349,7 +349,7 @@ auto WrapAL::OggAudioStream::ReadNext(uint32_t len, uint8_t* buf) noexcept -> bo
     }
     return recode;
 #else
-    // Ñ­»·¶ÁÈ¡Êı¾İ
+    // å¾ªç¯è¯»å–æ•°æ®
     while (len) {
         int bitstream = 0;
         auto code = ::ov_read(&m_ovfile, reinterpret_cast<char*>(buf), len, 0, 2, 1, &bitstream);
@@ -371,16 +371,16 @@ auto WrapAL::OggAudioStream::ReadNext(uint32_t len, uint8_t* buf) noexcept -> bo
 #endif
 }
 
-// Mp3AudioStream ¹¹Ôìº¯Êı
+// Mp3AudioStream æ„é€ å‡½æ•°
 WrapAL::Mp3AudioStream::Mp3AudioStream(const wchar_t* path) noexcept: Super(path)  {
-    // ¼ì²é´íÎó
+    // æ£€æŸ¥é”™è¯¯
     if (m_code != DefErrorCode::Code_Ok) return;
-    // ¼ì²édll
+    // æ£€æŸ¥dll
     if (!AudioEngine.libmpg123) { m_code = DefErrorCode::Code_FileNotFound; return; }
-    // ´´½¨ĞÂµÄ¾ä±ú
+    // åˆ›å»ºæ–°çš„å¥æŸ„
     int error_code = 0;
     m_hMpg123 = Mpg123::mpg123_new(nullptr, &error_code);
-    // Ìæ»»ĞÂµÄREAD/SEEKº¯Êı
+    // æ›¿æ¢æ–°çš„READ/SEEKå‡½æ•°
     if (!error_code) {
         error_code = Mpg123::mpg123_replace_reader_handle(
             m_hMpg123,
@@ -394,11 +394,11 @@ WrapAL::Mp3AudioStream::Mp3AudioStream(const wchar_t* path) noexcept: Super(path
             nullptr
             );
     }
-    // ÒÔ¾ä±ú·½Ê½´ò¿ªmpg123
+    // ä»¥å¥æŸ„æ–¹å¼æ‰“å¼€mpg123
     if (!error_code) {
         error_code = Mpg123::mpg123_open_handle(m_hMpg123, m_pFile);
     }
-    // »ñÈ¡¸ñÊ½
+    // è·å–æ ¼å¼
     int encoding = 0;
     if (!error_code) {
         long rate = 0; int ch = 0;
@@ -406,18 +406,18 @@ WrapAL::Mp3AudioStream::Mp3AudioStream(const wchar_t* path) noexcept: Super(path
         this->pcm_format.nChannels = ch;
         this->pcm_format.nSamplesPerSec = rate;
     }
-    // ¼ì²é±àÂëÖ§³Ö
+    // æ£€æŸ¥ç¼–ç æ”¯æŒ
     if (!error_code) {
         if (encoding != ENCODE_ENUM_SIGNED_16 && encoding != ENCODE_ENUM_FLOAT_32) {
             m_code = DefErrorCode::Code_UnsupportedFormat;
             return;
         }
     }
-    // ±£Ö¤±àÂë²»ÔÙ¸Ä±ä
+    // ä¿è¯ç¼–ç ä¸å†æ”¹å˜
     if (!error_code) {
         error_code = Mpg123::mpg123_format_none(m_hMpg123);
     }
-    // ±£Ö¤±àÂë²»ÔÙ¸Ä±ä
+    // ä¿è¯ç¼–ç ä¸å†æ”¹å˜
     if (!error_code) {
         error_code = Mpg123::mpg123_format(
             m_hMpg123, 
@@ -426,9 +426,9 @@ WrapAL::Mp3AudioStream::Mp3AudioStream(const wchar_t* path) noexcept: Super(path
             encoding
             );
     }
-    // ÌîĞ´¸ñÊ½
+    // å¡«å†™æ ¼å¼
     if (!error_code) {
-        // »ñÈ¡Éî¶È
+        // è·å–æ·±åº¦
         if (encoding & ENCODE_ENUM_FLOAT_64) {
             pcm_format.nBlockAlign = 8 * pcm_format.nChannels;
         }
@@ -441,23 +441,23 @@ WrapAL::Mp3AudioStream::Mp3AudioStream(const wchar_t* path) noexcept: Super(path
         else {
             pcm_format.nBlockAlign = 1 * pcm_format.nChannels;
         }
-        // Êı¾İÂÊ
+        // æ•°æ®ç‡
         pcm_format.nAvgBytesPerSec = pcm_format.nSamplesPerSec * pcm_format.nBlockAlign;
     }
-    // ¼ÆËã³¤¶È
+    // è®¡ç®—é•¿åº¦
     if (!error_code) {
         auto length_in_sample = Mpg123::mpg123_length(m_hMpg123);
-        // ÓĞĞ§
+        // æœ‰æ•ˆ
         if (length_in_sample > 0) {
             this->total_size = length_in_sample * pcm_format.nBlockAlign / pcm_format.nChannels;
         }
-        // ´íÎó
+        // é”™è¯¯
         else {
             m_code = DefErrorCode::Code_IllegalFile;
             return;
         }
     }
-    // ¼ì²é´íÎó
+    // æ£€æŸ¥é”™è¯¯
     if (error_code == MPG123_OUT_OF_MEM) {
         m_code = DefErrorCode::Code_OutOfMemory;
     }
@@ -466,7 +466,7 @@ WrapAL::Mp3AudioStream::Mp3AudioStream(const wchar_t* path) noexcept: Super(path
     }
 }
 
-// Mp3AudioStream ÊÍ·Å
+// Mp3AudioStream é‡Šæ”¾
 auto WrapAL::Mp3AudioStream::Release() noexcept -> int32_t {
     if (m_hMpg123) {
         Mpg123::mpg123_delete(m_hMpg123);
@@ -475,7 +475,7 @@ auto WrapAL::Mp3AudioStream::Release() noexcept -> int32_t {
     return Super::Release();
 }
 
-// ¶¨Î»
+// å®šä½
 auto WrapAL::Mp3AudioStream::Seek(uint32_t pos) noexcept -> bool {
     if (pos >= this->total_size) return false;
     auto pos_in_sample = pos / pcm_format.nBlockAlign ;
@@ -483,7 +483,7 @@ auto WrapAL::Mp3AudioStream::Seek(uint32_t pos) noexcept -> bool {
     return false;
 }
 
-// ¶ÁÈ¡ÏÂÒ»²¿·Ö
+// è¯»å–ä¸‹ä¸€éƒ¨åˆ†
 auto WrapAL::Mp3AudioStream::ReadNext(uint32_t len, uint8_t* buf) noexcept -> bool {
     size_t real_size = 0;
     if (auto i = Mpg123::mpg123_read(m_hMpg123, buf, len, &real_size)) {
@@ -499,7 +499,7 @@ auto WrapAL::Mp3AudioStream::ReadNext(uint32_t len, uint8_t* buf) noexcept -> bo
 
 
 
-// Ä¬ÈÏÒôÆµÁ÷´´½¨º¯Êı
+// é»˜è®¤éŸ³é¢‘æµåˆ›å»ºå‡½æ•°
 auto WrapAL::CALDefConfigure::DefCreateAudioStream(
     AudioFormat format, const wchar_t * file_path, wchar_t error_info[]) noexcept -> IALAudioStream * {
     IALAudioStream* stream = reinterpret_cast<IALAudioStream*>(ASPool.Alloc());
@@ -522,10 +522,10 @@ auto WrapAL::CALDefConfigure::DefCreateAudioStream(
         break;
     case WrapAL::AudioFormat::Format_ByteStream:
     default:
-        // ¸ñÊ½²»Ö§³Ö
+        // æ ¼å¼ä¸æ”¯æŒ
         ::swprintf(error_info, ErrorInfoLength, L"Unsupported Format : 0x%08X", format);
     }
-    // ¼ì²é´íÎó
+    // æ£€æŸ¥é”™è¯¯
     if (*reinterpret_cast<size_t*>(stream)) {
         stream->GetLastErrorInfo(error_info);
     }
@@ -533,13 +533,13 @@ auto WrapAL::CALDefConfigure::DefCreateAudioStream(
 }
 
 
-// ´´½¨ÒôÆµÁ÷
+// åˆ›å»ºéŸ³é¢‘æµ
 auto WrapAL::CALDefConfigure::CreateAudioStream(
     AudioFormat format, const wchar_t * file_path) noexcept -> IALAudioStream* {
     return CALDefConfigure::DefCreateAudioStream(format, file_path, m_szLastError);
 }
 
-// »ñÈ¡×î½üÒ»´Î´íÎó
+// è·å–æœ€è¿‘ä¸€æ¬¡é”™è¯¯
 auto WrapAL::CALDefConfigure::GetLastErrorInfo(wchar_t info[]) noexcept -> bool {
     if (*m_szLastError) {
         ::wcscpy(info, m_szLastError);
@@ -548,7 +548,7 @@ auto WrapAL::CALDefConfigure::GetLastErrorInfo(wchar_t info[]) noexcept -> bool 
     return false;
 }
 
-// »ñÈ¡Ä¬ÈÏlibmpg123Î»ÖÃ
+// è·å–é»˜è®¤libmpg123ä½ç½®
 auto WrapAL::CALDefConfigure::GetLibmpg123_dllPath(wchar_t path[]) noexcept -> void {
     path += ::GetCurrentDirectoryW(MAX_PATH, path);
     const auto* __restrict real = L"\\libmpg123.dll";
@@ -557,10 +557,10 @@ auto WrapAL::CALDefConfigure::GetLibmpg123_dllPath(wchar_t path[]) noexcept -> v
 
 #endif
 
-// ÔØÈë
+// è½½å…¥
 #define LoadFunction(a, b, c) a = reinterpret_cast<decltype(a)>(::GetProcAddress(c, #b))
 
-// ³õÊ¼»¯
+// åˆå§‹åŒ–
 void WrapAL::Mpg123::Init(HMODULE hModule) noexcept {
     assert(hModule); if (!hModule) return;
     LoadFunction(WrapAL::Mpg123::mpg123_init, mpg123_init, hModule);
@@ -579,7 +579,7 @@ void WrapAL::Mpg123::Init(HMODULE hModule) noexcept {
 }
 
 
-// ³õÊ¼»¯¾²Ì¬±äÁ¿
+// åˆå§‹åŒ–é™æ€å˜é‡
 #define InitStaticVar(v)  decltype(v) v = nullptr
 InitStaticVar(WrapAL::Mpg123::mpg123_init);
 InitStaticVar(WrapAL::Mpg123::mpg123_exit);
@@ -598,5 +598,5 @@ InitStaticVar(WrapAL::CAudioEngine::XAudio2Create);
 
 
 
-// µ¥ÀıÀà
+// å•ä¾‹ç±»
 WrapAL::CAudioEngine AudioEngine;

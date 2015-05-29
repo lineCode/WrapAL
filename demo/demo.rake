@@ -1,4 +1,4 @@
-Project.target("demo") do |target|
+﻿Project.target("demo") do |target|
   current_dir = File.dirname(__FILE__).relative_path_from(Dir.pwd)
   relative_from_root = File.dirname(__FILE__).relative_path_from(PROJECT_ROOT)
   current_build_dir = "#{build_dir}/#{relative_from_root}"

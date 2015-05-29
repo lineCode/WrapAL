@@ -1,4 +1,4 @@
-# encoding: utf-8
+﻿# encoding: utf-8
 # version: 0.1.2
 PROJECT_ROOT = File.dirname(File.expand_path(__FILE__))
 
@@ -18,7 +18,7 @@ load "#{PROJECT_ROOT}/src/wrapal.rake"
 load "#{PROJECT_ROOT}/demo/demo.rake"
 
 
-# 默认rake
+# 榛樿rake
 task :default => :all
 
 # WrapAL Library

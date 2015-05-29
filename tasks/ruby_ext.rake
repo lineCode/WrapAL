@@ -1,4 +1,4 @@
-require 'pathname'
+﻿require 'pathname'
 class Object
   class << self
     def attr_block(*syms)

@@ -1,4 +1,4 @@
-## WrapAL
+﻿## WrapAL
 Wrapped Audio Library, to make easier to play audio
 
 ####Current Version : 0.0.1

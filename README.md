@@ -7,7 +7,7 @@ Wrapped Audio Library, to make easier to play audio
 [so easy~](/doc/doc.md)
 
 ##Demo
-1. [hello world](/doc/helloworld.md)
+1. [hello world](/doc/1.helloworld.md)
 
 ##How to build
 1. for visual studio:  

@@ -64,10 +64,10 @@ Version: 0.0.1
 namespace WrapAL {
     // clip
     struct AudioSourceClipReal;
-    // Audio Clip ID, managed by engine, don't care about the releasing
-    using ClipID = size_t;
-    // error clip id
-    static constexpr ClipID ClipIDError = 0;
+    // Audio Handle ID, managed by engine, don't care about the releasing
+    using ALHandle = size_t;
+    // invalid handle
+    static constexpr ALHandle ALInvalidHandle = 0;
     // pcm format, WAVE_FORMAT_PCM
     struct PCMFormat {
         // make wave format
@@ -114,6 +114,10 @@ namespace WrapAL {
         // loop forever
         Flag_LoopInfinite = 1 << 1,
     };
+    // operator for AudioClipFlag
+    inline auto operator |(AudioClipFlag a, AudioClipFlag b) noexcept   {
+        return static_cast<AudioClipFlag>(static_cast<uint32_t>(a) | static_cast<uint32_t>(b));
+    }
     // safe release interface
     template<class T>
     auto SafeRelease(T*& pointer) noexcept {
@@ -141,4 +145,7 @@ namespace WrapAL {
 }
 #include "Interface.h"
 #include "Util.h"
+#include "AudioGroup.h"
+#include "AudioClip.h"
 #include "AudioEngine.h"
+#include "AudioHandle.h"

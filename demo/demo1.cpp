@@ -13,8 +13,11 @@ int main() {
         auto clip = WrapAL::CreateAudioClip(
             WrapAL::AudioFormat::Format_OggVorbis,
             L"NationalAnthemOfRussia.ogg",
-            WrapAL::AudioClipFlag(WrapAL::Flag_StreamingReading | WrapAL::Flag_LoopInfinite)
+            WrapAL::Flag_StreamingReading | WrapAL::Flag_LoopInfinite,
+            "BGM"
             );
+        auto group = clip.GetGroup();
+        auto name = group.Name();
         // play the clip
         clip.Play();
         float ratio = 1.f;
@@ -25,7 +28,7 @@ int main() {
         //clip.Destroy();
 
         // UnInitialize
-        AudioEngine.UnInitialize(); CoUninitialize();
+        AudioEngine.UnInitialize(); ::CoUninitialize();
     }
     return EXIT_SUCCESS;
 }

@@ -18,5 +18,9 @@ namespace WrapAL {
         StreamingBufferSize = 16 * 1024,
         // streaming buffer count
         StreamingBufferCount = 3,
+        // group name max length in char, +1 for null-end character
+        GroupNameMaxLength = 15,
+        // group max size
+        GroupMaxSize = 8,
     };
 }

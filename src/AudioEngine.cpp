@@ -78,11 +78,13 @@ auto WrapAL::AudioSourceClipReal::LoadAndBufferData(int id) noexcept ->HRESULT {
     return this->ProcessBufferData(buffer, !stream->ReadNext(StreamingBufferSize, data));
 }
 
+
+// 载入函数地址
 #define LoadFunction(a, b, c) a = reinterpret_cast<decltype(a)>(::GetProcAddress(c, #b))
 // 载入
 
 // 初始化
-auto WrapAL::CAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESULT {
+auto WrapAL::CALAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESULT {
     wchar_t error[ErrorInfoLength]; error[0] = 0;
     HRESULT hr = S_OK;
     // 检查配置信息
@@ -97,7 +99,7 @@ auto WrapAL::CAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESULT 
     if (SUCCEEDED(hr)) {
         m_hXAudio2 = ::LoadLibraryW(L"XAudio2_8.dll");
         if (m_hXAudio2) {
-            LoadFunction(WrapAL::CAudioEngine::XAudio2Create, XAudio2Create, m_hXAudio2);
+            LoadFunction(WrapAL::CALAudioEngine::XAudio2Create, XAudio2Create, m_hXAudio2);
         }
         else {
             hr = E_FAIL;
@@ -110,13 +112,17 @@ auto WrapAL::CAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESULT 
     // 创建 XAudio2 引擎
     if (SUCCEEDED(hr)) {
         assert(!m_pXAudio2Engine && "m_pXAudio2 must be null");
-        hr = CAudioEngine::XAudio2Create(&m_pXAudio2Engine, 0, XAUDIO2_DEFAULT_PROCESSOR);
+        hr = CALAudioEngine::XAudio2Create(&m_pXAudio2Engine, 0, XAUDIO2_DEFAULT_PROCESSOR);
     }
     // 创建 Mastering Voice 接口
     if (SUCCEEDED(hr)) {
         hr = m_pXAudio2Engine->CreateMasteringVoice(
             &m_pMasterVoice,
-            0, 0, 0, 0, nullptr
+            XAUDIO2_DEFAULT_CHANNELS,
+            XAUDIO2_DEFAULT_SAMPLERATE,
+            0, 
+            nullptr, 
+            nullptr
             );
     }
     // 获取libmpg123.dll句柄
@@ -151,7 +157,7 @@ auto WrapAL::CAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESULT 
 
 
 // 反初始化
-void WrapAL::CAudioEngine::UnInitialize() noexcept {
+void WrapAL::CALAudioEngine::UnInitialize() noexcept {
     // 摧毁所有有效片段
 #ifdef _DEBUG
     m_acAllocator.Release([this](AudioSourceClipReal* real) {
@@ -182,11 +188,11 @@ void WrapAL::CAudioEngine::UnInitialize() noexcept {
 }
 
 // 创建音频片段
-auto WrapAL::CAudioEngine::CreateClip(IALAudioStream* stream, AudioClipFlag flags) noexcept -> ClipID {
+auto WrapAL::CALAudioEngine::CreateClip(IALAudioStream* stream, AudioClipFlag flags, const char* group_name) noexcept -> ALHandle {
     assert(stream && "bad argument");
     wchar_t error[ErrorInfoLength];
     wchar_t error_total[ErrorInfoLength]; error[0] = 0;
-    ClipID id = ClipIDError;
+    ALHandle id = ALInvalidHandle;
     // 获取错误信息
     if (!stream->GetLastErrorInfo(error)) {
         // 流模式?
@@ -197,7 +203,7 @@ auto WrapAL::CAudioEngine::CreateClip(IALAudioStream* stream, AudioClipFlag flag
             if (real) m_listAC.push_back(real);
 #endif
             // 申请成功
-            if (buffer && (id = reinterpret_cast<ClipID>(real))) {
+            if (buffer && (id = reinterpret_cast<ALHandle>(real))) {
                 // 置换构造
                 new(real) AudioSourceClipReal();
                 // 设置
@@ -207,13 +213,20 @@ auto WrapAL::CAudioEngine::CreateClip(IALAudioStream* stream, AudioClipFlag flag
                 buffer = nullptr;
                 real->flags = flags;
                 real->buffer_length = StreamingBufferSize*StreamingBufferCount * 2;
+                auto hr = S_OK;
                 // 创建source
-                auto hr = m_pXAudio2Engine->CreateSourceVoice(
-                    &real->source_voice,
-                    &real->wave,
-                    0, XAUDIO2_DEFAULT_FREQ_RATIO,
-                    real, nullptr, nullptr
-                    );
+                if (SUCCEEDED(hr)) {
+                    hr = m_pXAudio2Engine->CreateSourceVoice(
+                        &real->source_voice,
+                        &real->wave,
+                        0, XAUDIO2_DEFAULT_FREQ_RATIO,
+                        real, nullptr, nullptr
+                        );
+                }
+                // 设置组别
+                if (SUCCEEDED(hr)) {
+                    hr = this->set_clip_group(*real, group_name);
+                }
                 // 输入数据
                 for (unsigned int i = 0; i < StreamingBufferCount-1; ++i) {
                     if (SUCCEEDED(hr)) {
@@ -244,7 +257,7 @@ auto WrapAL::CAudioEngine::CreateClip(IALAudioStream* stream, AudioClipFlag flag
             if (buffer) {
                 stream->ReadNext(size_in_byte, buffer);
                 stream->GetLastErrorInfo(error);
-                id = this->CreateClipMove(stream->GetFormat(), buffer, size_in_byte, flags);
+                id = this->CreateClipMove(stream->GetFormat(), buffer, size_in_byte, flags, group_name);
             }
             // OOM
             else {
@@ -266,14 +279,14 @@ auto WrapAL::CAudioEngine::CreateClip(IALAudioStream* stream, AudioClipFlag flag
 }
 
 // 创建音频片段
-auto WrapAL::CAudioEngine::CreateClip(AudioFormat format, const wchar_t* file_path, AudioClipFlag flags) noexcept ->ClipID {
-    ClipID clip(ClipIDError);
+auto WrapAL::CALAudioEngine::CreateClip(AudioFormat format, const wchar_t* file_path, AudioClipFlag flags, const char* group_name) noexcept ->ALHandle {
+    ALHandle clip(ALInvalidHandle);
     IALAudioStream* stream = nullptr;
     // 创建音频流
     if ((stream = this->configure->CreateAudioStream(format, file_path))) {
-        clip = this->CreateClip(stream, flags);
+        clip = this->CreateClip(stream, flags, group_name);
         // 安全释放
-        AudioSourceClip clip_handle(clip);
+        CALAudioSourceClip clip_handle(clip);
         if (!clip_handle->stream) {
             WrapAL::SafeRelease(stream);
         }
@@ -296,7 +309,7 @@ auto WrapAL::CAudioEngine::CreateClip(AudioFormat format, const wchar_t* file_pa
 }
 
 // 创建音频片段
-auto WrapAL::CAudioEngine::CreateClipMove(const PCMFormat& format, uint8_t*& buf, size_t len, AudioClipFlag flags) noexcept -> ClipID {
+auto WrapAL::CALAudioEngine::CreateClipMove(const PCMFormat& format, uint8_t*& buf, size_t len, AudioClipFlag flags, const char* group_name) noexcept -> ALHandle {
     // 直接使用缓冲区不能只用流模式
     assert(!(flags & WrapAL::Flag_StreamingReading) && "directly buffer can't be streaming mode");
     AudioSourceClipReal* real = m_acAllocator.Alloc();
@@ -314,13 +327,20 @@ auto WrapAL::CAudioEngine::CreateClipMove(const PCMFormat& format, uint8_t*& buf
         real->buffer_length = len;
         real->audio_data = buf;
         buf = nullptr;
+        auto hr = S_OK;
         // 创建source
-        auto hr = m_pXAudio2Engine->CreateSourceVoice(
-            &real->source_voice,
-            &real->wave,
-            0, XAUDIO2_DEFAULT_FREQ_RATIO,
-            real, nullptr, nullptr
-            );
+        if (SUCCEEDED(hr)) {
+            hr = m_pXAudio2Engine->CreateSourceVoice(
+                &real->source_voice,
+                &real->wave,
+                0, XAUDIO2_DEFAULT_FREQ_RATIO,
+                real, nullptr, nullptr
+                );
+        }
+        // 设置组别
+        if (SUCCEEDED(hr)) {
+            hr = this->set_clip_group(*real, group_name);
+        }
         // 提交缓冲区
         if (SUCCEEDED(hr)) {
             XAUDIO2_BUFFER buffer; ZeroMemory(&buffer, sizeof(buffer));
@@ -338,26 +358,26 @@ auto WrapAL::CAudioEngine::CreateClipMove(const PCMFormat& format, uint8_t*& buf
             this->configure->OutputError(error);
         }
     }
-    return reinterpret_cast<ClipID>(real);
+    return reinterpret_cast<ALHandle>(real);
 }
 
 
 // 创建片段
-auto WrapAL::CAudioEngine::CreateClip(const PCMFormat & format, const uint8_t* src, size_t size, AudioClipFlag config) noexcept ->ClipID {
+auto WrapAL::CALAudioEngine::CreateClip(const PCMFormat & format, const uint8_t* src, size_t size, AudioClipFlag config, const char* group_name) noexcept ->ALHandle {
     uint8_t* new_src = reinterpret_cast< uint8_t*>(::malloc(size));
     if (new_src) {
         ::memcpy(new_src, src, size);
-        return this->CreateClipMove(format, new_src, size, config);
+        return this->CreateClipMove(format, new_src, size, config, group_name);
     }
     else {
         this->configure->OutputError(L"Out of memory");
     }
-    return ClipIDError;
+    return ALInvalidHandle;
 }
 
 // 摧毁指定片段
-bool WrapAL::CAudioEngine::ac_destroy(ClipID id) noexcept {
-    assert(id != ClipIDError);
+bool WrapAL::CALAudioEngine::ac_destroy(ALHandle id) noexcept {
+    assert(id != ALInvalidHandle);
     auto clip = reinterpret_cast<AudioSourceClipReal*>(id);
     assert(clip->source_voice);
     if (clip->source_voice) {
@@ -371,9 +391,9 @@ bool WrapAL::CAudioEngine::ac_destroy(ClipID id) noexcept {
 }
 
 // 播放指定片段
-bool WrapAL::CAudioEngine::ac_play(ClipID id) noexcept {
-    assert(id != ClipIDError);
-    if (id != ClipIDError) {
+bool WrapAL::CALAudioEngine::ac_play(ALHandle id) noexcept {
+    assert(id != ALInvalidHandle);
+    if (id != ALInvalidHandle) {
         auto clip = reinterpret_cast<AudioSourceClipReal*>(id);
         assert(clip->source_voice);
         clip->source_voice->Start(0);
@@ -384,9 +404,9 @@ bool WrapAL::CAudioEngine::ac_play(ClipID id) noexcept {
 }
 
 // 暂停指定片段
-bool WrapAL::CAudioEngine::ac_pause(ClipID id) noexcept{
-    assert(id != ClipIDError);
-    if (id != ClipIDError) {
+bool WrapAL::CALAudioEngine::ac_pause(ALHandle id) noexcept{
+    assert(id != ALInvalidHandle);
+    if (id != ALInvalidHandle) {
         auto clip = reinterpret_cast<AudioSourceClipReal*>(id);
         assert(clip->source_voice);
         clip->source_voice->Stop(0);
@@ -397,9 +417,9 @@ bool WrapAL::CAudioEngine::ac_pause(ClipID id) noexcept{
 }
 
 // 音频定位
-bool WrapAL::CAudioEngine::ac_seek(ClipID id, float pos) noexcept {
-    assert(id != ClipIDError);
-    if (id != ClipIDError) {
+bool WrapAL::CALAudioEngine::ac_seek(ALHandle id, float pos) noexcept {
+    assert(id != ALInvalidHandle);
+    if (id != ALInvalidHandle) {
         auto* __restrict clip = reinterpret_cast<AudioSourceClipReal*>(id);
         assert(clip->source_voice);
         // 保留基本
@@ -435,10 +455,10 @@ bool WrapAL::CAudioEngine::ac_seek(ClipID id, float pos) noexcept {
 }
 
 // 获取片段位置
-auto WrapAL::CAudioEngine::ac_tell(ClipID id) noexcept -> float {
-    assert(id != ClipIDError);
+auto WrapAL::CALAudioEngine::ac_tell(ALHandle id) noexcept -> float {
+    assert(id != ALInvalidHandle);
     float pos = 0.0f;
-    if (id != ClipIDError) {
+    if (id != ALInvalidHandle) {
         auto* __restrict clip = reinterpret_cast<AudioSourceClipReal*>(id);
         assert(clip->source_voice);
         XAUDIO2_VOICE_STATE state ;
@@ -452,10 +472,10 @@ auto WrapAL::CAudioEngine::ac_tell(ClipID id) noexcept -> float {
 }
 
 // 获取片段持续时间
-auto WrapAL::CAudioEngine::ac_duration(ClipID id) noexcept -> float {
-    assert(id != ClipIDError);
+auto WrapAL::CALAudioEngine::ac_duration(ALHandle id) noexcept -> float {
+    assert(id != ALInvalidHandle);
     float duration = 0.f;
-    if (id != ClipIDError) {
+    if (id != ALInvalidHandle) {
         auto* __restrict clip = reinterpret_cast<AudioSourceClipReal*>(id);
         register uint32_t length;
         // 获取字节长度
@@ -475,9 +495,9 @@ auto WrapAL::CAudioEngine::ac_duration(ClipID id) noexcept -> float {
 
 
 // 设置或获取片段音量
-auto WrapAL::CAudioEngine::ac_volume(ClipID id, float volume) noexcept -> float {
-    assert(id != ClipIDError);
-    if (id != ClipIDError) {
+auto WrapAL::CALAudioEngine::ac_volume(ALHandle id, float volume) noexcept -> float {
+    assert(id != ALInvalidHandle);
+    if (id != ALInvalidHandle) {
         auto* clip = reinterpret_cast<AudioSourceClipReal*>(id);
         assert(clip->source_voice);
         // Get
@@ -494,9 +514,9 @@ auto WrapAL::CAudioEngine::ac_volume(ClipID id, float volume) noexcept -> float 
 
 
 // 设置或获取片段回放速率
-auto WrapAL::CAudioEngine::ac_ratio(ClipID id, float ratio) noexcept -> float {
-    assert(id != ClipIDError);
-    if (id != ClipIDError) {
+auto WrapAL::CALAudioEngine::ac_ratio(ALHandle id, float ratio) noexcept -> float {
+    assert(id != ALInvalidHandle);
+    if (id != ALInvalidHandle) {
         auto* clip = reinterpret_cast<AudioSourceClipReal*>(id);
         assert(clip->source_voice);
         // Get
@@ -513,7 +533,7 @@ auto WrapAL::CAudioEngine::ac_ratio(ClipID id, float ratio) noexcept -> float {
 
 
 // 设置或获取总音量
-auto WrapAL::CAudioEngine::Master_Volume(float volume) noexcept -> float {
+auto WrapAL::CALAudioEngine::Volume(float volume) noexcept -> float {
     assert(m_pMasterVoice);
     // Get
     if (volume < 0.f) {
@@ -524,5 +544,97 @@ auto WrapAL::CAudioEngine::Master_Volume(float volume) noexcept -> float {
         m_pMasterVoice->SetVolume(volume);
     }
     return volume;
+}
+
+
+// 获取组名称
+auto WrapAL::CALAudioEngine::ag_name(ALHandle id) const noexcept -> const char* {
+    if (id != ALInvalidHandle) {
+        return reinterpret_cast<AudioSourceGroupReal*>(id)->name;
+    }
+    return "TOPLEVEL";
+}
+
+// 设置或获取组别音量
+auto WrapAL::CALAudioEngine::ag_volume(ALHandle group_id, float volume) noexcept -> float {
+    IXAudio2Voice* voice = nullptr;
+    if (group_id != ALInvalidHandle) {
+        auto* group = reinterpret_cast<AudioSourceGroupReal*>(group_id);
+        assert(group->voice);
+        voice = group->voice;
+    }
+    else {
+        voice = m_pMasterVoice;
+    }
+    // 设置
+    if (voice) {
+        // Get
+        if (volume < 0.f) {
+            voice->GetVolume(&volume);
+        }
+        // Set
+        else {
+            voice->SetVolume(volume);
+        }
+    }
+    return volume;
+}
+
+// 获取组指针
+auto WrapAL::CALAudioEngine::find_group(const char* name) noexcept->AudioSourceGroupReal* {
+    // 循环
+    for (size_t i = 0u; i < m_cGroupCount; ++i) {
+        if (!::strncmp(m_aGroup[i].name, name, GroupNameMaxLength)) {
+            return m_aGroup + i;
+        }
+    }
+    return nullptr;
+}
+
+// 设置clip的组ID
+auto WrapAL::CALAudioEngine::set_clip_group(AudioSourceClipReal& clip, const char* group_name) noexcept->HRESULT {
+    assert(clip.source_voice);
+    // 参数无效
+    if (!clip.source_voice) return E_INVALIDARG;
+    // 参数将就
+    clip.group = nullptr;
+    if (!group_name || !*group_name) return S_FALSE;
+    // 查找clip组别
+    auto group_id = this->find_group(group_name);
+    // 没有就添加组别
+    if (!group_id) {
+        // 满了?
+        if (m_cGroupCount == GroupMaxSize) return S_FALSE;
+        XAUDIO2_VOICE_DETAILS details = { 0 };
+        m_pMasterVoice->GetVoiceDetails(&details);
+        // 创建submix
+        auto hr = m_pXAudio2Engine->CreateSubmixVoice(
+            &m_aGroup[m_cGroupCount].voice,
+            details.InputChannels,
+            details.InputSampleRate,
+            0, 0,
+            nullptr,
+            nullptr
+            );
+        // 失败
+        assert(SUCCEEDED(hr));
+        if (FAILED(hr)) return S_FALSE;
+        group_id = m_aGroup + m_cGroupCount;
+        ::strncpy(group_id->name, group_name, GroupNameMaxLength);
+        ++m_cGroupCount;
+    }
+    // 设置组别
+    clip.group = group_id;
+    // 设置输出链
+    XAUDIO2_SEND_DESCRIPTOR descriptors[] = {
+        { 0, group_id->voice }
+    };
+    XAUDIO2_VOICE_SENDS sends = {
+        sizeof(descriptors)/sizeof(*descriptors),
+        descriptors
+    };
+    auto hr = clip.source_voice->SetOutputVoices(&sends);
+    assert(SUCCEEDED(hr));
+    return hr;
 }
 

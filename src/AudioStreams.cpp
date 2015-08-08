@@ -594,9 +594,9 @@ InitStaticVar(WrapAL::Mpg123::mpg123_getformat);
 InitStaticVar(WrapAL::Mpg123::mpg123_format_none);
 InitStaticVar(WrapAL::Mpg123::mpg123_open_handle);
 InitStaticVar(WrapAL::Mpg123::mpg123_replace_reader_handle);
-InitStaticVar(WrapAL::CAudioEngine::XAudio2Create);
+InitStaticVar(WrapAL::CALAudioEngine::XAudio2Create);
 
 
 
 // 单例类
-WrapAL::CAudioEngine AudioEngine;
+WrapAL::CALAudioEngine AudioEngine;

@@ -1,10 +1,13 @@
 ﻿## WrapAL
 Wrapped Audio Library, to make easier to play audio
 
-####Current Version : 0.0.1
+####Current Version : 0.1.0
 
 ##Document
-none document yet
+[so easy~](/doc/doc.md)
+
+##Demo
+1. [hello world](/doc/helloworld.md)
 
 ##How to build
 1. for visual studio:  

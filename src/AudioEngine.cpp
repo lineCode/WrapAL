@@ -546,6 +546,10 @@ auto WrapAL::CALAudioEngine::Volume(float volume) noexcept -> float {
     return volume;
 }
 
+// find group by group name
+auto WrapAL::CALAudioEngine::GetGroup(const char* name) noexcept ->CALAudioSourceGroup {
+    return CALAudioSourceGroup(reinterpret_cast<ALHandle>(this->find_group(name)));
+}
 
 // 获取组名称
 auto WrapAL::CALAudioEngine::ag_name(ALHandle id) const noexcept -> const char* {

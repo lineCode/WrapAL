@@ -88,7 +88,7 @@ namespace WrapAL {
         auto Volume(float volume=-1.f) noexcept -> float;
     public: // Group
         // find group by group name
-        auto FindGroup(const char* name) noexcept->AudioSourceGroupReal*;
+        auto GetGroup(const char* name) noexcept ->CALAudioSourceGroup;
     private:
         // get group name
         auto ag_name(ALHandle group_id) const noexcept -> const char*;

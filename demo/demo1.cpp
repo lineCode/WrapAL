@@ -16,17 +16,11 @@ int main() {
             WrapAL::Flag_StreamingReading | WrapAL::Flag_LoopInfinite,
             "BGM"
             );
-        auto group = clip.GetGroup();
-        auto name = group.Name();
         // play the clip
         clip.Play();
-        float ratio = 1.f;
-        while (::scanf("%f", &ratio) != EOF) { 
-            clip.Ratio(ratio); 
-        }
+        std::getchar();
         // destroy clip(optional)
         //clip.Destroy();
-
         // UnInitialize
         AudioEngine.UnInitialize(); ::CoUninitialize();
     }

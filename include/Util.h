@@ -91,7 +91,7 @@ namespace WrapAL {
     };
 #ifdef WRAPAL_INCLUDE_DEFAULT_CONFIGURE
     // default al configure
-    class CALDefConfigure final : public IALConfigure {
+    class CALDefConfigure : public IALConfigure {
     public:
         // default audio stream creation func
         static auto DefCreateAudioStream(AudioFormat, const wchar_t*, wchar_t info[/*ErrorInfoLength*/])noexcept->IALAudioStream*;
@@ -100,8 +100,6 @@ namespace WrapAL {
         CALDefConfigure() { m_szLastError[0] = 0; };
         // dotr
         ~CALDefConfigure() = default;
-        // set hwnd for this
-        auto SetHwnd(HWND hwnd) noexcept { m_hwnd = hwnd; }
     public: // infterface impl for IALConfigure
         // release this
         virtual auto Release() noexcept ->int32_t override { return 1; }
@@ -110,12 +108,10 @@ namespace WrapAL {
         // get last error infomation, return false if no error
         virtual auto GetLastErrorInfo(wchar_t info[/*ErrorInfoLength*/])noexcept->bool override;
         // output error infomation
-        virtual auto OutputError(const wchar_t* err)noexcept->void override { ::MessageBoxW(m_hwnd, err, L"Error!", MB_ICONERROR); }
-        // get the "libmpg123.dll" path
-        virtual auto GetLibmpg123_dllPath(wchar_t path[/*MAX_PATH*/])noexcept->void;
+        virtual auto OutputError(const wchar_t* err) noexcept->void override { ::MessageBoxW(nullptr, err, L"Error!", MB_ICONERROR); }
+        // get the "libmpg123.dll" path on windows
+        virtual auto GetLibmpg123Path(wchar_t path[/*MAX_PATH*/])noexcept->void;
     private:
-        // HWND for mainwindow
-        HWND                m_hwnd = nullptr;
         // last error infomation
         wchar_t             m_szLastError[ErrorInfoLength];
     };
@@ -237,7 +233,7 @@ namespace WrapAL {
             tmp = tmp->next;
         }
         if (!ok) {
-            ::swprintf(buffer, ErrorInfoLength, L"Invalid Address @ 0x%08X\n", stream);
+            ::swprintf(buffer, ErrorInfoLength, L"Invalid Address @ 0x%P\n", stream);
             ::MessageBoxW(nullptr, buffer, L"Error", MB_ICONERROR);
             assert(!"invalid address");
         }
@@ -245,7 +241,7 @@ namespace WrapAL {
         for (auto itr = m_ppFreeStack; itr < m_ppStackTop; ++itr) {
             // repeated?
             if (stream == static_cast<void*>(*itr)) {
-                ::swprintf(buffer, ErrorInfoLength, L"Address @ 0x%08X, had been freed\n", stream);
+                ::swprintf(buffer, ErrorInfoLength, L"Address @ 0x%P, had been freed\n", stream);
                 ::MessageBoxW(nullptr, buffer, L"Error", MB_ICONERROR);
                 assert(!"address had been freed");
                 break;

@@ -4,6 +4,12 @@
 // include CALDefConfigure
 #define WRAPAL_INCLUDE_DEFAULT_CONFIGURE
 
+// lower case method in clip, group class
+//#define WRAPAL_HADNLE_CLASS_WITH_LOWERCASE_METHOD
+
+// simple/crude memory leak detector in msc in debug mode
+#define WRAPAL_MEMDEBUG_IN_MSC
+
 // name
 namespace WrapAL {
     // some config

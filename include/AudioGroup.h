@@ -34,7 +34,11 @@ namespace WrapAL {
         // ctor
         AudioSourceGroupReal() noexcept { ::memset(name, 0, sizeof(name)); };
         // dtor
-        ~AudioSourceGroupReal() noexcept { WrapAL::SafeDestroyVoice(voice); }
+#ifdef _DEBUG
+        ~AudioSourceGroupReal() { assert(!voice && "not released!"); }
+#endif
+        // Release
+        auto Release() noexcept { WrapAL::SafeDestroyVoice(voice); }
         // name
         char                    name[GroupNameMaxLength + 1];
         // XAudio2

@@ -75,6 +75,6 @@ namespace WrapAL {
         // output error infomation
         virtual auto OutputError(const wchar_t*)noexcept->void = 0;
         // get the "libmpg123.dll" path
-        virtual auto GetLibmpg123_dllPath(wchar_t path[/*MAX_PATH*/])noexcept->void = 0;
+        virtual auto GetLibmpg123Path(wchar_t path[/*MAX_PATH*/])noexcept->void = 0;
     };
 }

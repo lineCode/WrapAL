@@ -19,36 +19,36 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{88F9E94B-8F98-46B7-8C38-5DFACC958BA4}</ProjectGuid>
-    <RootNamespace>libvorbis</RootNamespace>
+    <ProjectGuid>{0E1BE292-A1BA-4560-AAA6-B79E76DC7E4C}</ProjectGuid>
+    <RootNamespace>demo2</RootNamespace>
     <TargetPlatformVersion>10.0.10240.0</TargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -69,27 +69,31 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(SolutionDir)\..\3rdparty\libogg\include;$(SolutionDir)\..\3rdparty\libvorbis\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\..\include\;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)\..\3rdparty\libogg\include;$(SolutionDir)\..\3rdparty\libvorbis\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\..\include\;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(SolutionDir)\..\3rdparty\libogg\include;$(SolutionDir)\..\3rdparty\libvorbis\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\..\include\;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir)\..\3rdparty\libogg\include;$(SolutionDir)\..\3rdparty\libvorbis\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\..\include\;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>libogg.lib;libvorbis.lib;wrapal.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -97,11 +101,11 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>libogg.lib;libvorbis.lib;wrapal.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -111,13 +115,13 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>libogg.lib;libvorbis.lib;wrapal.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -127,40 +131,17 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>libogg.lib;libvorbis.lib;wrapal.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\3rdparty\libvorbis\lib\analysis.c" />
-    <ClCompile Include="..\..\3rdparty\libvorbis\lib\barkmel.c" />
-    <ClCompile Include="..\..\3rdparty\libvorbis\lib\bitrate.c" />
-    <ClCompile Include="..\..\3rdparty\libvorbis\lib\block.c" />
-    <ClCompile Include="..\..\3rdparty\libvorbis\lib\codebook.c" />
-    <ClCompile Include="..\..\3rdparty\libvorbis\lib\envelope.c" />
-    <ClCompile Include="..\..\3rdparty\libvorbis\lib\floor0.c" />
-    <ClCompile Include="..\..\3rdparty\libvorbis\lib\floor1.c" />
-    <ClCompile Include="..\..\3rdparty\libvorbis\lib\info.c" />
-    <ClCompile Include="..\..\3rdparty\libvorbis\lib\lookup.c" />
-    <ClCompile Include="..\..\3rdparty\libvorbis\lib\lpc.c" />
-    <ClCompile Include="..\..\3rdparty\libvorbis\lib\lsp.c" />
-    <ClCompile Include="..\..\3rdparty\libvorbis\lib\mapping0.c" />
-    <ClCompile Include="..\..\3rdparty\libvorbis\lib\mdct.c" />
-    <ClCompile Include="..\..\3rdparty\libvorbis\lib\psy.c" />
-    <ClCompile Include="..\..\3rdparty\libvorbis\lib\registry.c" />
-    <ClCompile Include="..\..\3rdparty\libvorbis\lib\res0.c" />
-    <ClCompile Include="..\..\3rdparty\libvorbis\lib\sharedbook.c" />
-    <ClCompile Include="..\..\3rdparty\libvorbis\lib\smallft.c" />
-    <ClCompile Include="..\..\3rdparty\libvorbis\lib\synthesis.c" />
-    <ClCompile Include="..\..\3rdparty\libvorbis\lib\tone.c" />
-    <ClCompile Include="..\..\3rdparty\libvorbis\lib\vorbisenc.c" />
-    <ClCompile Include="..\..\3rdparty\libvorbis\lib\vorbisfile.c" />
-    <ClCompile Include="..\..\3rdparty\libvorbis\lib\window.c" />
+    <ClCompile Include="..\..\demo\demo2.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

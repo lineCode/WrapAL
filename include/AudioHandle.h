@@ -49,6 +49,13 @@ namespace WrapAL {
         auto Name() const noexcept { return AudioEngine.ag_name(m_handle); }
         // get/set group volume
         auto Volume(float volume = -1.f) const noexcept { return AudioEngine.ag_volume(m_handle, volume); }
+        // ----------------------------------------------------------------------------
+#ifdef WRAPAL_HADNLE_CLASS_WITH_LOWERCASE_METHOD
+        // get group name
+        auto name() const noexcept { return AudioEngine.ag_name(m_handle); }
+        // get/set group volume
+        auto volume(float volume = -1.f) const noexcept { return AudioEngine.ag_volume(m_handle, volume); }
+#endif
     private:
         // m_handle for this
         ALHandle            m_handle;
@@ -93,6 +100,29 @@ namespace WrapAL {
         auto Ratio(float ratio = -1.f) const noexcept { CheckHandle; return AudioEngine.ac_ratio(m_handle, ratio); }
         // Seek this clip in sec.
         auto Seek(float time) const noexcept { CheckHandle; return AudioEngine.ac_seek(m_handle, time); }
+        // ----------------------------------------------------------------------------
+#ifdef WRAPAL_HADNLE_CLASS_WITH_LOWERCASE_METHOD
+        // get group
+        auto group() const noexcept { return CALAudioSourceGroup(m_handle ? reinterpret_cast<ALHandle>((*this)->group) : ALInvalidHandle); }
+        // destroy this clip, free the memory in engine
+        auto destroy() noexcept { CheckHandle; AudioEngine.ac_destroy(m_handle);  (m_handle) = ALInvalidHandle; }
+        // play this clip
+        auto play() const noexcept { CheckHandle; return AudioEngine.ac_play(m_handle); }
+        // stop this clip
+        auto stop() const noexcept { CheckHandle; return AudioEngine.ac_stop(m_handle); }
+        // Pause this clip
+        auto pause() const noexcept { CheckHandle; return AudioEngine.ac_pause(m_handle); }
+        // tell this clip
+        auto tell() const noexcept { CheckHandle; return AudioEngine.ac_tell(m_handle); }
+        // get the duration in sec.
+        auto duration() const noexcept { CheckHandle; return AudioEngine.ac_duration(m_handle); }
+        // set/get this volume
+        auto volume(float volume = -1.f) const noexcept { CheckHandle; return AudioEngine.ac_volume(m_handle, volume); }
+        // set/get this ratio
+        auto ratio(float ratio = -1.f) const noexcept { CheckHandle; return AudioEngine.ac_ratio(m_handle, ratio); }
+        // Seek this clip in sec.
+        auto seek(float time) const noexcept { CheckHandle; return AudioEngine.ac_seek(m_handle, time); }
+#endif
     private:
         // m_handle for this
         ALHandle                m_handle;

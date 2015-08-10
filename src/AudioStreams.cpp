@@ -1,8 +1,30 @@
 ﻿#include "wrapal.h"
 
+// Memory leak detector
+#if defined(_DEBUG) && defined(_MSC_VER) && defined(WRAPAL_MEMDEBUG_IN_MSC)
+struct MemoryLeakDetector {
+    // ctor
+    MemoryLeakDetector() {
+        ::_CrtMemCheckpoint(memstate + 0);
+        constexpr int sa = sizeof(_CrtMemState);
+    }
+    // dtor
+    ~MemoryLeakDetector() {
+        ::_CrtMemCheckpoint(memstate + 1);
+        if (::_CrtMemDifference(memstate + 2, memstate + 0, memstate + 1)) {
+            ::_CrtDumpMemoryLeaks();
+            assert(!"OOps! Memory leak detected");
+        }
+    }
+    // mem state
+    _CrtMemState memstate[3];
+} g_detector;
+#endif
+
 // Ogg Vorbis
 #include "../3rdparty/libvorbis/include/vorbis/codec.h"
 #include "../3rdparty/libvorbis/include/vorbis/vorbisfile.h"
+
 
 
 #ifdef WRAPAL_INCLUDE_DEFAULT_CONFIGURE
@@ -549,7 +571,7 @@ auto WrapAL::CALDefConfigure::GetLastErrorInfo(wchar_t info[]) noexcept -> bool 
 }
 
 // 获取默认libmpg123位置
-auto WrapAL::CALDefConfigure::GetLibmpg123_dllPath(wchar_t path[]) noexcept -> void {
+auto WrapAL::CALDefConfigure::GetLibmpg123Path(wchar_t path[]) noexcept -> void {
     path += ::GetCurrentDirectoryW(MAX_PATH, path);
     const auto* __restrict real = L"\\libmpg123.dll";
     while ((*path = *real)) { ++path; ++real; }

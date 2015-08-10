@@ -128,7 +128,7 @@ auto WrapAL::CALAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESUL
     // 获取libmpg123.dll句柄
     if (SUCCEEDED(hr)) {
         wchar_t path[MAX_PATH]; path[0] = 0;
-        this->configure->GetLibmpg123_dllPath(path);
+        this->configure->GetLibmpg123Path(path);
         force_cast(this->libmpg123) = ::LoadLibraryW(path);
         // 初始化libmpg123
         if (this->libmpg123) {
@@ -169,9 +169,13 @@ void WrapAL::CALAudioEngine::UnInitialize() noexcept {
     assert(m_listAC.size() == 0);
 #else
     m_acAllocator.Release([](AudioSourceClipReal* real) {
-            real->Release();
+        real->Release();
     });
 #endif
+    // 释放
+    for (auto& group : m_aGroup) {
+        group.Release();
+    }
     WrapAL::SafeDestroyVoice(m_pMasterVoice);
     WrapAL::SafeRelease(m_pXAudio2Engine);
     WrapAL::SafeRelease(force_cast(this->configure));
@@ -345,7 +349,7 @@ auto WrapAL::CALAudioEngine::CreateClipMove(const PCMFormat& format, uint8_t*& b
         if (SUCCEEDED(hr)) {
             XAUDIO2_BUFFER buffer; ZeroMemory(&buffer, sizeof(buffer));
             buffer.pAudioData = real->audio_data;
-            buffer.AudioBytes = real->buffer_length;
+            buffer.AudioBytes = static_cast<UINT32>(real->buffer_length);
             hr = real->ProcessBufferData(buffer);
         }
         // 检查错误
@@ -442,7 +446,7 @@ bool WrapAL::CALAudioEngine::ac_seek(ALHandle id, float pos) noexcept {
             XAUDIO2_BUFFER buffer; ZeroMemory(&buffer, sizeof(buffer));
             buffer.PlayBegin = pos_in_sample;
             buffer.pAudioData = clip->audio_data;
-            buffer.AudioBytes = clip->buffer_length;
+            buffer.AudioBytes = static_cast<UINT32>(clip->buffer_length);
             clip->ProcessBufferData(buffer);
         }
         // 播放?
@@ -553,9 +557,11 @@ auto WrapAL::CALAudioEngine::GetGroup(const char* name) noexcept ->CALAudioSourc
 
 // 获取组名称
 auto WrapAL::CALAudioEngine::ag_name(ALHandle id) const noexcept -> const char* {
+    // 句柄有效?
     if (id != ALInvalidHandle) {
         return reinterpret_cast<AudioSourceGroupReal*>(id)->name;
     }
+    // TOP-LEVEL!
     return "TOPLEVEL";
 }
 

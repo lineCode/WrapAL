@@ -54,6 +54,10 @@ namespace WrapAL {
     public:
         // ctor
         AudioSourceClipReal() { end_of_buffer = false; playing = false; };
+        // dtor
+#ifdef _DEBUG
+        ~AudioSourceClipReal() { if (stream || source_voice) assert(!"not released!"); }
+#endif
         // Release
         void Release() noexcept { WrapAL::SafeDestroyVoice(source_voice); WrapAL::SafeRelease(stream); ::free(audio_data); audio_data = nullptr; }
         // buffer the data

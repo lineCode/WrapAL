@@ -66,23 +66,23 @@ namespace WrapAL {
         auto CreateClip(const PCMFormat& format, const uint8_t* src, size_t size, AudioClipFlag, const char* group_name) noexcept->ALHandle;
     private: // Audio Clip
         // destroy the clip
-        bool ac_destroy(ALHandle) noexcept;
+        bool ac_destroy(ALHandle clip_id) noexcept;
         // play the clip
-        bool ac_play(ALHandle) noexcept;
+        bool ac_play(ALHandle clip_id) noexcept;
         // pause the clip
-        bool ac_pause(ALHandle) noexcept;
+        bool ac_pause(ALHandle clip_id) noexcept;
         // stop the clip
-        bool ac_stop(ALHandle id) noexcept { this->ac_pause(id); return this->ac_seek(id, 0.0f); }
+        bool ac_stop(ALHandle clip_id) noexcept { this->ac_pause(clip_id); return this->ac_seek(clip_id, 0.0f); }
         // seek the clip with time in sec.
-        bool ac_seek(ALHandle, float) noexcept;
+        bool ac_seek(ALHandle clip_id, float) noexcept;
         // tell the postion of clip in sec.
-        auto ac_tell(ALHandle) noexcept ->float;
+        auto ac_tell(ALHandle clip_id) noexcept ->float;
         // get the duration of clip  in sec.
-        auto ac_duration(ALHandle) noexcept ->float;
+        auto ac_duration(ALHandle clip_id) noexcept ->float;
         // set or get volume of clip
-        auto ac_volume(ALHandle, float = -1.f) noexcept->float;
+        auto ac_volume(ALHandle clip_id, float = -1.f) noexcept->float;
         // set or get ratio of clip
-        auto ac_ratio(ALHandle id, float ratio) noexcept -> float;
+        auto ac_ratio(ALHandle clip_id, float ratio) noexcept -> float;
     public: // Master
         // set or get master volume
         auto Volume(float volume=-1.f) noexcept -> float;

@@ -108,7 +108,7 @@ namespace WrapAL {
         // none flag
         Flag_None = 0,
         // all flags
-        Flag_All = uint32_t(-1),
+        Flag_All = ~Flag_None,
         // streaming reading from stream
         Flag_StreamingReading = 1 << 0,
         // loop forever
@@ -141,11 +141,13 @@ namespace WrapAL {
     // force cast
     template<typename T> T& force_cast(const T&t) { return const_cast<T&>(t); }
     // API level
-    enum class APILevel {
-        XAudio2 = 0,
+    enum class APILevel : unsigned {
+        Level_XAudio2 = 0,
+        Level_OpenAL,
+        Level_DirectSound,
     };
     // now api level
-    static const APILevel $WrapALAPILevel = APILevel::XAudio2;
+    static const APILevel $WrapALAPILevel = APILevel::Level_XAudio2;
 }
 #include "Interface.h"
 #include "Util.h"

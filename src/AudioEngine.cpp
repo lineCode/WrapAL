@@ -397,6 +397,7 @@ bool WrapAL::CALAudioEngine::ac_destroy(ALHandle id) noexcept {
 // 播放指定片段
 bool WrapAL::CALAudioEngine::ac_play(ALHandle id) noexcept {
     assert(id != ALInvalidHandle);
+    // OK
     if (id != ALInvalidHandle) {
         auto clip = reinterpret_cast<AudioSourceClipReal*>(id);
         assert(clip->source_voice);
@@ -410,6 +411,7 @@ bool WrapAL::CALAudioEngine::ac_play(ALHandle id) noexcept {
 // 暂停指定片段
 bool WrapAL::CALAudioEngine::ac_pause(ALHandle id) noexcept{
     assert(id != ALInvalidHandle);
+    // OK
     if (id != ALInvalidHandle) {
         auto clip = reinterpret_cast<AudioSourceClipReal*>(id);
         assert(clip->source_voice);
@@ -423,6 +425,7 @@ bool WrapAL::CALAudioEngine::ac_pause(ALHandle id) noexcept{
 // 音频定位
 bool WrapAL::CALAudioEngine::ac_seek(ALHandle id, float pos) noexcept {
     assert(id != ALInvalidHandle);
+    // OK
     if (id != ALInvalidHandle) {
         auto* __restrict clip = reinterpret_cast<AudioSourceClipReal*>(id);
         assert(clip->source_voice);
@@ -462,6 +465,7 @@ bool WrapAL::CALAudioEngine::ac_seek(ALHandle id, float pos) noexcept {
 auto WrapAL::CALAudioEngine::ac_tell(ALHandle id) noexcept -> float {
     assert(id != ALInvalidHandle);
     float pos = 0.0f;
+    // OK
     if (id != ALInvalidHandle) {
         auto* __restrict clip = reinterpret_cast<AudioSourceClipReal*>(id);
         assert(clip->source_voice);
@@ -479,6 +483,7 @@ auto WrapAL::CALAudioEngine::ac_tell(ALHandle id) noexcept -> float {
 auto WrapAL::CALAudioEngine::ac_duration(ALHandle id) noexcept -> float {
     assert(id != ALInvalidHandle);
     float duration = 0.f;
+    // OK
     if (id != ALInvalidHandle) {
         auto* __restrict clip = reinterpret_cast<AudioSourceClipReal*>(id);
         register uint32_t length;
@@ -501,6 +506,7 @@ auto WrapAL::CALAudioEngine::ac_duration(ALHandle id) noexcept -> float {
 // 设置或获取片段音量
 auto WrapAL::CALAudioEngine::ac_volume(ALHandle id, float volume) noexcept -> float {
     assert(id != ALInvalidHandle);
+    // OK
     if (id != ALInvalidHandle) {
         auto* clip = reinterpret_cast<AudioSourceClipReal*>(id);
         assert(clip->source_voice);
@@ -520,6 +526,7 @@ auto WrapAL::CALAudioEngine::ac_volume(ALHandle id, float volume) noexcept -> fl
 // 设置或获取片段回放速率
 auto WrapAL::CALAudioEngine::ac_ratio(ALHandle id, float ratio) noexcept -> float {
     assert(id != ALInvalidHandle);
+    // OK
     if (id != ALInvalidHandle) {
         auto* clip = reinterpret_cast<AudioSourceClipReal*>(id);
         assert(clip->source_voice);

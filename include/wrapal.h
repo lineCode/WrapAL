@@ -149,8 +149,8 @@ namespace WrapAL {
     // now api level
     static const APILevel $WrapALAPILevel = APILevel::Level_XAudio2;
 }
-#include "Interface.h"
-#include "Util.h"
+#include "AudioInterface.h"
+#include "AudioUtil.h"
 #include "AudioGroup.h"
 #include "AudioClip.h"
 #include "AudioEngine.h"

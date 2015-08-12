@@ -37,12 +37,6 @@
     <ClInclude Include="..\..\include\AudioEngine.h">
       <Filter>Header Files\Core</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\Interface.h">
-      <Filter>Header Files\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\Util.h">
-      <Filter>Header Files\Core</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\AudioGroup.h">
       <Filter>Header Files\Core</Filter>
     </ClInclude>
@@ -50,6 +44,12 @@
       <Filter>Header Files\Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\AudioHandle.h">
+      <Filter>Header Files\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\AudioInterface.h">
+      <Filter>Header Files\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\AudioUtil.h">
       <Filter>Header Files\Core</Filter>
     </ClInclude>
   </ItemGroup>

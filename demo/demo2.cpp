@@ -22,12 +22,13 @@ int main() {
             // create audio clip
             auto clip = WrapAL::CreateAudioClip(
                 WrapAL::AudioFormat::Format_OggVorbis,
-                L"NationalAnthemOfRussia.ogg",
+                //L"NationalAnthemOfRussia.ogg",
+                L"Sakura.ogg",
                 WrapAL::Flag_StreamingReading | WrapAL::Flag_LoopInfinite,
                 "BGM"
                 );
-            auto group = clip.GetGroup();
-            auto name = group.Name();
+            auto dur = clip.Duration();
+            auto name = clip.GetGroup().Name();
             // play the clip
             clip.Play();
             float ratio = 1.f;

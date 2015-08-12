@@ -94,7 +94,7 @@ namespace WrapAL {
     class CALDefConfigure : public IALConfigure {
     public:
         // default audio stream creation func
-        static auto DefCreateAudioStream(AudioFormat, const wchar_t*, wchar_t info[/*ErrorInfoLength*/])noexcept->IALAudioStream*;
+        static auto DefCreateAudioStream(AudioFormat, const wchar_t*, wchar_t info[/*ErrorInfoLength*/])noexcept->XALAudioStream*;
     public:
         // cotr
         CALDefConfigure() { m_szLastError[0] = 0; };
@@ -104,7 +104,7 @@ namespace WrapAL {
         // release this
         virtual auto Release() noexcept ->int32_t override { return 1; }
         // create audio stream from file
-        virtual auto CreateAudioStream(AudioFormat, const wchar_t*) noexcept->IALAudioStream* override;
+        virtual auto CreateAudioStream(AudioFormat, const wchar_t*) noexcept->XALAudioStream* override;
         // get last error infomation, return false if no error
         virtual auto GetLastErrorInfo(wchar_t info[/*ErrorInfoLength*/])noexcept->bool override;
         // output error infomation

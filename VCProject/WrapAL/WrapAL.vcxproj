@@ -143,8 +143,8 @@
     <ClInclude Include="..\..\include\AudioEngine.h" />
     <ClInclude Include="..\..\include\AudioGroup.h" />
     <ClInclude Include="..\..\include\AudioHandle.h" />
-    <ClInclude Include="..\..\include\Interface.h" />
-    <ClInclude Include="..\..\include\Util.h" />
+    <ClInclude Include="..\..\include\AudioInterface.h" />
+    <ClInclude Include="..\..\include\AudioUtil.h" />
     <ClInclude Include="..\..\include\wrapal.h" />
     <ClInclude Include="..\..\include\wrapalconf.h" />
     <ClInclude Include="..\..\include\XAudio2_diy.h" />

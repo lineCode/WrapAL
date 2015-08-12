@@ -48,13 +48,13 @@ namespace WrapAL {
     };
 #define alignedsize(n, a) (((((n)-1)/(a))+1)*(a))
     // Basic Audio Stream
-    class WRAPAL_NOVTABLE BasicAudioStream : public IALAudioStream {
+    class WRAPAL_NOVTABLE BasicAudioStream : public XALAudioStream {
     public:
         // ctor
         BasicAudioStream(const wchar_t*  path) noexcept :
             m_pFile(::_wfopen(path, L"rb")),
             m_code(m_pFile ? DefErrorCode::Code_Ok : DefErrorCode::Code_FileNotFound) {}
-    public: // interface impl for IALAudioStream
+    public: // interface impl for XALAudioStream
             // release this
         virtual auto Release() noexcept->int32_t override;
         // get last error infomation, return false if no error
@@ -74,7 +74,7 @@ namespace WrapAL {
     public:
         // ctor
         WavAudioStream(const wchar_t*) noexcept;
-    public: // interface impl for IALAudioStream
+    public: // interface impl for XALAudioStream
             // release this
             //virtual auto Release() noexcept->int32_t override;
             // seek stream in byte, return false if out of range
@@ -92,7 +92,7 @@ namespace WrapAL {
     public:
         // ctor
         OggAudioStream(const wchar_t*) noexcept;
-    public: // interface impl for IALAudioStream
+    public: // interface impl for XALAudioStream
             // release this
         virtual auto Release() noexcept->int32_t override;
         // seek stream in byte, return false if out of range
@@ -110,7 +110,7 @@ namespace WrapAL {
     public:
         // ctor
         Mp3AudioStream(const wchar_t*) noexcept;
-    public: // interface impl for IALAudioStream
+    public: // interface impl for XALAudioStream
             // release this
         virtual auto Release() noexcept->int32_t override;
         // seek stream in byte, return false if out of range
@@ -523,8 +523,8 @@ auto WrapAL::Mp3AudioStream::ReadNext(uint32_t len, uint8_t* buf) noexcept -> bo
 
 // 默认音频流创建函数
 auto WrapAL::CALDefConfigure::DefCreateAudioStream(
-    AudioFormat format, const wchar_t * file_path, wchar_t error_info[]) noexcept -> IALAudioStream * {
-    IALAudioStream* stream = reinterpret_cast<IALAudioStream*>(ASPool.Alloc());
+    AudioFormat format, const wchar_t * file_path, wchar_t error_info[]) noexcept -> XALAudioStream * {
+    XALAudioStream* stream = reinterpret_cast<XALAudioStream*>(ASPool.Alloc());
     if (!stream) {
         ::wcscpy(error_info, L"Out of memory!");
         return nullptr;
@@ -557,7 +557,7 @@ auto WrapAL::CALDefConfigure::DefCreateAudioStream(
 
 // 创建音频流
 auto WrapAL::CALDefConfigure::CreateAudioStream(
-    AudioFormat format, const wchar_t * file_path) noexcept -> IALAudioStream* {
+    AudioFormat format, const wchar_t * file_path) noexcept -> XALAudioStream* {
     return CALDefConfigure::DefCreateAudioStream(format, file_path, m_szLastError);
 }
 

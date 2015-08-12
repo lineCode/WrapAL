@@ -41,8 +41,8 @@ namespace WrapAL {
         // release this
         virtual auto Release() noexcept->int32_t = 0;
     };
-    // Audio Stream
-    class IALAudioStream : public IALInterface {
+    // Audio Stream, X for Mixed but like a interface
+    class XALAudioStream : public IALInterface {
     public:
         // seek stream in byte, return false if out of range
         virtual auto Seek(uint32_t) noexcept->bool = 0;
@@ -52,9 +52,9 @@ namespace WrapAL {
         virtual auto GetLastErrorInfo(wchar_t info[/*ErrorInfoLength*/])noexcept->bool = 0;
     public:
         // ctor
-        IALAudioStream() noexcept = default;
+        XALAudioStream() noexcept = default;
         // dtor
-        ~IALAudioStream() noexcept = default;
+        ~XALAudioStream() noexcept = default;
         // get format
         auto GetFormat() const noexcept -> const PCMFormat& { return this->pcm_format; }
         // get size in byte
@@ -69,7 +69,7 @@ namespace WrapAL {
     class IALConfigure : public IALInterface {
     public:
         // create audio stream from file
-        virtual auto CreateAudioStream(AudioFormat, const wchar_t*) noexcept ->IALAudioStream* = 0;
+        virtual auto CreateAudioStream(AudioFormat, const wchar_t*) noexcept ->XALAudioStream* = 0;
         // get last error infomation, return false if no error
         virtual auto GetLastErrorInfo(wchar_t info[/*ErrorInfoLength*/])noexcept->bool = 0;
         // output error infomation

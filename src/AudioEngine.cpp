@@ -192,7 +192,7 @@ void WrapAL::CALAudioEngine::UnInitialize() noexcept {
 }
 
 // 创建音频片段
-auto WrapAL::CALAudioEngine::CreateClip(IALAudioStream* stream, AudioClipFlag flags, const char* group_name) noexcept -> ALHandle {
+auto WrapAL::CALAudioEngine::CreateClip(XALAudioStream* stream, AudioClipFlag flags, const char* group_name) noexcept -> ALHandle {
     assert(stream && "bad argument");
     wchar_t error[ErrorInfoLength];
     wchar_t error_total[ErrorInfoLength]; error[0] = 0;
@@ -285,7 +285,7 @@ auto WrapAL::CALAudioEngine::CreateClip(IALAudioStream* stream, AudioClipFlag fl
 // 创建音频片段
 auto WrapAL::CALAudioEngine::CreateClip(AudioFormat format, const wchar_t* file_path, AudioClipFlag flags, const char* group_name) noexcept ->ALHandle {
     ALHandle clip(ALInvalidHandle);
-    IALAudioStream* stream = nullptr;
+    XALAudioStream* stream = nullptr;
     // 创建音频流
     if ((stream = this->configure->CreateAudioStream(format, file_path))) {
         clip = this->CreateClip(stream, flags, group_name);

@@ -57,7 +57,7 @@ namespace WrapAL {
     public: // Audio Clip
         // create new clip with audio stream
         // if using streaming audio, do not release the stream, this clip will do it
-        auto CreateClip(IALAudioStream*, AudioClipFlag, const char* group_name) noexcept ->ALHandle;
+        auto CreateClip(XALAudioStream*, AudioClipFlag, const char* group_name) noexcept ->ALHandle;
         // create new clip with file name
         auto CreateClip(AudioFormat, const wchar_t*, AudioClipFlag, const char* group_name) noexcept->ALHandle;
         // create new clip in memory with move

@@ -129,7 +129,7 @@ namespace WrapAL {
     };
     // create new clip with audio stream wrapped function
     // if using streaming audio, do not release the stream, this clip will do it
-    static inline auto CreateAudioClip(IALAudioStream* stream, AudioClipFlag flags = Flag_None, const char* group = "BGM") noexcept {
+    static inline auto CreateAudioClip(XALAudioStream* stream, AudioClipFlag flags = Flag_None, const char* group = "BGM") noexcept {
         return std::move(CALAudioSourceClip(AudioEngine.CreateClip(stream, flags, group)));
     }
     // create new clip with file name wrapped function
@@ -148,7 +148,7 @@ namespace WrapAL {
     }
     // create new clip with audio stream wrapped function
     // if using streaming audio, do not release the stream, this clip will do it
-    static inline auto CreateStreamingAudioClip(IALAudioStream* stream, AudioClipFlag flags = Flag_None, const char* group = "BGM") noexcept {
+    static inline auto CreateStreamingAudioClip(XALAudioStream* stream, AudioClipFlag flags = Flag_None, const char* group = "BGM") noexcept {
         return std::move(CALAudioSourceClip(AudioEngine.CreateClip(stream, flags | WrapAL::Flag_StreamingReading, group)));
     }
     // create new clip with file name wrapped function

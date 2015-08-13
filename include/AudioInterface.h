@@ -36,13 +36,13 @@ namespace WrapAL {
 #   endif
 #endif
     // WrapAL Interface
-    class IALInterface {
+    class WRAPAL_NOVTABLE IALInterface {
     public:
         // release this
         virtual auto Release() noexcept->int32_t = 0;
     };
     // Audio Stream, X for Mixed but like a interface
-    class XALAudioStream : public IALInterface {
+    class WRAPAL_NOVTABLE XALAudioStream : public IALInterface {
     public:
         // seek stream in byte, return false if out of range
         virtual auto Seek(uint32_t) noexcept->bool = 0;
@@ -66,7 +66,7 @@ namespace WrapAL {
         uint32_t                m_cTotalSize = 0;
     };
     // Audio Configure
-    class IALConfigure : public IALInterface {
+    class WRAPAL_NOVTABLE IALConfigure : public IALInterface {
     public:
         // create audio stream from file
         virtual auto CreateAudioStream(AudioFormat, const wchar_t*) noexcept ->XALAudioStream* = 0;

@@ -71,7 +71,7 @@ namespace WrapAL {
     // pcm format, WAVE_FORMAT_PCM
     struct PCMFormat {
         // make wave format
-        auto MakeWave(WAVEFORMATEX& wave) const {
+        auto MakeWave(WAVEFORMATEX& wave) const noexcept {
             wave.wFormatTag = WAVE_FORMAT_PCM;
             wave.nChannels = this->nChannels;
             wave.nSamplesPerSec = this->nSamplesPerSec;

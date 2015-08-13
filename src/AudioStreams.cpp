@@ -271,7 +271,7 @@ WrapAL::WavAudioStream::WavAudioStream(const wchar_t* file_path) noexcept : Supe
         }
         // data 块?
         if ((*reinterpret_cast<uint32_t*>(fact_data.szDataID) == "data"_wrapal32)) {
-            this->total_size = fact_data.dwDataSize;
+            m_cTotalSize = fact_data.dwDataSize;
             m_zeroPosOffset = ::ftell(m_pFile);
         }
         else {
@@ -280,17 +280,17 @@ WrapAL::WavAudioStream::WavAudioStream(const wchar_t* file_path) noexcept : Supe
     }
     // 复制数据
     if (code == DefErrorCode::Code_Ok) {
-        this->pcm_format.nSamplesPerSec = header.nSamplesPerSec;
-        this->pcm_format.nAvgBytesPerSec = header.nAvgBytesPerSec;
-        this->pcm_format.nBlockAlign = header.nBlockAlign;
-        this->pcm_format.nChannels = header.nChannels;
+        m_pcmFormat.nSamplesPerSec = header.nSamplesPerSec;
+        m_pcmFormat.nAvgBytesPerSec = header.nAvgBytesPerSec;
+        m_pcmFormat.nBlockAlign = header.nBlockAlign;
+        m_pcmFormat.nChannels = header.nChannels;
     }
     m_code = code;
 }
 
 // 设置读取位置
 auto WrapAL::WavAudioStream::Seek(uint32_t pos) noexcept -> bool {
-    if (pos >= this->total_size) return false;
+    if (pos >= m_cTotalSize) return false;
     m_pos = pos;
     ::fseek(m_pFile, pos + m_zeroPosOffset, SEEK_SET);
     return true;
@@ -304,16 +304,16 @@ WrapAL::OggAudioStream::OggAudioStream(const wchar_t* file_path) noexcept : Supe
         //char **ptr = ov_comment(&ovfile, -1)->user_comments;
         vorbis_info *vi = ov_info(&m_ovfile, -1);
         // 获取声道数
-        this->pcm_format.nChannels = vi->channels;
+        m_pcmFormat.nChannels = vi->channels;
         // 获取采样率
-        this->pcm_format.nSamplesPerSec = vi->rate;
+        m_pcmFormat.nSamplesPerSec = vi->rate;
         // 区块对齐
-        this->pcm_format.nBlockAlign = this->pcm_format.nChannels * sizeof(int16_t);
+        m_pcmFormat.nBlockAlign = m_pcmFormat.nChannels * sizeof(int16_t);
         // bps
-        this->pcm_format.nAvgBytesPerSec = this->pcm_format.nSamplesPerSec * this->pcm_format.nBlockAlign;
+        m_pcmFormat.nAvgBytesPerSec = m_pcmFormat.nSamplesPerSec * m_pcmFormat.nBlockAlign;
         // 数据大小
-        this->total_size = static_cast<decltype(this->total_size)>(::ov_pcm_total(&m_ovfile, -1)) *
-            static_cast<decltype(this->total_size)>(this->pcm_format.nBlockAlign);
+        m_cTotalSize = static_cast<decltype(m_cTotalSize)>(::ov_pcm_total(&m_ovfile, -1)) *
+            static_cast<decltype(m_cTotalSize)>(m_pcmFormat.nBlockAlign);
     }
     // 非法文件
     else {
@@ -329,8 +329,8 @@ auto WrapAL::OggAudioStream::Release() noexcept -> int32_t {
 
 // OggAudioStream 定位
 auto WrapAL::OggAudioStream::Seek(uint32_t pos) noexcept -> bool {
-    if (pos >= this->total_size) return false;
-    auto code = ::ov_pcm_seek(&m_ovfile, pos / this->pcm_format.nBlockAlign);
+    if (pos >= m_cTotalSize) return false;
+    auto code = ::ov_pcm_seek(&m_ovfile, pos / m_pcmFormat.nBlockAlign);
     // ERROR
     if (code) {
 
@@ -425,8 +425,8 @@ WrapAL::Mp3AudioStream::Mp3AudioStream(const wchar_t* path) noexcept: Super(path
     if (!error_code) {
         long rate = 0; int ch = 0;
         error_code = Mpg123::mpg123_getformat(m_hMpg123, &rate, &ch, &encoding);
-        this->pcm_format.nChannels = ch;
-        this->pcm_format.nSamplesPerSec = rate;
+        m_pcmFormat.nChannels = ch;
+        m_pcmFormat.nSamplesPerSec = rate;
     }
     // 检查编码支持
     if (!error_code) {
@@ -443,8 +443,8 @@ WrapAL::Mp3AudioStream::Mp3AudioStream(const wchar_t* path) noexcept: Super(path
     if (!error_code) {
         error_code = Mpg123::mpg123_format(
             m_hMpg123, 
-            this->pcm_format.nSamplesPerSec,
-            this->pcm_format.nChannels,
+            m_pcmFormat.nSamplesPerSec,
+            m_pcmFormat.nChannels,
             encoding
             );
     }
@@ -452,26 +452,26 @@ WrapAL::Mp3AudioStream::Mp3AudioStream(const wchar_t* path) noexcept: Super(path
     if (!error_code) {
         // 获取深度
         if (encoding & ENCODE_ENUM_FLOAT_64) {
-            pcm_format.nBlockAlign = 8 * pcm_format.nChannels;
+            m_pcmFormat.nBlockAlign = 8 * m_pcmFormat.nChannels;
         }
         else if (encoding & ENCODE_ENUM_FLOAT_32) {
-            pcm_format.nBlockAlign = 4 * pcm_format.nChannels;
+            m_pcmFormat.nBlockAlign = 4 * m_pcmFormat.nChannels;
         }
         else if (encoding & ENCODE_ENUM_16) {
-            pcm_format.nBlockAlign = 2 * pcm_format.nChannels;
+            m_pcmFormat.nBlockAlign = 2 * m_pcmFormat.nChannels;
         }
         else {
-            pcm_format.nBlockAlign = 1 * pcm_format.nChannels;
+            m_pcmFormat.nBlockAlign = 1 * m_pcmFormat.nChannels;
         }
         // 数据率
-        pcm_format.nAvgBytesPerSec = pcm_format.nSamplesPerSec * pcm_format.nBlockAlign;
+        m_pcmFormat.nAvgBytesPerSec = m_pcmFormat.nSamplesPerSec * m_pcmFormat.nBlockAlign;
     }
     // 计算长度
     if (!error_code) {
         auto length_in_sample = Mpg123::mpg123_length(m_hMpg123);
         // 有效
         if (length_in_sample > 0) {
-            this->total_size = length_in_sample * pcm_format.nBlockAlign / pcm_format.nChannels;
+            m_cTotalSize = length_in_sample * m_pcmFormat.nBlockAlign / m_pcmFormat.nChannels;
         }
         // 错误
         else {
@@ -499,8 +499,8 @@ auto WrapAL::Mp3AudioStream::Release() noexcept -> int32_t {
 
 // 定位
 auto WrapAL::Mp3AudioStream::Seek(uint32_t pos) noexcept -> bool {
-    if (pos >= this->total_size) return false;
-    auto pos_in_sample = pos / pcm_format.nBlockAlign ;
+    if (pos >= m_cTotalSize) return false;
+    auto pos_in_sample = pos / m_pcmFormat.nBlockAlign ;
     Mpg123::mpg123_seek(m_hMpg123, pos_in_sample, SEEK_SET);
     return false;
 }

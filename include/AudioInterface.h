@@ -36,7 +36,7 @@ namespace WrapAL {
 #   endif
 #endif
     // WrapAL Interface
-    class alignas(sizeof(void*)) IALInterface {
+    class IALInterface {
     public:
         // release this
         virtual auto Release() noexcept->int32_t = 0;
@@ -56,14 +56,14 @@ namespace WrapAL {
         // dtor
         ~XALAudioStream() noexcept = default;
         // get format
-        auto GetFormat() const noexcept -> const PCMFormat& { return this->pcm_format; }
+        auto GetFormat() const noexcept -> const PCMFormat& { return m_pcmFormat; }
         // get size in byte
-        auto GetSizeInByte() const noexcept { return this->total_size; }
+        auto GetSizeInByte() const noexcept { return m_cTotalSize; }
     protected:
         // the format of pcm
-        PCMFormat               pcm_format = { 0 };
+        PCMFormat               m_pcmFormat = { 0 };
         // total size in byte
-        uint32_t                total_size = 0;
+        uint32_t                m_cTotalSize = 0;
     };
     // Audio Configure
     class IALConfigure : public IALInterface {

@@ -28,5 +28,7 @@ namespace WrapAL {
         GroupNameMaxLength = 15,
         // group max size
         GroupMaxSize = 8,
+        // devie max count
+        DeviceMaxCount = 256,
     };
 }

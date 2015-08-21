@@ -103,6 +103,8 @@ namespace WrapAL {
     public: // infterface impl for IALConfigure
         // release this
         virtual auto Release() noexcept ->int32_t override { return 1; }
+        // choose device, return index, if out of range, choose default device
+        virtual auto ChooseDevice(const AudioDeviceInfo [/*count*/], UINT count/* <= DeviceMaxCount*/) noexcept ->UINT override { return count; };
         // create audio stream from file
         virtual auto CreateAudioStream(AudioFormat, const wchar_t*) noexcept->XALAudioStream* override;
         // get last error infomation, return false if no error

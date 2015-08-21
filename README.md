@@ -1,7 +1,7 @@
 ﻿## WrapAL
 Wrapped Audio Library, to make easier to play audio
 
-####Current Version : 0.1.1
+####Current Version : 0.1.2
 
 ##Document
 - [so easy~](./doc/doc.md)

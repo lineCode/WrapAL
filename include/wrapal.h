@@ -89,6 +89,17 @@ namespace WrapAL {
         // number of channels (i.e. mono, stereo...)
         uint16_t    nChannels;
     };
+    // infomation for audio device
+    struct AudioDeviceInfo {
+        // name
+        const auto* Name() const noexcept { return name.pwszVal; }
+        // id
+        const auto* Id() const noexcept { return id.pwszVal; }
+        // name of device
+        PROPVARIANT name;
+        // id of device
+        PROPVARIANT id;
+    };
     // audio format
     enum class AudioFormat : uint32_t {
         // stream from memory

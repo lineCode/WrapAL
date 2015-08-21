@@ -68,6 +68,8 @@ namespace WrapAL {
     // Audio Configure
     class WRAPAL_NOVTABLE IALConfigure : public IALInterface {
     public:
+        // choose device, return index, if out of range, choose default device
+        virtual auto ChooseDevice(const AudioDeviceInfo devices[/*count*/], UINT count/* <= DeviceMaxCount*/) noexcept ->UINT = 0;
         // create audio stream from file
         virtual auto CreateAudioStream(AudioFormat, const wchar_t*) noexcept ->XALAudioStream* = 0;
         // get last error infomation, return false if no error

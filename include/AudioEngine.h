@@ -53,7 +53,7 @@ namespace WrapAL {
         // dtor
         ~CALAudioEngine() noexcept { if(this->configure) this->UnInitialize(); }
         // get version
-        auto GetVersion() const noexcept -> const char* { return "0.1.1" ; }
+        auto GetVersion() const noexcept -> const char* { return "0.1.2" ; }
     public: // Audio Clip
         // create new clip with audio stream
         // if using streaming audio, do not release the stream, this clip will do it

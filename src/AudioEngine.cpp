@@ -1,4 +1,38 @@
 ﻿#include "wrapal.h"
+#include <mmdeviceapi.h>
+
+// WRAPAL: DEFINE_GUID
+#define WRAPAL_DEFINE_GUID(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
+    static const GUID name = { l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } }
+
+// WRAPAL: DEFINE_PROPERTYKEY
+#define WRAPAL_DEFINE_PROPERTYKEY(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8, pid) \
+    static const PROPERTYKEY name = { { l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } }, pid }
+
+/*
+// IID_IAudioClient
+WRAPAL_DEFINE_GUID(IID_IAudioClient, 0x1cb9ad4c, 0xdbfa, 0x4c32, 0xb1, 0x78, 0xc2, 0xf5, 0x68, 0xa7, 0x03, 0xb2);
+// IID_IAudioCaptureClient
+WRAPAL_DEFINE_GUID(IID_IAudioCaptureClient, 0xc8adbd64, 0xe71e, 0x48a0, 0xa4, 0xde, 0x18, 0x5c, 0x39, 0x5c, 0xd3, 0x17);
+*/
+
+#define INITGUID
+
+// WrapAL 命名空间
+namespace WrapAL {
+    // CLSID_MMDeviceEnumerator
+    WRAPAL_DEFINE_GUID(CLSID_MMDeviceEnumerator, 0xBCDE0395, 0xE52F, 0x467C,
+        0x8E, 0x3D, 0xC4, 0x57, 0x92, 0x91, 0x69, 0x2E);
+    // IID_IMMDeviceEnumerator
+    WRAPAL_DEFINE_GUID(IID_IMMDeviceEnumerator, 0xA95664D2, 0x9614, 0x4F35,
+        0xA7, 0x46, 0xDE, 0x8D, 0xB6, 0x36, 0x17, 0xE6);
+    // PKEY_Device_FriendlyName
+    WRAPAL_DEFINE_PROPERTYKEY(PKEY_Device_FriendlyName,0xa45c254e, 0xdf1c, 0x4efd, 
+        0x80, 0x20, 0x67, 0xd1, 0x46, 0xa8, 0x50, 0xe0, 14);
+    // PKEY_AudioEndpoint_Path
+    WRAPAL_DEFINE_PROPERTYKEY(PKEY_AudioEndpoint_Path, 0x9c119480, 0xddc2, 0x4954, 
+        0xa1, 0x50, 0x5b, 0xd2, 0x40, 0xd4, 0x54, 0xad, 1);
+}
 
 // 音频处理开始
 void WrapAL::AudioSourceClipReal::OnVoiceProcessingPassStart(UINT32 SamplesRequired) noexcept {
@@ -114,14 +148,79 @@ auto WrapAL::CALAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESUL
         assert(!m_pXAudio2Engine && "m_pXAudio2 must be null");
         hr = CALAudioEngine::XAudio2Create(&m_pXAudio2Engine, 0, XAUDIO2_DEFAULT_PROCESSOR);
     }
+    // 枚举输出
+    IMMDeviceEnumerator* enumerator = nullptr;
+    IMMDeviceCollection * devices = nullptr;
+    UINT device_count = 0;
+    // 获取枚举器
+    if (SUCCEEDED(hr)) {
+        hr = ::CoCreateInstance(
+            CLSID_MMDeviceEnumerator, 
+            nullptr,
+            CLSCTX_ALL, 
+            IID_IMMDeviceEnumerator, 
+            reinterpret_cast<void**>(&enumerator)
+            );
+    }
+    // 获取输出设备集合
+    if (SUCCEEDED(hr)) {
+        hr = enumerator->EnumAudioEndpoints(eRender, DEVICE_STATE_ACTIVE, &devices);
+    }
+    // 获取输出设备数量
+    if (SUCCEEDED(hr)) {
+        hr = devices->GetCount(&device_count);
+    }
+    WrapAL::AudioDeviceInfo devices_info[WrapAL::DeviceMaxCount];
+    // 获取设备信息
+    if (SUCCEEDED(hr)) {
+        // 太大
+        if (device_count > DeviceMaxCount) {
+            device_count = DeviceMaxCount;
+        }
+        for (UINT i = 0; i < device_count; ++i) {
+            // 错误
+            if (FAILED(hr)) { break; }
+            // 当前
+            auto& info = devices_info[i];
+            // 数据信息
+            IPropertyStore *propStore = nullptr;
+            IMMDevice* device = nullptr;
+            ::PropVariantInit(&info.id);
+            ::PropVariantInit(&info.name);
+            // 获取设备
+            hr = devices->Item(i, &device);
+            // 信息商店
+            if (SUCCEEDED(hr)) {
+                hr = device->OpenPropertyStore(STGM_READ, &propStore);
+            }
+            // 路径名称
+            if (SUCCEEDED(hr)) {
+                hr = propStore->GetValue(PKEY_AudioEndpoint_Path, &info.id);
+            }
+            // 友好名称
+            if (SUCCEEDED(hr)) {
+                hr = propStore->GetValue(PKEY_Device_FriendlyName, &info.name);
+            }
+            // 断言检查
+            if (SUCCEEDED(hr)) {
+                assert(info.id.vt == VT_LPWSTR && info.name.vt == VT_LPWSTR);
+            }
+            // 扫尾
+            WrapAL::SafeRelease(propStore);
+            WrapAL::SafeRelease(device);
+        }
+    }
     // 创建 Mastering Voice 接口
     if (SUCCEEDED(hr)) {
+        // 选择设备
+        auto index = this->configure->ChooseDevice(devices_info, device_count);
+        // 创建
         hr = m_pXAudio2Engine->CreateMasteringVoice(
             &m_pMasterVoice,
             XAUDIO2_DEFAULT_CHANNELS,
             XAUDIO2_DEFAULT_SAMPLERATE,
             0, 
-            nullptr, 
+            index >= device_count ? nullptr : devices_info[index].Id(),
             nullptr
             );
     }
@@ -129,6 +228,7 @@ auto WrapAL::CALAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESUL
     if (SUCCEEDED(hr)) {
         wchar_t path[MAX_PATH]; path[0] = 0;
         this->configure->GetLibmpg123Path(path);
+        // 载入
         force_cast(this->libmpg123) = ::LoadLibraryW(path);
         // 初始化libmpg123
         if (this->libmpg123) {
@@ -150,6 +250,14 @@ auto WrapAL::CALAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESUL
             __FUNCTION__, hr
             );
     }
+    // 扫尾
+    for (UINT i = 0; i < device_count; ++i) {
+        ::PropVariantClear(&devices_info[i].id);
+        ::PropVariantClear(&devices_info[i].name);
+    }
+    WrapAL::SafeRelease(enumerator);
+    WrapAL::SafeRelease(devices);
+    // 输出错误
     if(error[0] && this->configure)  this->configure->OutputError(error);
     assert(SUCCEEDED(hr));
     return hr;

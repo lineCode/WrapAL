@@ -90,7 +90,7 @@ namespace WrapAL {
         auto Stop() const noexcept { CheckHandle; return AudioEngine.ac_stop(m_handle); }
         // Pause this clip
         auto Pause() const noexcept { CheckHandle; return AudioEngine.ac_pause(m_handle); }
-        // tell this clip
+        // tell this clip in sec.
         auto Tell() const noexcept { CheckHandle; return AudioEngine.ac_tell(m_handle); }
         // get the duration in sec.
         auto Duration() const noexcept { CheckHandle; return AudioEngine.ac_duration(m_handle); }
@@ -112,7 +112,7 @@ namespace WrapAL {
         auto stop() const noexcept { CheckHandle; return AudioEngine.ac_stop(m_handle); }
         // Pause this clip
         auto pause() const noexcept { CheckHandle; return AudioEngine.ac_pause(m_handle); }
-        // tell this clip
+        // tell this clip in sec.
         auto tell() const noexcept { CheckHandle; return AudioEngine.ac_tell(m_handle); }
         // get the duration in sec.
         auto duration() const noexcept { CheckHandle; return AudioEngine.ac_duration(m_handle); }

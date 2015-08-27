@@ -53,7 +53,7 @@ namespace WrapAL {
         // dtor
         ~CALAudioEngine() noexcept { if(this->configure) this->UnInitialize(); }
         // get version
-        auto GetVersion() const noexcept -> const char* { return "0.1.2" ; }
+        auto GetVersion() const noexcept -> const char* { return "0.1.3" ; }
     public: // Audio Clip
         // create new clip with audio stream
         // if using streaming audio, do not release the stream, this clip will do it
@@ -135,6 +135,8 @@ namespace WrapAL {
         static CALAudioEngine s_instance;
     };
     // marco define
+#define WrapALAudioEngine (WrapAL::CALAudioEngine::s_instance)
+#ifdef WRAPAL_USE_AUDIOENGINE_MARCO
 #define AudioEngine (WrapAL::CALAudioEngine::s_instance)
-
+#endif
 }

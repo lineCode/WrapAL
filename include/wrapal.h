@@ -92,9 +92,9 @@ namespace WrapAL {
     // infomation for audio device
     struct AudioDeviceInfo {
         // name
-        const auto* Name() const noexcept { return name.pwszVal; }
+        const wchar_t* Name() const noexcept { return name.pwszVal; }
         // id
-        const auto* Id() const noexcept { return id.pwszVal; }
+        const wchar_t* Id() const noexcept { return id.pwszVal; }
         // name of device
         PROPVARIANT name;
         // id of device

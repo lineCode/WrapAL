@@ -137,7 +137,7 @@ auto WrapAL::CALAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESUL
         }
         else {
             hr = E_FAIL;
-            ::swprintf(error, ErrorInfoLength,
+            std::swprintf(error, ErrorInfoLength,
                 L"<%S>:libmpg123 library not found ---> %ls",
                 __FUNCTION__, L"XAudio2_8.dll"
                 );
@@ -179,7 +179,7 @@ auto WrapAL::CALAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESUL
         }
         for (UINT i = 0; i < device_count; ++i) {
             // 错误
-            if (FAILED(hr)) { break; }
+            if (FAILED(hr)) { device_count = i; break; }
             // 当前
             auto& info = devices_info[i];
             // 数据信息
@@ -214,13 +214,29 @@ auto WrapAL::CALAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESUL
     if (SUCCEEDED(hr)) {
         // 选择设备
         auto index = this->configure->ChooseDevice(devices_info, device_count);
+        auto device_id = index >= device_count ? nullptr : devices_info[index].Id();
+        auto device_namme = index >= device_count ? nullptr : devices_info[index].Name();
+#if defined(_DEBUG) && defined(_MSC_VER)
+        {
+            wchar_t buffer[4096];
+            std::swprintf(
+                buffer, 4096, 
+                L"WrapAL Debug<%S>:    Choose Device:\r\n\t\t"
+                L"[  id: %ls]\r\n\t\t[name: %ls]\r\n",
+                __FUNCTION__,
+                device_id ? device_id : L"<DEFAULT>",
+                device_namme ? device_namme : L"<DEFAULT>"
+                );
+            ::OutputDebugStringW(buffer);
+        }
+#endif
         // 创建
         hr = m_pXAudio2Engine->CreateMasteringVoice(
             &m_pMasterVoice,
             XAUDIO2_DEFAULT_CHANNELS,
             XAUDIO2_DEFAULT_SAMPLERATE,
             0, 
-            index >= device_count ? nullptr : devices_info[index].Id(),
+            device_id,
             nullptr
             );
     }
@@ -237,7 +253,7 @@ auto WrapAL::CALAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESUL
         }
         // 没有 libmpg123.dll 依然允许运行, 提供了路径则报错
         else if(path[0]){
-            ::swprintf(error, ErrorInfoLength,
+            std::swprintf(error, ErrorInfoLength,
                 L"<%S>:libmpg123 library not found ---> %ls",
                 __FUNCTION__, path
                 );
@@ -245,7 +261,7 @@ auto WrapAL::CALAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESUL
     }
     // 报错
     if (!error[0] && FAILED(hr)) {
-        ::swprintf(error, ErrorInfoLength,
+        std::swprintf(error, ErrorInfoLength,
             L"<%S>: Failed with HRESULT code : 0x%08X",
             __FUNCTION__, hr
             );
@@ -347,7 +363,7 @@ auto WrapAL::CALAudioEngine::CreateClip(XALAudioStream* stream, AudioClipFlag fl
                 }
                 // 检查错误
                 if (FAILED(hr)) {
-                    ::swprintf(error, ErrorInfoLength, L"HRESULT code -> 0x%08X\n", hr);
+                    std::swprintf(error, ErrorInfoLength, L"HRESULT code -> 0x%08X\n", hr);
                 }
             }
             // 错误
@@ -380,7 +396,7 @@ auto WrapAL::CALAudioEngine::CreateClip(XALAudioStream* stream, AudioClipFlag fl
     // 有错误的情况
     if (error[0]) {
         // 添加信息
-        ::swprintf(
+        std::swprintf(
             error_total, ErrorInfoLength, L"<%S>: Error -> %ls\n",
             __func__, error
             );
@@ -410,7 +426,7 @@ auto WrapAL::CALAudioEngine::CreateClip(AudioFormat format, const wchar_t* file_
         // 获取基本错误信息
         this->configure->GetLastErrorInfo(error);
         // 添加信息
-        ::swprintf(
+        std::swprintf(
             error_total, ErrorInfoLength, L"<%S>: Error -> %ls\n",
             __func__, error
             );
@@ -463,7 +479,7 @@ auto WrapAL::CALAudioEngine::CreateClipMove(const PCMFormat& format, uint8_t*& b
         // 检查错误
         if (FAILED(hr)) {
             wchar_t error[ErrorInfoLength];
-            ::swprintf(
+            std::swprintf(
                 error, ErrorInfoLength, L"<%S>: Error with HRESULT code -> 0x%08X\n",
                 __func__, hr
                 );

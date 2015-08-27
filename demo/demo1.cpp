@@ -8,7 +8,9 @@
 // App Entrance
 int main() {
     // Initialize COM Interface and AudioEngine
-    if (SUCCEEDED(::CoInitialize(nullptr)) && SUCCEEDED(AudioEngine.Initialize())) {
+    ::CoInitialize(nullptr);
+    AudioEngine.Initialize();
+    {
         // create audio clip
         auto clip = WrapAL::CreateAudioClip(
             WrapAL::AudioFormat::Format_OggVorbis,
@@ -18,12 +20,15 @@ int main() {
             );
         // play the clip
         clip.Play();
+        // until get char
         std::getchar();
         // destroy clip(optional)
         //clip.Destroy();
-        // UnInitialize
-        AudioEngine.UnInitialize(); ::CoUninitialize();
     }
+    // UnInitialize
+    AudioEngine.UnInitialize();
+    ::CoUninitialize();
+    return EXIT_SUCCESS;
     return EXIT_SUCCESS;
 }
 

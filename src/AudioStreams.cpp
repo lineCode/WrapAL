@@ -398,7 +398,7 @@ WrapAL::Mp3AudioStream::Mp3AudioStream(const wchar_t* path) noexcept: Super(path
     // 检查错误
     if (m_code != DefErrorCode::Code_Ok) return;
     // 检查dll
-    if (!AudioEngine.libmpg123) { m_code = DefErrorCode::Code_FileNotFound; return; }
+    if (!WrapALAudioEngine.libmpg123) { m_code = DefErrorCode::Code_FileNotFound; return; }
     // 创建新的句柄
     int error_code = 0;
     m_hMpg123 = Mpg123::mpg123_new(nullptr, &error_code);
@@ -545,7 +545,7 @@ auto WrapAL::CALDefConfigure::DefCreateAudioStream(
     case WrapAL::AudioFormat::Format_ByteStream:
     default:
         // 格式不支持
-        ::swprintf(error_info, ErrorInfoLength, L"Unsupported Format : 0x%08X", format);
+        std::swprintf(error_info, ErrorInfoLength, L"Unsupported Format : 0x%08X", format);
     }
     // 检查错误
     if (*reinterpret_cast<size_t*>(stream)) {
@@ -621,4 +621,4 @@ InitStaticVar(WrapAL::CALAudioEngine::XAudio2Create);
 
 
 // 单例类
-WrapAL::CALAudioEngine AudioEngine;
+WrapAL::CALAudioEngine WrapALAudioEngine;

@@ -4,6 +4,9 @@
 // include CALDefConfigure
 #define WRAPAL_INCLUDE_DEFAULT_CONFIGURE
 
+// use AudioEngine marco
+#define WRAPAL_USE_AUDIOENGINE_MARCO
+
 // lower case method in clip, group class
 //#define WRAPAL_HADNLE_CLASS_WITH_LOWERCASE_METHOD
 

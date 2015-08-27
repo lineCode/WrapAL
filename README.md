@@ -1,7 +1,7 @@
 ﻿## WrapAL
 Wrapped Audio Library, to make easier to play audio
 
-####Current Version : 0.1.2
+####Current Version : 0.1.3
 
 ##Document
 - [so easy~](./doc/doc.md)
@@ -13,11 +13,11 @@ Wrapped Audio Library, to make easier to play audio
 
 ##How to build
 1. for visual studio:  
-open the vcproject and build it
+  - open the vcproject and build it
 2. for mingw-w64(WrapAL need some dxsdk/winsdk headers)  
-use rakefile to build, you may download ruby/rake at first,  
-A. modify the build_config.rb  
-B. rake it  
+  - use rakefile to build, you may download ruby/rake at first,  
+  - A. modify the build_config.rb  
+  - B. rake it  
 
 ##About the libmpg123
 Because of the LGPL, you should build the libmpg123.dll by youself,  
@@ -25,7 +25,7 @@ this repo provided a pre-build libmpg123.dll for x86 in
 'Bin/libmpg123_x86.dll'
 
 由于LGPL的限制, 你必须自己创建libmpg123.dll, 当然, 本项目提供了一个  
-现成的用于x68的libmpg123.dll, 喂鱼'Bin/libmpg123_x86.dll', 黑喂鱼~
+现成的用于x86的libmpg123.dll, 喂鱼'Bin/libmpg123_x86.dll', 黑喂鱼~
 
 ## License
 Under the MIT License. Please refer to [License.txt](./License.txt).

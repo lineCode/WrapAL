@@ -46,15 +46,15 @@ namespace WrapAL {
         auto operator =(CALAudioSourceGroup&& group) noexcept ->CALAudioSourceGroup& { m_handle = group.m_handle;  (group.m_handle) = ALInvalidHandle; return *this; }
     public:
         // get group name
-        auto Name() const noexcept { return AudioEngine.ag_name(m_handle); }
+        auto Name() const noexcept { return WrapALAudioEngine.ag_name(m_handle); }
         // get/set group volume
-        auto Volume(float volume = -1.f) const noexcept { return AudioEngine.ag_volume(m_handle, volume); }
+        auto Volume(float volume = -1.f) const noexcept { return WrapALAudioEngine.ag_volume(m_handle, volume); }
         // ----------------------------------------------------------------------------
 #ifdef WRAPAL_HADNLE_CLASS_WITH_LOWERCASE_METHOD
         // get group name
-        auto name() const noexcept { return AudioEngine.ag_name(m_handle); }
+        auto name() const noexcept { return WrapALAudioEngine.ag_name(m_handle); }
         // get/set group volume
-        auto volume(float volume = -1.f) const noexcept { return AudioEngine.ag_volume(m_handle, volume); }
+        auto volume(float volume = -1.f) const noexcept { return WrapALAudioEngine.ag_volume(m_handle, volume); }
 #endif
     private:
         // m_handle for this
@@ -83,45 +83,45 @@ namespace WrapAL {
         // get group
         auto GetGroup() const noexcept { return CALAudioSourceGroup(m_handle ? reinterpret_cast<ALHandle>((*this)->group) : ALInvalidHandle); }
         // destroy this clip, free the memory in engine
-        auto Destroy()noexcept { CheckHandle; AudioEngine.ac_destroy(m_handle);  (m_handle) = ALInvalidHandle; }
+        auto Destroy()noexcept { CheckHandle; WrapALAudioEngine.ac_destroy(m_handle);  (m_handle) = ALInvalidHandle; }
         // play this clip
-        auto Play() const noexcept { CheckHandle; return AudioEngine.ac_play(m_handle); }
+        auto Play() const noexcept { CheckHandle; return WrapALAudioEngine.ac_play(m_handle); }
         // stop this clip
-        auto Stop() const noexcept { CheckHandle; return AudioEngine.ac_stop(m_handle); }
+        auto Stop() const noexcept { CheckHandle; return WrapALAudioEngine.ac_stop(m_handle); }
         // Pause this clip
-        auto Pause() const noexcept { CheckHandle; return AudioEngine.ac_pause(m_handle); }
+        auto Pause() const noexcept { CheckHandle; return WrapALAudioEngine.ac_pause(m_handle); }
         // tell this clip in sec.
-        auto Tell() const noexcept { CheckHandle; return AudioEngine.ac_tell(m_handle); }
+        auto Tell() const noexcept { CheckHandle; return WrapALAudioEngine.ac_tell(m_handle); }
         // get the duration in sec.
-        auto Duration() const noexcept { CheckHandle; return AudioEngine.ac_duration(m_handle); }
+        auto Duration() const noexcept { CheckHandle; return WrapALAudioEngine.ac_duration(m_handle); }
         // set/get this volume
-        auto Volume(float volume = -1.f) const noexcept { CheckHandle; return AudioEngine.ac_volume(m_handle, volume); }
+        auto Volume(float volume = -1.f) const noexcept { CheckHandle; return WrapALAudioEngine.ac_volume(m_handle, volume); }
         // set/get this ratio
-        auto Ratio(float ratio = -1.f) const noexcept { CheckHandle; return AudioEngine.ac_ratio(m_handle, ratio); }
+        auto Ratio(float ratio = -1.f) const noexcept { CheckHandle; return WrapALAudioEngine.ac_ratio(m_handle, ratio); }
         // Seek this clip in sec.
-        auto Seek(float time) const noexcept { CheckHandle; return AudioEngine.ac_seek(m_handle, time); }
+        auto Seek(float time) const noexcept { CheckHandle; return WrapALAudioEngine.ac_seek(m_handle, time); }
         // ----------------------------------------------------------------------------
 #ifdef WRAPAL_HADNLE_CLASS_WITH_LOWERCASE_METHOD
         // get group
         auto group() const noexcept { return CALAudioSourceGroup(m_handle ? reinterpret_cast<ALHandle>((*this)->group) : ALInvalidHandle); }
         // destroy this clip, free the memory in engine
-        auto destroy() noexcept { CheckHandle; AudioEngine.ac_destroy(m_handle);  (m_handle) = ALInvalidHandle; }
+        auto destroy() noexcept { CheckHandle; WrapALAudioEngine.ac_destroy(m_handle);  (m_handle) = ALInvalidHandle; }
         // play this clip
-        auto play() const noexcept { CheckHandle; return AudioEngine.ac_play(m_handle); }
+        auto play() const noexcept { CheckHandle; return WrapALAudioEngine.ac_play(m_handle); }
         // stop this clip
-        auto stop() const noexcept { CheckHandle; return AudioEngine.ac_stop(m_handle); }
+        auto stop() const noexcept { CheckHandle; return WrapALAudioEngine.ac_stop(m_handle); }
         // Pause this clip
-        auto pause() const noexcept { CheckHandle; return AudioEngine.ac_pause(m_handle); }
+        auto pause() const noexcept { CheckHandle; return WrapALAudioEngine.ac_pause(m_handle); }
         // tell this clip in sec.
-        auto tell() const noexcept { CheckHandle; return AudioEngine.ac_tell(m_handle); }
+        auto tell() const noexcept { CheckHandle; return WrapALAudioEngine.ac_tell(m_handle); }
         // get the duration in sec.
-        auto duration() const noexcept { CheckHandle; return AudioEngine.ac_duration(m_handle); }
+        auto duration() const noexcept { CheckHandle; return WrapALAudioEngine.ac_duration(m_handle); }
         // set/get this volume
-        auto volume(float volume = -1.f) const noexcept { CheckHandle; return AudioEngine.ac_volume(m_handle, volume); }
+        auto volume(float volume = -1.f) const noexcept { CheckHandle; return WrapALAudioEngine.ac_volume(m_handle, volume); }
         // set/get this ratio
-        auto ratio(float ratio = -1.f) const noexcept { CheckHandle; return AudioEngine.ac_ratio(m_handle, ratio); }
+        auto ratio(float ratio = -1.f) const noexcept { CheckHandle; return WrapALAudioEngine.ac_ratio(m_handle, ratio); }
         // Seek this clip in sec.
-        auto seek(float time) const noexcept { CheckHandle; return AudioEngine.ac_seek(m_handle, time); }
+        auto seek(float time) const noexcept { CheckHandle; return WrapALAudioEngine.ac_seek(m_handle, time); }
 #endif
     private:
         // m_handle for this
@@ -130,29 +130,29 @@ namespace WrapAL {
     // create new clip with audio stream wrapped function
     // if using streaming audio, do not release the stream, this clip will do it
     static inline auto CreateAudioClip(XALAudioStream* stream, AudioClipFlag flags = Flag_None, const char* group = "BGM") noexcept {
-        return std::move(CALAudioSourceClip(AudioEngine.CreateClip(stream, flags, group)));
+        return std::move(CALAudioSourceClip(WrapALAudioEngine.CreateClip(stream, flags, group)));
     }
     // create new clip with file name wrapped function
     static inline auto CreateAudioClip(AudioFormat f, const wchar_t* p, AudioClipFlag flags = Flag_None, const char* group = "BGM") noexcept {
-        return std::move(CALAudioSourceClip(AudioEngine.CreateClip(f, p, flags, group)));
+        return std::move(CALAudioSourceClip(WrapALAudioEngine.CreateClip(f, p, flags, group)));
     }
     // create new clip in memory wrapped function
     // for this, can't be in streaming mode
     static inline auto CreateAudioClip(const PCMFormat& format, const uint8_t* src, size_t size, AudioClipFlag flags = Flag_None, const char* group = "BGM") noexcept {
-        return std::move(CALAudioSourceClip(AudioEngine.CreateClip(format, src, size, flags, group)));
+        return std::move(CALAudioSourceClip(WrapALAudioEngine.CreateClip(format, src, size, flags, group)));
     }
     // create new clip in memory with move wrapped function
     // for this, can't be in streaming mode
     static inline auto CreateAudioClipMove(const PCMFormat& f, uint8_t*& p, size_t l, AudioClipFlag flags = Flag_None, const char* group = "BGM") noexcept {
-        return std::move(CALAudioSourceClip(AudioEngine.CreateClipMove(f, p, l, flags, group)));
+        return std::move(CALAudioSourceClip(WrapALAudioEngine.CreateClipMove(f, p, l, flags, group)));
     }
     // create new clip with audio stream wrapped function
     // if using streaming audio, do not release the stream, this clip will do it
     static inline auto CreateStreamingAudioClip(XALAudioStream* stream, AudioClipFlag flags = Flag_None, const char* group = "BGM") noexcept {
-        return std::move(CALAudioSourceClip(AudioEngine.CreateClip(stream, flags | WrapAL::Flag_StreamingReading, group)));
+        return std::move(CALAudioSourceClip(WrapALAudioEngine.CreateClip(stream, flags | WrapAL::Flag_StreamingReading, group)));
     }
     // create new clip with file name wrapped function
     static inline auto CreateStreamingAudioClip(AudioFormat f, const wchar_t* p, AudioClipFlag flags = Flag_None, const char* group = "BGM") noexcept {
-        return std::move(CALAudioSourceClip(AudioEngine.CreateClip(f, p, flags | WrapAL::Flag_StreamingReading, group)));
+        return std::move(CALAudioSourceClip(WrapALAudioEngine.CreateClip(f, p, flags | WrapAL::Flag_StreamingReading, group)));
     }
 }

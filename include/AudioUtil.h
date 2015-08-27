@@ -235,7 +235,7 @@ namespace WrapAL {
             tmp = tmp->next;
         }
         if (!ok) {
-            ::swprintf(buffer, ErrorInfoLength, L"Invalid Address @ 0x%p\n", stream);
+            std::swprintf(buffer, ErrorInfoLength, L"Invalid Address @ 0x%p\n", stream);
             ::MessageBoxW(nullptr, buffer, L"Error", MB_ICONERROR);
             assert(!"invalid address");
         }
@@ -243,7 +243,7 @@ namespace WrapAL {
         for (auto itr = m_ppFreeStack; itr < m_ppStackTop; ++itr) {
             // repeated?
             if (stream == static_cast<void*>(*itr)) {
-                ::swprintf(buffer, ErrorInfoLength, L"Address @ 0x%p, had been freed\n", stream);
+                std::swprintf(buffer, ErrorInfoLength, L"Address @ 0x%p, had been freed\n", stream);
                 ::MessageBoxW(nullptr, buffer, L"Error", MB_ICONERROR);
                 assert(!"address had been freed");
                 break;

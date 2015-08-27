@@ -17,7 +17,7 @@ int main() {
     } config;
     // Initialize COM Interface
     if (SUCCEEDED(::CoInitialize(nullptr))) {
-        // Initialize WrapAL AudioEngine
+        // Initialize WrapAL WrapALAudioEngine
         if (SUCCEEDED(AudioEngine.Initialize(&config))) {
             // create audio clip
             auto clip = WrapAL::CreateAudioClip(
@@ -38,7 +38,7 @@ int main() {
             // destroy clip(optional)
             //clip.Destroy();
 
-            // Uninitialize WrapAL AudioEngine
+            // Uninitialize WrapAL WrapALAudioEngine
             AudioEngine.UnInitialize();
         }
         // Uninitialize the COM Interface

@@ -2,7 +2,7 @@
 Wrapped Audio Library, to make easier to play audio
 
 ####Current Version : 0.2.0-pre
-(Version History)[./VersionHistory.md]
+[Version History](./VersionHistory.md)  
 
 ##Document
 - [so easy~](./doc/doc.md)
@@ -16,9 +16,16 @@ Wrapped Audio Library, to make easier to play audio
 1. for visual studio:  
   - open the vcproject and build it
 2. for mingw-w64(WrapAL need some dxsdk/winsdk headers)  
-  - use rakefile to build, you may download ruby/rake at first,  
-  - A. modify the build_config.rb  
-  - B. rake it  
+  - use rakefile to build, you may download ruby/rake at first
+  - modify the build_config.rb  
+  - rake it 
+  
+##How to configure WrapAL
+  - you should modify [wrapalconf.h](./include/wrapalconf.h) to configure WrapAL
+  - macro: 
+  - constant:
+  - runtime message:
+  - locker:
 
 ##About the libmpg123
 Because of the LGPL, you should build the libmpg123.dll by youself,  

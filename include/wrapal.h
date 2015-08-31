@@ -42,23 +42,25 @@ Version: 0.0.1
 #include <cstdlib>
 // default define
 #include <cstddef>
-// for using [u]intXX_t
+// for [u]intXX_t
 #include <cstdint>
-// for using assert
+// for assert
 #include <cassert>
-// for using FILE
+// for FILE
 #include <cstdio>
-// for using atomic for thread safety
+// for atomic for thread safety
 #include <atomic>
-// for using replacement new
+// for replacement new
 #include <memory>
+
+// include the config
+#include "wrapalconf.h"
 
 // XAudio
 //#include <xaudio2.h>
 #include "XAudio2_diy.h"
+#include "X3DAudio_diy.h"
 
-// include the config
-#include "wrapalconf.h"
 
 // wrapal namespace
 namespace WrapAL {
@@ -89,16 +91,31 @@ namespace WrapAL {
         // number of channels (i.e. mono, stereo...)
         uint16_t    nChannels;
     };
+    // CALAudioEngine
+    class CALAudioEngine;
     // infomation for audio device
     struct AudioDeviceInfo {
+        // friend class
+        friend class CALAudioEngine;
+#ifdef WRAPAL_XAUDIO2_7_SUPPORT
+        // name
+        const wchar_t* Name() const noexcept { return details.DisplayName; }
+        // id
+        const wchar_t* Id() const noexcept { return details.DeviceID; }
+    private:
+        // details
+        XAUDIO2_DEVICE_DETAILS details;
+#else
         // name
         const wchar_t* Name() const noexcept { return name.pwszVal; }
         // id
         const wchar_t* Id() const noexcept { return id.pwszVal; }
+    private:
         // name of device
         PROPVARIANT name;
         // id of device
         PROPVARIANT id;
+#endif
     };
     // audio format
     enum class AudioFormat : uint32_t {
@@ -122,8 +139,12 @@ namespace WrapAL {
         Flag_All = ~Flag_None,
         // streaming reading from stream
         Flag_StreamingReading = 1 << 0,
-        // loop forever
+        // loop forever, cannot combine with Flag_AutoDestroyEOP
         Flag_LoopInfinite = 1 << 1,
+        // [AUTO-TASK] auto destroy if end of playing
+        Flag_AutoDestroyEOP = 1 << 2,
+        // 3d audio
+        Flag_3D = 1 << 3,
     };
     // operator for AudioClipFlag
     inline auto operator |(AudioClipFlag a, AudioClipFlag b) noexcept   {
@@ -132,6 +153,10 @@ namespace WrapAL {
     // operator for AudioClipFlag
     inline auto&operator |=(AudioClipFlag& a, AudioClipFlag b) noexcept {
         return a = a | b;
+    }
+    template<typename T>
+    auto LoadProc(T& pointer, HMODULE dll, const char* name) noexcept {
+        pointer = reinterpret_cast<T>(::GetProcAddress(dll, name));
     }
     // safe release interface
     template<class T>

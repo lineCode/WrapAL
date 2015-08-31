@@ -16,8 +16,6 @@ WRAPAL_DEFINE_GUID(IID_IAudioClient, 0x1cb9ad4c, 0xdbfa, 0x4c32, 0xb1, 0x78, 0xc
 WRAPAL_DEFINE_GUID(IID_IAudioCaptureClient, 0xc8adbd64, 0xe71e, 0x48a0, 0xa4, 0xde, 0x18, 0x5c, 0x39, 0x5c, 0xd3, 0x17);
 */
 
-#define INITGUID
-
 // WrapAL 命名空间
 namespace WrapAL {
     // CLSID_MMDeviceEnumerator
@@ -32,7 +30,14 @@ namespace WrapAL {
     // PKEY_AudioEndpoint_Path
     WRAPAL_DEFINE_PROPERTYKEY(PKEY_AudioEndpoint_Path, 0x9c119480, 0xddc2, 0x4954, 
         0xa1, 0x50, 0x5b, 0xd2, 0x40, 0xd4, 0x54, 0xad, 1);
+#ifdef WRAPAL_XAUDIO2_7_SUPPORT
+    // CLSID_XAudio2
+    WRAPAL_DEFINE_GUID(CLSID_XAudio2, 0x5a508685, 0xa254, 0x4fba, 0x9b, 0x82, 0x9a, 0x24, 0xb0, 0x03, 0x06, 0xaf);
+    // IID_IXAudio2
+    WRAPAL_DEFINE_GUID(IID_IXAudio2, 0x8bcf1f58, 0x9fe7, 0x4583, 0x8a, 0xc6, 0xe2, 0xad, 0xc4, 0x65, 0xc8, 0xbb);
+#endif
 }
+
 
 // 音频处理开始
 void WrapAL::AudioSourceClipReal::OnVoiceProcessingPassStart(UINT32 SamplesRequired) noexcept {
@@ -52,15 +57,15 @@ void WrapAL::AudioSourceClipReal::OnVoiceProcessingPassStart(UINT32 SamplesRequi
 
 // 音频流结束
 void WrapAL::AudioSourceClipReal::OnStreamEnd() noexcept {
-    // 流模式？
-    if (this->flags & WrapAL::Flag_StreamingReading) {
-        // 无线轮回?
-        if (this->flags & WrapAL::Flag_LoopInfinite) {
-            this->stream->Seek(0);
-        }
-        else {
-            this->playing = false;
-        }
+    // 自动释放?
+    if (this->flags & WrapAL::Flag_AutoDestroyEOP) {
+        this->playing = false;
+        return;
+    }
+    // 流模式 + 无线轮回
+    if (this->flags & (WrapAL::Flag_StreamingReading | WrapAL::Flag_LoopInfinite)) {
+        // = 重置
+        this->stream->Seek(0);
     }
     else {
         this->playing = false;
@@ -69,7 +74,7 @@ void WrapAL::AudioSourceClipReal::OnStreamEnd() noexcept {
 
 
 // 缓冲区结束
-void WrapAL::AudioSourceClipReal::OnBufferEnd(void * pBufferContext) noexcept {
+void WrapAL::AudioSourceClipReal::OnBufferEnd(void* pBufferContext) noexcept {
     end_of_buffer = true; 
     if (this->flags & WrapAL::Flag_StreamingReading) {
         // todo
@@ -113,10 +118,6 @@ auto WrapAL::AudioSourceClipReal::LoadAndBufferData(int id) noexcept ->HRESULT {
 }
 
 
-// 载入函数地址
-#define LoadFunction(a, b, c) a = reinterpret_cast<decltype(a)>(::GetProcAddress(c, #b))
-// 载入
-
 // 初始化
 auto WrapAL::CALAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESULT {
     wchar_t error[ErrorInfoLength]; error[0] = 0;
@@ -129,25 +130,81 @@ auto WrapAL::CALAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESUL
 #endif
     assert(this->configure && "none configure");
     if (!this->configure) hr = E_INVALIDARG;
-    // 载入XAudio动态链接库
+    // 载入 XAudio2 动态链接库
     if (SUCCEEDED(hr)) {
-        m_hXAudio2 = ::LoadLibraryW(L"XAudio2_8.dll");
-        if (m_hXAudio2) {
-            LoadFunction(WrapAL::CALAudioEngine::XAudio2Create, XAudio2Create, m_hXAudio2);
+#ifdef WRAPAL_XAUDIO2_7_SUPPORT
+        const auto* const file_name = L"XAudio2_7.dll";
+        if ((m_hXAudio2 = ::LoadLibraryW(file_name))) {
+            // 创建
+            CALAudioEngine::XAudio2Create = [](IXAudio2** ppXAudio2, UINT32 Flags, XAUDIO2_PROCESSOR XAudio2Processor) noexcept {
+                IXAudio2* pXAudio2 = nullptr;
+                // 创建实例
+                HRESULT hr = ::CoCreateInstance(
+                    CLSID_XAudio2,
+                    NULL, 
+                    CLSCTX_INPROC_SERVER, 
+                    IID_IXAudio2, 
+                    reinterpret_cast<void**>(&pXAudio2)
+                    );
+                // 初始化
+                if (SUCCEEDED(hr)) {
+                    hr = pXAudio2->Initialize(Flags, XAudio2Processor);
+                    // OK!
+                    if (SUCCEEDED(hr)) {
+                        *ppXAudio2 = pXAudio2;
+                    }
+                    else {
+                        pXAudio2->Release();
+                    }
+                }
+                return hr;
+            };
+#else
+        const auto* const file_name = L"XAudio2_8.dll";
+        if ((m_hXAudio2 = ::LoadLibraryW(file_name))) {
+            WrapAL::LoadProc(XAudio2Create, m_hXAudio2, "XAudio2Create");
+            WrapAL::LoadProc(X3DAudioInitialize, m_hXAudio2, "X3DAudioInitialize");
+#endif
         }
         else {
             hr = E_FAIL;
             std::swprintf(error, ErrorInfoLength,
-                L"<%S>:libmpg123 library not found ---> %ls",
-                __FUNCTION__, L"XAudio2_8.dll"
+                L"<%S>: library not found ---> %ls",
+                __FUNCTION__, file_name
                 );
         }
+    }
+    // 检查是否自动刷新
+    if (SUCCEEDED(hr) && this->configure->IsAutoUpdate()) {
+#ifdef WRAPAL_SAME_THREAD_UPDATE
+        assert(!"you must undef 'WRAPAL_SAME_THREAD_UPDATE' if want auto-update");
+        hr = E_ABORT;
+#else
+
+#endif
+        assert(!"noimpl");
     }
     // 创建 XAudio2 引擎
     if (SUCCEEDED(hr)) {
         assert(!m_pXAudio2Engine && "m_pXAudio2 must be null");
         hr = CALAudioEngine::XAudio2Create(&m_pXAudio2Engine, 0, XAUDIO2_DEFAULT_PROCESSOR);
     }
+    WrapAL::AudioDeviceInfo devices_info[WrapAL::DeviceMaxCount];
+#ifdef WRAPAL_XAUDIO2_7_SUPPORT
+    UINT32 device_count = 0;
+    // 获取数量设备
+    if (SUCCEEDED(hr)) {
+        hr = m_pXAudio2Engine->GetDeviceCount(&device_count);
+    }
+    // 获取设备信息
+    if (SUCCEEDED(hr)) {
+        for (UINT32 i = 0; i < device_count; ++i) {
+            if (SUCCEEDED(hr)) {
+                hr = m_pXAudio2Engine->GetDeviceDetails(i, &devices_info[i].details);
+            }
+        }
+    }
+#else
     // 枚举输出
     IMMDeviceEnumerator* enumerator = nullptr;
     IMMDeviceCollection * devices = nullptr;
@@ -170,7 +227,6 @@ auto WrapAL::CALAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESUL
     if (SUCCEEDED(hr)) {
         hr = devices->GetCount(&device_count);
     }
-    WrapAL::AudioDeviceInfo devices_info[WrapAL::DeviceMaxCount];
     // 获取设备信息
     if (SUCCEEDED(hr)) {
         // 太大
@@ -210,6 +266,7 @@ auto WrapAL::CALAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESUL
             WrapAL::SafeRelease(device);
         }
     }
+#endif
     // 创建 Mastering Voice 接口
     if (SUCCEEDED(hr)) {
         // 选择设备
@@ -236,9 +293,34 @@ auto WrapAL::CALAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESUL
             XAUDIO2_DEFAULT_CHANNELS,
             XAUDIO2_DEFAULT_SAMPLERATE,
             0, 
+#ifdef WRAPAL_XAUDIO2_7_SUPPORT
+            ((index >= device_count) ? 0 : index),
+#else
             device_id,
+#endif
             nullptr
             );
+        device_id = device_namme = nullptr;
+    }
+#ifndef WRAPAL_XAUDIO2_7_SUPPORT
+    // 扫尾
+    for (UINT i = 0; i < device_count; ++i) {
+        ::PropVariantClear(&devices_info[i].id);
+        ::PropVariantClear(&devices_info[i].name);
+    }
+    WrapAL::SafeRelease(enumerator);
+    WrapAL::SafeRelease(devices);
+#endif
+    // 初始化X3DAudio
+    if (SUCCEEDED(hr)) {
+        /*DWORD mask;
+        X3DAUDIO_HANDLE instance;
+        // 获取通道掩码
+        hr = m_pMasterVoice->GetChannelMask(&mask);
+        // 初始化 X3D
+        if (SUCCEEDED(hr)) {
+            hr = CALAudioEngine::X3DAudioInitialize(mask, X3DAUDIO_SPEED_OF_SOUND, instance);
+        }*/
     }
     // 获取libmpg123.dll句柄
     if (SUCCEEDED(hr)) {
@@ -266,13 +348,6 @@ auto WrapAL::CALAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESUL
             __FUNCTION__, hr
             );
     }
-    // 扫尾
-    for (UINT i = 0; i < device_count; ++i) {
-        ::PropVariantClear(&devices_info[i].id);
-        ::PropVariantClear(&devices_info[i].name);
-    }
-    WrapAL::SafeRelease(enumerator);
-    WrapAL::SafeRelease(devices);
     // 输出错误
     if(error[0] && this->configure)  this->configure->OutputError(error);
     assert(SUCCEEDED(hr));
@@ -292,14 +367,10 @@ void WrapAL::CALAudioEngine::UnInitialize() noexcept {
     });
     assert(m_listAC.size() == 0);
 #else
-    m_acAllocator.Release([](AudioSourceClipReal* real) {
-        real->Release();
-    });
+    m_acAllocator.Release([](AudioSourceClipReal* real) { real->Release(); });
 #endif
     // 释放
-    for (auto& group : m_aGroup) {
-        group.Release();
-    }
+    for (auto& group : m_aGroup) { group.Release(); }
     WrapAL::SafeDestroyVoice(m_pMasterVoice);
     WrapAL::SafeRelease(m_pXAudio2Engine);
     WrapAL::SafeRelease(force_cast(this->configure));
@@ -344,16 +415,7 @@ auto WrapAL::CALAudioEngine::CreateClip(XALAudioStream* stream, AudioClipFlag fl
                 auto hr = S_OK;
                 // 创建source
                 if (SUCCEEDED(hr)) {
-                    hr = m_pXAudio2Engine->CreateSourceVoice(
-                        &real->source_voice,
-                        &real->wave,
-                        0, XAUDIO2_DEFAULT_FREQ_RATIO,
-                        real, nullptr, nullptr
-                        );
-                }
-                // 设置组别
-                if (SUCCEEDED(hr)) {
-                    hr = this->set_clip_group(*real, group_name);
+                    hr = this->create_source_voice(*real, group_name);
                 }
                 // 输入数据
                 for (unsigned int i = 0; i < StreamingBufferCount-1; ++i) {
@@ -458,16 +520,7 @@ auto WrapAL::CALAudioEngine::CreateClipMove(const PCMFormat& format, uint8_t*& b
         auto hr = S_OK;
         // 创建source
         if (SUCCEEDED(hr)) {
-            hr = m_pXAudio2Engine->CreateSourceVoice(
-                &real->source_voice,
-                &real->wave,
-                0, XAUDIO2_DEFAULT_FREQ_RATIO,
-                real, nullptr, nullptr
-                );
-        }
-        // 设置组别
-        if (SUCCEEDED(hr)) {
-            hr = this->set_clip_group(*real, group_name);
+            hr = this->create_source_voice(*real, group_name);
         }
         // 提交缓冲区
         if (SUCCEEDED(hr)) {
@@ -503,10 +556,9 @@ auto WrapAL::CALAudioEngine::CreateClip(const PCMFormat & format, const uint8_t*
     return ALInvalidHandle;
 }
 
-// 摧毁指定片段
-bool WrapAL::CALAudioEngine::ac_destroy(ALHandle id) noexcept {
-    assert(id != ALInvalidHandle);
-    auto clip = reinterpret_cast<AudioSourceClipReal*>(id);
+// 摧毁指定片段(正式)
+void WrapAL::CALAudioEngine::destroy_clip_real(AudioSourceClipReal* clip) noexcept {
+    assert(clip && "bad argument");
     assert(clip->source_voice);
     if (clip->source_voice) {
         clip->Release();
@@ -515,6 +567,15 @@ bool WrapAL::CALAudioEngine::ac_destroy(ALHandle id) noexcept {
 #ifdef _DEBUG
     m_listAC.remove(clip);
 #endif
+}
+
+// 摧毁指定片段
+bool WrapAL::CALAudioEngine::ac_destroy(ALHandle id) noexcept {
+    assert(id != ALInvalidHandle);
+    auto clip = reinterpret_cast<AudioSourceClipReal*>(id);
+    // 自动释放?
+    assert(!(clip->flags & Flag_AutoDestroyEOP) && "cannot destroy clip with Flag_AutoDestroyEOP");
+    this->destroy_clip_real(clip);
     return true;
 }
 
@@ -667,6 +728,35 @@ auto WrapAL::CALAudioEngine::ac_ratio(ALHandle id, float ratio) noexcept -> floa
 }
 
 
+// 利用文件重建片段
+bool WrapAL::CALAudioEngine::ac_recreate(ALHandle clip_id, const wchar_t * file_name) noexcept {
+
+    return false;
+}
+
+// 利用流重建片段
+bool WrapAL::CALAudioEngine::ac_recreate(ALHandle clip_id, XALAudioStream* stream) noexcept {
+
+    return false;
+}
+
+// 利用缓冲片段重建片段
+bool WrapAL::CALAudioEngine::ac_recreate(ALHandle id, uint8_t* buf, size_t len) noexcept {
+    auto new_buffer = reinterpret_cast<uint8_t*>(::malloc(len));
+    if (new_buffer) {
+        ::memcpy(new_buffer, buf, len);
+        return this->ac_recreate_move(id, new_buffer, len);
+    }
+    return false;
+}
+
+// 利用可移动缓冲片段重建片段
+bool WrapAL::CALAudioEngine::ac_recreate_move(ALHandle id, uint8_t*& buf, size_t len) noexcept {
+
+    return false;
+}
+
+
 // 设置或获取总音量
 auto WrapAL::CALAudioEngine::Volume(float volume) noexcept -> float {
     assert(m_pMasterVoice);
@@ -779,3 +869,27 @@ auto WrapAL::CALAudioEngine::set_clip_group(AudioSourceClipReal& clip, const cha
     return hr;
 }
 
+// 创建源音
+auto WrapAL::CALAudioEngine::create_source_voice(
+    AudioSourceClipReal& clip, const char* group_name) noexcept->HRESULT {
+    HRESULT hr = S_OK;
+    // 创建源音
+    if (SUCCEEDED(hr)) {
+        hr = m_pXAudio2Engine->CreateSourceVoice(
+            &clip.source_voice,
+            &clip.wave,
+            0, XAUDIO2_DEFAULT_FREQ_RATIO,
+            &clip, nullptr, nullptr
+            );
+    }
+    // 设置组别
+    if (SUCCEEDED(hr)) {
+        hr = this->set_clip_group(clip, group_name);
+    }
+    return hr;
+}
+
+// 刷新
+void WrapAL::CALAudioEngine::Update() noexcept {
+
+}

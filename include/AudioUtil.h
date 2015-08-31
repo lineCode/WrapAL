@@ -89,6 +89,36 @@ namespace WrapAL {
         // mpg123 : replace reader handle
         static decltype(&::mpg123_replace_reader_handle) mpg123_replace_reader_handle;
     };
+    // small buffer
+    template<typename T, size_t LEN>
+    class SmallBuffer {
+    public:
+        // ctor
+        SmallBuffer() noexcept = default;
+        // copy ctor
+        SmallBuffer(const SmallBuffer&) = delete;
+        // move ctor
+        SmallBuffer(SmallBuffer&&) = delete;
+        // dtor
+        ~SmallBuffer() noexcept { 
+            if (m_pData && m_pData != m_buffer) 
+                ::free(m_pData); 
+            m_pData = nullptr; 
+        }
+        // init
+        auto Init(size_t length) {
+            assert(!m_pData && "call Init() only once");
+            m_pData = (length > LEN) ? reinterpret_cast<T*>(::malloc(sizeof(T)*length)) : m_buffer;
+            assert(m_pData && "out of memory");
+        }
+        // get data
+        auto GetData() const noexcept { assert(m_pData); return m_pData; }
+    private:
+        // buffer
+        T*          m_pData = nullptr;
+        // fixed buffer
+        T           m_buffer[LEN];
+    };
 #ifdef WRAPAL_INCLUDE_DEFAULT_CONFIGURE
     // default al configure
     class CALDefConfigure : public IALConfigure {
@@ -103,6 +133,8 @@ namespace WrapAL {
     public: // infterface impl for IALConfigure
         // release this
         virtual auto Release() noexcept ->int32_t override { return 1; }
+        // auto update? return true if you want and must undef "WRAPAL_SAME_THREAD_UPDATE"
+        virtual auto IsAutoUpdate() noexcept ->bool override { return false; };
         // choose device, return index, if out of range, choose default device
         virtual auto ChooseDevice(const AudioDeviceInfo [/*count*/], UINT count/* <= DeviceMaxCount*/) noexcept ->UINT override { return count; };
         // create audio stream from file
@@ -111,6 +143,8 @@ namespace WrapAL {
         virtual auto GetLastErrorInfo(wchar_t info[/*ErrorInfoLength*/])noexcept->bool override;
         // output error infomation
         virtual auto OutputError(const wchar_t* err) noexcept->void override { ::MessageBoxW(nullptr, err, L"Error!", MB_ICONERROR); }
+        // get message in runtime
+        virtual auto GetRuntimeMessage(RuntimeMessage msg)noexcept->const wchar_t* override { return BuildInMessageString[msg]; }
         // get the "libmpg123.dll" path on windows
         virtual auto GetLibmpg123Path(wchar_t path[/*MAX_PATH*/])noexcept->void;
     private:

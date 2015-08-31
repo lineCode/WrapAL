@@ -145,6 +145,7 @@
     <ClInclude Include="..\..\include\AudioUtil.h" />
     <ClInclude Include="..\..\include\wrapal.h" />
     <ClInclude Include="..\..\include\wrapalconf.h" />
+    <ClInclude Include="..\..\include\X3DAudio_diy.h" />
     <ClInclude Include="..\..\include\XAudio2_diy.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

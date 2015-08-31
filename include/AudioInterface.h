@@ -68,6 +68,8 @@ namespace WrapAL {
     // Audio Configure
     class WRAPAL_NOVTABLE IALConfigure : public IALInterface {
     public:
+        // auto update? return true if you want and must undef "WRAPAL_SAME_THREAD_UPDATE"
+        virtual auto IsAutoUpdate() noexcept ->bool = 0;
         // choose device, return index, if out of range, choose default device
         virtual auto ChooseDevice(const AudioDeviceInfo devices[/*count*/], UINT count/* <= DeviceMaxCount*/) noexcept ->UINT = 0;
         // create audio stream from file
@@ -76,6 +78,8 @@ namespace WrapAL {
         virtual auto GetLastErrorInfo(wchar_t info[/*ErrorInfoLength*/])noexcept->bool = 0;
         // output error infomation
         virtual auto OutputError(const wchar_t*)noexcept->void = 0;
+        // get message in runtime
+        virtual auto GetRuntimeMessage(RuntimeMessage msg)noexcept->const wchar_t* = 0;
         // get the "libmpg123.dll" path
         virtual auto GetLibmpg123Path(wchar_t path[/*MAX_PATH*/])noexcept->void = 0;
     };

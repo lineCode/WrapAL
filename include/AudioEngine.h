@@ -53,7 +53,9 @@ namespace WrapAL {
         // dtor
         ~CALAudioEngine() noexcept { if(this->configure) this->UnInitialize(); }
         // get version
-        auto GetVersion() const noexcept -> const char* { return "0.1.3" ; }
+        auto GetVersion() const noexcept -> const char* { return "0.2.0-pre" ; }
+        // update audio engine if you want to do some auto-task, call this more than 20Hz please
+        void Update() noexcept;
     public: // Audio Clip
         // create new clip with audio stream
         // if using streaming audio, do not release the stream, this clip will do it
@@ -65,6 +67,14 @@ namespace WrapAL {
         // create new clip in memory
         auto CreateClip(const PCMFormat& format, const uint8_t* src, size_t size, AudioClipFlag, const char* group_name) noexcept->ALHandle;
     private: // Audio Clip
+        // recreate with file
+        bool ac_recreate(ALHandle clip_id, const wchar_t* file_name) noexcept;
+        // recreate with stream
+        bool ac_recreate(ALHandle clip_id, XALAudioStream* stream) noexcept;
+        // recreate with memory: same format with new buffer!
+        bool ac_recreate(ALHandle clip_id, uint8_t* buffer, size_t length) noexcept;
+        // recreate with move-able memory : same format with new buffer!
+        bool ac_recreate_move(ALHandle clip_id, uint8_t*& buffer, size_t length) noexcept;
         // destroy the clip
         bool ac_destroy(ALHandle clip_id) noexcept;
         // play the clip
@@ -94,14 +104,21 @@ namespace WrapAL {
         auto ag_name(ALHandle group_id) const noexcept -> const char*;
         // get/set group volume
         auto ag_volume(ALHandle group_id, float volume = -1.f) noexcept -> float;
+    private:
         // find group by group name
         auto find_group(const char* name) noexcept->AudioSourceGroupReal*;
+        // real destroy the clip
+        void destroy_clip_real(AudioSourceClipReal* clip) noexcept;
         // set clip group
         auto set_clip_group(AudioSourceClipReal& clip, const char* group) noexcept->HRESULT;
     public: // XAudio2 API
         // XAudio2Create
         static decltype(&::XAudio2Create) XAudio2Create;
+        // X3DAudioInitialize
+        static decltype(&::X3DAudioInitialize) X3DAudioInitialize;
     private: // XAudio2 API
+        // create source void
+        auto create_source_voice(AudioSourceClipReal& clip, const char* group_name) noexcept->HRESULT;
         // XAudio2
         HMODULE                     m_hXAudio2 = nullptr;
         // XAudio2 interface

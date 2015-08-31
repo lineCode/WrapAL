@@ -24,7 +24,8 @@ int main() {
                 WrapAL::AudioFormat::Format_OggVorbis,
                 //L"NationalAnthemOfRussia.ogg",
                 L"Sakura.ogg",
-                WrapAL::Flag_StreamingReading | WrapAL::Flag_LoopInfinite,
+                WrapAL::Flag_StreamingReading | WrapAL::Flag_AutoDestroyEOP
+                /*| WrapAL::Flag_LoopInfinite*/,
                 "BGM"
                 );
             auto dur = clip.Duration();

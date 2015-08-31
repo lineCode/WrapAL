@@ -579,25 +579,22 @@ auto WrapAL::CALDefConfigure::GetLibmpg123Path(wchar_t path[]) noexcept -> void 
 
 #endif
 
-// 载入
-#define LoadFunction(a, b, c) a = reinterpret_cast<decltype(a)>(::GetProcAddress(c, #b))
-
 // 初始化
 void WrapAL::Mpg123::Init(HMODULE hModule) noexcept {
     assert(hModule); if (!hModule) return;
-    LoadFunction(WrapAL::Mpg123::mpg123_init, mpg123_init, hModule);
-    LoadFunction(WrapAL::Mpg123::mpg123_exit, mpg123_exit, hModule);
-    LoadFunction(WrapAL::Mpg123::mpg123_new, mpg123_new, hModule);
-    LoadFunction(WrapAL::Mpg123::mpg123_delete, mpg123_delete, hModule);
-    LoadFunction(WrapAL::Mpg123::mpg123_read, mpg123_read, hModule);
-    LoadFunction(WrapAL::Mpg123::mpg123_seek, mpg123_seek, hModule);
-    LoadFunction(WrapAL::Mpg123::mpg123_tell, mpg123_tell, hModule);
-    LoadFunction(WrapAL::Mpg123::mpg123_length, mpg123_length, hModule);
-    LoadFunction(WrapAL::Mpg123::mpg123_format, mpg123_format, hModule);
-    LoadFunction(WrapAL::Mpg123::mpg123_getformat, mpg123_getformat, hModule);
-    LoadFunction(WrapAL::Mpg123::mpg123_format_none, mpg123_format_none, hModule);
-    LoadFunction(WrapAL::Mpg123::mpg123_open_handle, mpg123_open_handle, hModule);
-    LoadFunction(WrapAL::Mpg123::mpg123_replace_reader_handle, mpg123_replace_reader_handle, hModule);
+    WrapAL::LoadProc(Mpg123::mpg123_init, hModule, "mpg123_init");
+    WrapAL::LoadProc(Mpg123::mpg123_exit, hModule, "mpg123_exit");
+    WrapAL::LoadProc(Mpg123::mpg123_new, hModule, "mpg123_new");
+    WrapAL::LoadProc(Mpg123::mpg123_delete, hModule, "mpg123_delete");
+    WrapAL::LoadProc(Mpg123::mpg123_read, hModule, "mpg123_read");
+    WrapAL::LoadProc(Mpg123::mpg123_seek, hModule, "mpg123_seek");
+    WrapAL::LoadProc(Mpg123::mpg123_tell, hModule, "mpg123_tell");
+    WrapAL::LoadProc(Mpg123::mpg123_length, hModule, "mpg123_length");
+    WrapAL::LoadProc(Mpg123::mpg123_format, hModule, "mpg123_format");
+    WrapAL::LoadProc(Mpg123::mpg123_getformat, hModule, "mpg123_getformat");
+    WrapAL::LoadProc(Mpg123::mpg123_format_none, hModule, "mpg123_format_none");
+    WrapAL::LoadProc(Mpg123::mpg123_open_handle, hModule, "mpg123_open_handle");
+    WrapAL::LoadProc(Mpg123::mpg123_replace_reader_handle, hModule, "mpg123_replace_reader_handle");
 }
 
 
@@ -617,6 +614,7 @@ InitStaticVar(WrapAL::Mpg123::mpg123_format_none);
 InitStaticVar(WrapAL::Mpg123::mpg123_open_handle);
 InitStaticVar(WrapAL::Mpg123::mpg123_replace_reader_handle);
 InitStaticVar(WrapAL::CALAudioEngine::XAudio2Create);
+InitStaticVar(WrapAL::CALAudioEngine::X3DAudioInitialize);
 
 
 

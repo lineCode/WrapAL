@@ -52,5 +52,8 @@
     <ClInclude Include="..\..\include\AudioUtil.h">
       <Filter>Header Files\Core</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\X3DAudio_diy.h">
+      <Filter>Header Files\diy_header</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -33,6 +33,8 @@ namespace WrapAL {
 #ifdef WRAPAL_XAUDIO2_7_SUPPORT
     // CLSID_XAudio2
     WRAPAL_DEFINE_GUID(CLSID_XAudio2, 0x5a508685, 0xa254, 0x4fba, 0x9b, 0x82, 0x9a, 0x24, 0xb0, 0x03, 0x06, 0xaf);
+    // CLSID_XAudio2Debug
+    WRAPAL_DEFINE_GUID(CLSID_XAudio2Debug, 0xdb05ea35, 0x0329, 0x4d4b, 0xa5, 0x3a, 0x6d, 0xea, 0xd0, 0x3d, 0x38, 0x52);
     // IID_IXAudio2
     WRAPAL_DEFINE_GUID(IID_IXAudio2, 0x8bcf1f58, 0x9fe7, 0x4583, 0x8a, 0xc6, 0xe2, 0xad, 0xc4, 0x65, 0xc8, 0xbb);
 #endif
@@ -130,25 +132,34 @@ auto WrapAL::CALAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESUL
 #endif
     assert(this->configure && "none configure");
     if (!this->configure) hr = E_INVALIDARG;
+    // 提前声明
+    WrapAL::AudioDeviceInfo devices_info[WrapAL::DeviceMaxCount];
+    UINT create_flags = 0;
+    UINT32 device_count = 0;
     // 载入 XAudio2 动态链接库
     if (SUCCEEDED(hr)) {
 #ifdef WRAPAL_XAUDIO2_7_SUPPORT
-        const auto* const file_name = L"XAudio2_7.dll";
+#ifdef _DEBUG
+        create_flags |= XAUDIO2_DEBUG_ENGINE;
+#endif
+        const auto* file_name = L"XAudio2_7.dll";
         if ((m_hXAudio2 = ::LoadLibraryW(file_name))) {
+            // 设置API等级
+            m_lvAPI = APILevel::Level_XAudio2_7;
             // 创建
-            CALAudioEngine::XAudio2Create = [](IXAudio2** ppXAudio2, UINT32 Flags, XAUDIO2_PROCESSOR XAudio2Processor) noexcept {
+            CALAudioEngine::XAudio2Create = [](IXAudio2** ppXAudio2, UINT32 flags, XAUDIO2_PROCESSOR XAudio2Processor) noexcept {
                 IXAudio2* pXAudio2 = nullptr;
                 // 创建实例
                 HRESULT hr = ::CoCreateInstance(
-                    CLSID_XAudio2,
-                    NULL, 
-                    CLSCTX_INPROC_SERVER, 
-                    IID_IXAudio2, 
+                    (flags & XAUDIO2_DEBUG_ENGINE) ? CLSID_XAudio2Debug : CLSID_XAudio2,
+                    nullptr,
+                    CLSCTX_INPROC_SERVER,
+                    IID_IXAudio2,
                     reinterpret_cast<void**>(&pXAudio2)
                     );
                 // 初始化
                 if (SUCCEEDED(hr)) {
-                    hr = pXAudio2->Initialize(Flags, XAudio2Processor);
+                    hr = pXAudio2->Initialize(flags, XAudio2Processor);
                     // OK!
                     if (SUCCEEDED(hr)) {
                         *ppXAudio2 = pXAudio2;
@@ -159,13 +170,32 @@ auto WrapAL::CALAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESUL
                 }
                 return hr;
             };
+        }
 #else
-        const auto* const file_name = L"XAudio2_8.dll";
+        // XAudio2.9
+#ifdef WRAPAL_DEBUG_XAUDIO2_9
+        const auto* file_name = L"XAudio2_9D.dll";
         if ((m_hXAudio2 = ::LoadLibraryW(file_name))) {
+            m_lvAPI = APILevel::Level_XAudio2_9;
+            create_flags |= XAUDIO2_9_DEBUG_ENGINE;
+        }
+#else
+        const auto* file_name = L"XAudio2_9.dll";
+        if ((m_hXAudio2 = ::LoadLibraryW(file_name))) {
+            m_lvAPI = APILevel::Level_XAudio2_9;
+        }
+#endif
+        // XAudio2.8
+        else if ((m_hXAudio2 = ::LoadLibraryW((file_name = L"XAudio2_8.dll")))) {
+            m_lvAPI = APILevel::Level_XAudio2_8;
+        }
+        // 有效
+        if (m_hXAudio2) {
             WrapAL::LoadProc(XAudio2Create, m_hXAudio2, "XAudio2Create");
             WrapAL::LoadProc(X3DAudioInitialize, m_hXAudio2, "X3DAudioInitialize");
-#endif
         }
+#endif
+        // 没有找到
         else {
             hr = E_FAIL;
             std::swprintf(error, ErrorInfoLength,
@@ -189,9 +219,7 @@ auto WrapAL::CALAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESUL
         assert(!m_pXAudio2Engine && "m_pXAudio2 must be null");
         hr = CALAudioEngine::XAudio2Create(&m_pXAudio2Engine, 0, XAUDIO2_DEFAULT_PROCESSOR);
     }
-    WrapAL::AudioDeviceInfo devices_info[WrapAL::DeviceMaxCount];
 #ifdef WRAPAL_XAUDIO2_7_SUPPORT
-    UINT32 device_count = 0;
     // 获取数量设备
     if (SUCCEEDED(hr)) {
         hr = m_pXAudio2Engine->GetDeviceCount(&device_count);
@@ -208,7 +236,6 @@ auto WrapAL::CALAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESUL
     // 枚举输出
     IMMDeviceEnumerator* enumerator = nullptr;
     IMMDeviceCollection * devices = nullptr;
-    UINT device_count = 0;
     // 获取枚举器
     if (SUCCEEDED(hr)) {
         hr = ::CoCreateInstance(
@@ -292,7 +319,7 @@ auto WrapAL::CALAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESUL
             &m_pMasterVoice,
             XAUDIO2_DEFAULT_CHANNELS,
             XAUDIO2_DEFAULT_SAMPLERATE,
-            0, 
+            create_flags, 
 #ifdef WRAPAL_XAUDIO2_7_SUPPORT
             ((index >= device_count) ? 0 : index),
 #else

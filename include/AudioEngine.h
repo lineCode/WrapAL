@@ -33,6 +33,21 @@
 
 // wrapal namespace
 namespace WrapAL {
+    // API level
+    enum class APILevel : size_t {
+        // NO API
+        Level_Unknown = 0,
+        // XAudio ver2.7, user need install DirectX Runtime
+        Level_XAudio2_7,
+        // XAudio ver2.8, system component in Windows 8
+        Level_XAudio2_8,
+        // XAudio ver2.9, system component in Windows 10
+        Level_XAudio2_9,
+        // [invalid yet]Open Audio Lib, user need install openal-runtime
+        Level_OpenAL,
+        // [invalid yet]Direct Sound in early sdk
+        Level_DirectSound,
+    };
     // Audio Engine
     class CALAudioEngine {
         // audio clip pool
@@ -48,14 +63,20 @@ namespace WrapAL {
         auto Initialize(IALConfigure* config=nullptr) noexcept ->HRESULT;
         // un-init
         void UnInitialize() noexcept;
+        // get version
+        auto GetVersion() const noexcept -> const char* { return "0.2.0"; }
+        // get api level
+        auto GetAPILevel() const noexcept { return m_lvAPI; }
+        // update audio engine if you want to do some auto-task, call this more than 20Hz please
+        void Update() noexcept;
+    public:
         // ctor
         CALAudioEngine() = default;
         // dtor
         ~CALAudioEngine() noexcept { if(this->configure) this->UnInitialize(); }
-        // get version
-        auto GetVersion() const noexcept -> const char* { return "0.2.0-pre" ; }
-        // update audio engine if you want to do some auto-task, call this more than 20Hz please
-        void Update() noexcept;
+    private:
+        // audio api leve
+        APILevel                    m_lvAPI = APILevel::Level_Unknown;
     public: // Audio Clip
         // create new clip with audio stream
         // if using streaming audio, do not release the stream, this clip will do it

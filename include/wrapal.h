@@ -176,14 +176,6 @@ namespace WrapAL {
     }
     // force cast
     template<typename T> T& force_cast(const T&t) { return const_cast<T&>(t); }
-    // API level
-    enum class APILevel : unsigned {
-        Level_XAudio2 = 0,
-        Level_OpenAL,
-        Level_DirectSound,
-    };
-    // now api level
-    static const APILevel $WrapALAPILevel = APILevel::Level_XAudio2;
 }
 #include "AudioInterface.h"
 #include "AudioUtil.h"

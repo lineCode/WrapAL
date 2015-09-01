@@ -75,7 +75,8 @@ FWD_DECLARE(IXAudio2VoiceCallback);
 * XAudio2 structures and enumerations.
 *
 **************************************************************************/
-
+// Used in XAudio2Create on Windows only for XAudio2.9
+#define XAUDIO2_9_DEBUG_ENGINE            0x0001
 
 #ifdef WRAPAL_XAUDIO2_7_SUPPORT
 

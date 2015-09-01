@@ -1,5 +1,6 @@
 ﻿#pragma once
 // THIS FILE IS NONE-LICENSE
+#include <Windows.h>
 
 // include CALDefConfigure
 #define WRAPAL_INCLUDE_DEFAULT_CONFIGURE
@@ -13,12 +14,12 @@
 // simple/crude memory leak detector in msc in debug mode
 #define WRAPAL_MEMDEBUG_IN_MSC
 
-// update AudioEngine in same thread?
+// update AudioEngine in same thread with playing audio?
 #define WRAPAL_SAME_THREAD_UPDATE
 
 // support for XAudio2_7.dll in dxsdk/runtime 2010jun?
 // need support vista/win7 ? define it!
-#define WRAPAL_XAUDIO2_7_SUPPORT
+//#define WRAPAL_XAUDIO2_7_SUPPORT
 
 // name
 namespace WrapAL {

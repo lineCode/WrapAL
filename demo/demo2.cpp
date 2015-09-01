@@ -34,7 +34,8 @@ int main() {
             clip.Play();
             float ratio = 1.f;
             while (::scanf("%f", &ratio) != EOF) {
-                clip.Ratio(ratio);
+                //clip.Ratio(ratio);
+                clip.Volume(ratio);
             }
             // destroy clip(optional)
             //clip.Destroy();

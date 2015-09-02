@@ -142,7 +142,7 @@ auto WrapAL::CALAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESUL
 #ifdef _DEBUG
         create_flags |= XAUDIO2_DEBUG_ENGINE;
 #endif
-        const auto* file_name = L"XAudio2_7.dll";
+        const auto* const file_name = L"XAudio2_7.dll";
         if ((m_hXAudio2 = ::LoadLibraryW(file_name))) {
             // 设置API等级
             m_lvAPI = APILevel::Level_XAudio2_7;
@@ -171,6 +171,14 @@ auto WrapAL::CALAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESUL
                 return hr;
             };
         }
+        // 没有找到
+        else {
+            hr = E_FAIL;
+            std::swprintf(error, ErrorInfoLength,
+                this->GetRuntimeMessage(Message_NeedDxRuntime),
+                __FUNCTION__
+                );
+        }
 #else
         // XAudio2.9
 #ifdef WRAPAL_DEBUG_XAUDIO2_9
@@ -194,15 +202,12 @@ auto WrapAL::CALAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESUL
             WrapAL::LoadProc(XAudio2Create, m_hXAudio2, "XAudio2Create");
             WrapAL::LoadProc(X3DAudioInitialize, m_hXAudio2, "X3DAudioInitialize");
         }
-#endif
         // 没有找到
         else {
+            this->FormatErrorFoF(error, __FUNCTION__, file_name);
             hr = E_FAIL;
-            std::swprintf(error, ErrorInfoLength,
-                L"<%S>: library not found ---> %ls",
-                __FUNCTION__, file_name
-                );
         }
+#endif
     }
     // 检查是否自动刷新
     if (SUCCEEDED(hr) && this->configure->IsAutoUpdate()) {
@@ -363,17 +368,14 @@ auto WrapAL::CALAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESUL
         // 没有 libmpg123.dll 依然允许运行, 提供了路径则报错
         else if(path[0]){
             std::swprintf(error, ErrorInfoLength,
-                L"<%S>:libmpg123 library not found ---> %ls",
+                this->GetRuntimeMessage(Message_NoLibmpg123),
                 __FUNCTION__, path
                 );
         }
     }
     // 报错
     if (!error[0] && FAILED(hr)) {
-        std::swprintf(error, ErrorInfoLength,
-            L"<%S>: Failed with HRESULT code : 0x%08X",
-            __FUNCTION__, hr
-            );
+        this->FormatErrorHR(error, __FUNCTION__, hr);
     }
     // 输出错误
     if(error[0] && this->configure)  this->configure->OutputError(error);
@@ -416,8 +418,7 @@ void WrapAL::CALAudioEngine::UnInitialize() noexcept {
 // 创建音频片段
 auto WrapAL::CALAudioEngine::CreateClip(XALAudioStream* stream, AudioClipFlag flags, const char* group_name) noexcept -> ALHandle {
     assert(stream && "bad argument");
-    wchar_t error[ErrorInfoLength];
-    wchar_t error_total[ErrorInfoLength]; error[0] = 0;
+    wchar_t error[ErrorInfoLength]; error[0] = 0;
     ALHandle id = ALInvalidHandle;
     // 获取错误信息
     if (!stream->GetLastErrorInfo(error)) {
@@ -452,12 +453,12 @@ auto WrapAL::CALAudioEngine::CreateClip(XALAudioStream* stream, AudioClipFlag fl
                 }
                 // 检查错误
                 if (FAILED(hr)) {
-                    std::swprintf(error, ErrorInfoLength, L"HRESULT code -> 0x%08X\n", hr);
+                    this->FormatErrorHR(error, __FUNCTION__, hr);
                 }
             }
             // 错误
             else {
-                ::wcscpy(error, L"Out of memory");
+                this->FormatErrorOOM(error, __FUNCTION__);
             }
             // 释放
             if (buffer) {
@@ -478,19 +479,14 @@ auto WrapAL::CALAudioEngine::CreateClip(XALAudioStream* stream, AudioClipFlag fl
             }
             // OOM
             else {
-                ::wcscpy(error, L"Out of memory");
+                this->FormatErrorOOM(error, __FUNCTION__);
             }
         }
     }
     // 有错误的情况
     if (error[0]) {
-        // 添加信息
-        std::swprintf(
-            error_total, ErrorInfoLength, L"<%S>: Error -> %ls\n",
-            __func__, error
-            );
         // 显示错误信息
-        this->configure->OutputError(error_total);
+        this->configure->OutputError(error);
     }
     return id;
 }
@@ -510,17 +506,7 @@ auto WrapAL::CALAudioEngine::CreateClip(AudioFormat format, const wchar_t* file_
     }
     // 出现错误
     else {
-        wchar_t error[ErrorInfoLength]; error[0] = 0;
-        wchar_t error_total[ErrorInfoLength];
-        // 获取基本错误信息
-        this->configure->GetLastErrorInfo(error);
-        // 添加信息
-        std::swprintf(
-            error_total, ErrorInfoLength, L"<%S>: Error -> %ls\n",
-            __func__, error
-            );
-        // 显示错误信息
-        this->configure->OutputError(error_total);
+        this->OutputErrorLast(__FUNCTION__);
     }
     return clip;
 }
@@ -558,12 +544,7 @@ auto WrapAL::CALAudioEngine::CreateClipMove(const PCMFormat& format, uint8_t*& b
         }
         // 检查错误
         if (FAILED(hr)) {
-            wchar_t error[ErrorInfoLength];
-            std::swprintf(
-                error, ErrorInfoLength, L"<%S>: Error with HRESULT code -> 0x%08X\n",
-                __func__, hr
-                );
-            this->configure->OutputError(error);
+            this->OutputErrorHR(__FUNCTION__, hr);
         }
     }
     return reinterpret_cast<ALHandle>(real);
@@ -578,7 +559,7 @@ auto WrapAL::CALAudioEngine::CreateClip(const PCMFormat & format, const uint8_t*
         return this->CreateClipMove(format, new_src, size, config, group_name);
     }
     else {
-        this->configure->OutputError(L"Out of memory");
+        this->OutputErrorOOM(__FUNCTION__);
     }
     return ALInvalidHandle;
 }
@@ -919,4 +900,62 @@ auto WrapAL::CALAudioEngine::create_source_voice(
 // 刷新
 void WrapAL::CALAudioEngine::Update() noexcept {
 
+}
+
+
+// ----------------------------------------------------------------------------
+// -------------------------------- Error Helper ------------------------------
+// ----------------------------------------------------------------------------
+
+
+// 输出最新错误
+void WrapAL::CALAudioEngine::OutputErrorLast(const char* func_name) noexcept {
+    wchar_t error[ErrorInfoLength]; error[0] = 0;
+    wchar_t error_total[ErrorInfoLength];
+    // 获取基本错误信息
+    this->configure->GetLastErrorInfo(error);
+    // 有效
+    if (error[0]) {
+        // 添加信息
+        std::swprintf(
+            error_total, ErrorInfoLength, L"<%S>: Error -> %ls\n",
+            func_name, error
+            );
+        // 显示错误信息
+        this->configure->OutputError(error_total);
+    }
+}
+
+// 错误 HR 代码
+WRAPAL_NOINLINE void WrapAL::CALAudioEngine::FormatErrorHR(wchar_t err_buf[], const char* func_name, HRESULT hr) noexcept {
+    // 失败
+    if (FAILED(hr)) {
+        std::swprintf(
+            err_buf, ErrorInfoLength,
+            WrapALAudioEngine.configure->GetRuntimeMessage(Message_FailedHRESULT),
+            func_name, hr
+            );
+    }
+    // 成功
+    else {
+        err_buf[0] = 0;
+    }
+}
+
+// 错误 文件没找到
+WRAPAL_NOINLINE void WrapAL::CALAudioEngine::FormatErrorFoF(wchar_t err_buf[], const char* func_name, const wchar_t* file_name) noexcept {
+    std::swprintf(
+        err_buf, ErrorInfoLength,
+        WrapALAudioEngine.configure->GetRuntimeMessage(Message_FileNotFound),
+        func_name, file_name
+        );
+}
+
+// 内存不足
+WRAPAL_NOINLINE void WrapAL::CALAudioEngine::FormatErrorOOM(wchar_t err_buf[], const char* func_name) noexcept {
+    std::swprintf(
+        err_buf, ErrorInfoLength,
+        WrapALAudioEngine.configure->GetRuntimeMessage(Message_OOM),
+        func_name
+        );
 }

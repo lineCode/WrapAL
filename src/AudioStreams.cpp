@@ -46,7 +46,8 @@ namespace WrapAL {
         // Out of memory
         Code_OutOfMemory,
     };
-#define alignedsize(n, a) (((((n)-1)/(a))+1)*(a))
+    // alignedsize
+    constexpr auto alignedsize(const size_t n, const size_t a) { return (((((n)-1) / (a)) + 1)*(a)); }
     // Basic Audio Stream
     class WRAPAL_NOVTABLE BasicAudioStream : public XALAudioStream {
     public:
@@ -172,11 +173,11 @@ bool WrapAL::BasicAudioStream::GetLastErrorInfo(wchar_t des_info[]) noexcept {
         const wchar_t* info = nullptr;
         switch (m_code)
         {
-        /*case WrapAL::DefErrorCode::Code_Ok:
-            info = L"No Error";
-            break;*/
+        case WrapAL::DefErrorCode::Code_Ok:
+            info = L"WrapAL::DefErrorCode::Code_Ok";
+            break;
         case WrapAL::DefErrorCode::Code_FileNotFound:
-            info = L"File Not Found";
+            info = WrapALAudioEngine.GetRuntimeMessage(Message_FileNotFound);
             break;
         case WrapAL::DefErrorCode::Code_IllegalFile:
             info = L"Illegal File";
@@ -188,7 +189,7 @@ bool WrapAL::BasicAudioStream::GetLastErrorInfo(wchar_t des_info[]) noexcept {
             info = L"Decode Error";
             break;
         case WrapAL::DefErrorCode::Code_OutOfMemory:
-            info = L"Out Of Memory";
+            info = WrapALAudioEngine.GetRuntimeMessage(Message_OOM);
             break;
         default:
             info = L"Unknown Error";

@@ -62,6 +62,23 @@ Version: 0.0.1
 #include "X3DAudio_diy.h"
 
 
+// 检查
+#ifndef WRAPAL_NOVTABLE
+#   if (_MSC_VER >= 1100) && defined(__cplusplus)
+#       define WRAPAL_NOVTABLE __declspec(novtable)
+#   else
+#       define WRAPAL_NOVTABLE
+#   endif
+#endif
+
+#ifndef WRAPAL_NOINLINE
+#   if (_MSC_VER >= 1300) && defined(__cplusplus)
+#       define WRAPAL_NOINLINE __declspec(noinline)
+#   else
+#       define WRAPAL_NOINLINE
+#   endif
+#endif
+
 // wrapal namespace
 namespace WrapAL {
     // clip
@@ -119,16 +136,16 @@ namespace WrapAL {
     };
     // audio format
     enum class AudioFormat : uint32_t {
-        // stream from memory
+        // [WrapAL default] stream from memory
         Format_ByteStream = 0,
-        // stream from *.wav file
+        // [WrapAL default] stream from *.wav file
         Format_Wave,
-        // stream from *.ogg file
+        // [WrapAL default] stream from *.ogg file
         Format_OggVorbis,
-        // stream from *.mp3 or some file, mpg123 will use
-        // stderr to display error infomation, be careful
+        // [WrapAL default] stream from *.mp3 or some file,
+        // remarks: mpg123 will use stderr to display error infomation, be careful
         Format_Mpg123,
-        // stream for user defined
+        // stream for user defined, you should define
         Format_User,
     };
     // Audio Clip Flag

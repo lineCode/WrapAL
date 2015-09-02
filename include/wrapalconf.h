@@ -1,6 +1,5 @@
 ﻿#pragma once
 // THIS FILE IS NONE-LICENSE
-#include <Windows.h>
 
 // include CALDefConfigure
 #define WRAPAL_INCLUDE_DEFAULT_CONFIGURE
@@ -20,6 +19,12 @@
 // support for XAudio2_7.dll in dxsdk/runtime 2010jun?
 // need support vista/win7 ? define it!
 //#define WRAPAL_XAUDIO2_7_SUPPORT
+
+
+
+#ifndef WRAPAL_SAME_THREAD_UPDATE
+#include <Windows.h>
+#endif
 
 // name
 namespace WrapAL {
@@ -46,11 +51,13 @@ namespace WrapAL {
     enum RuntimeMessage : unsigned int {
         // failed with HRESULT code, 2-arguments[char*, HRESULT]
         Message_FailedHRESULT,
-        // file not found
+        // out of memory, 1-argument[char*]
+        Message_OOM,
+        // file not found, 2-arguments[char*, wchar_t*]
         Message_FileNotFound,
         // libmpg123 not found, 2-arguments[char*, wchar_t*]
         Message_NoLibmpg123,
-        // os before win8, XAudio2_7.dll only,1-argument[char*]
+        // os before win8, XAudio2_7.dll only, 1-argument[char*]
 #ifdef WRAPAL_XAUDIO2_7_SUPPORT
         Message_NeedDxRuntime,
 #endif
@@ -60,6 +67,7 @@ namespace WrapAL {
     // build-in message string
     static const wchar_t* BuildInMessageString[MESSAGE_COUNT] = {
         L"<%S>: Failed with HRESULT code : 0x%08X",
+        L"<%S>: Out of memory",
         L"<%S>: file not found ---> %ls",
         L"<%S>: libmpg123 library not found ---> %ls",
 #ifdef WRAPAL_XAUDIO2_7_SUPPORT

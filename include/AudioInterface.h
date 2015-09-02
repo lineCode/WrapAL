@@ -27,14 +27,6 @@
 
 // wrapal namespace
 namespace WrapAL {
-    // 检查
-#ifndef WRAPAL_NOVTABLE
-#   if (_MSC_VER >= 1100) && defined(__cplusplus)
-#       define WRAPAL_NOVTABLE __declspec(novtable)
-#   else
-#       define WRAPAL_NOVTABLE
-#   endif
-#endif
     // WrapAL Interface
     class WRAPAL_NOVTABLE IALInterface {
     public:

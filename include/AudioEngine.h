@@ -59,15 +59,17 @@ namespace WrapAL {
         // friend class
         friend class CALDefConfigure;
     public:
+        // get version
+        auto GetVersion() const noexcept -> const char* { return "0.2.1"; }
+        // get api level
+        auto GetAPILevel() const noexcept { return m_lvAPI; }
+        // get message
+        auto GetRuntimeMessage(RuntimeMessage msg) const noexcept { return this->configure->GetRuntimeMessage(msg); }
         // init
         auto Initialize(IALConfigure* config=nullptr) noexcept ->HRESULT;
         // un-init
         void UnInitialize() noexcept;
-        // get version
-        auto GetVersion() const noexcept -> const char* { return "0.2.0"; }
-        // get api level
-        auto GetAPILevel() const noexcept { return m_lvAPI; }
-        // update audio engine if you want to do some auto-task, call this more than 20Hz please
+        // update audio engine if you want to do some auto-task, call this more than 20Hz
         void Update() noexcept;
     public:
         // ctor
@@ -168,6 +170,34 @@ namespace WrapAL {
         // default config
         CALDefConfigure             m_config;
 #endif
+    public: // format helper 
+        // format error with hr code
+        static void FormatErrorHR(wchar_t err_buf[], const char* func_name, HRESULT hr) noexcept;
+        // format error with file not found
+        static void FormatErrorFoF(wchar_t err_buf[], const char* func_name, const wchar_t* file_name) noexcept;
+        // format error with out of memory
+        static void FormatErrorOOM(wchar_t err_buf[], const char* func_name) noexcept;
+    public: // output helper
+        // output error with hr code
+        inline auto OutputErrorHR(const char* func_name, HRESULT hr) noexcept { 
+            wchar_t err_buf[ErrorInfoLength]; 
+            this->FormatErrorHR(err_buf, func_name, hr);
+            this->configure->OutputError(err_buf);
+        }
+        // output error with file not found
+        inline auto OutputErrorFoF(const char* func_name, const wchar_t* file_name) noexcept { 
+            wchar_t err_buf[ErrorInfoLength]; 
+            this->FormatErrorFoF(err_buf,func_name, file_name); 
+            this->configure->OutputError(err_buf);
+        }
+        // output error with out of memory
+        inline auto OutputErrorOOM(const char* func_name) noexcept { 
+            wchar_t err_buf[ErrorInfoLength]; 
+            this->FormatErrorOOM(err_buf,func_name); 
+            this->configure->OutputError(err_buf);
+        }
+        // output last error
+        void OutputErrorLast(const char* func_name) noexcept;
     public:
         // instance for this
         static CALAudioEngine s_instance;

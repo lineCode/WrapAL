@@ -142,8 +142,8 @@ namespace WrapAL {
         virtual auto SmallFree(void* address) noexcept ->void override { ::free(address); };
         // choose device, return index, if out of range, choose default device
         virtual auto ChooseDevice(const AudioDeviceInfo [/*count*/], UINT count/* <= DeviceMaxCount*/) noexcept ->UINT override { return count; };
-        // create pcm audio stream from file stream
-        virtual auto CreatePCMStream(AudioFormat, IALFileStream*) noexcept->XALPCMStream* override;
+        // create audio stream from file stream
+        virtual auto CreateAudioStream(EncodingFormat, IALFileStream*) noexcept->XALAudioStream* override;
         // get last error infomation, return false if no error
         virtual auto GetLastErrorInfo(wchar_t info[/*ErrorInfoLength*/])noexcept->bool override;
         // output error infomation

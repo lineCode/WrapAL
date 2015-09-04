@@ -48,9 +48,9 @@ namespace WrapAL {
         // [invalid yet]Direct Sound in early sdk
         Level_DirectSound,
     };
-#ifdef WRAPAL_INCLUDE_DEFAULT_PCM_STREAM
-    // create default pcm audio stream
-    auto DefCreatePCMStream(AudioFormat format, IALFileStream* stream, wchar_t error_info[ErrorInfoLength]) noexcept->XALPCMStream* ;
+#ifdef WRAPAL_INCLUDE_DEFAULT_AUDIO_STREAM
+    // create default audio stream
+    auto DefCreateAudioStream(EncodingFormat format, IALFileStream* stream, wchar_t error_info[ErrorInfoLength]) noexcept->XALAudioStream* ;
 #endif
     // Audio Engine
     class CALAudioEngine {
@@ -64,7 +64,7 @@ namespace WrapAL {
         friend class CALDefConfigure;
     public:
         // get version
-        auto GetVersion() const noexcept -> const char* { return "0.2.2"; }
+        auto GetVersion() const noexcept -> const char* { return "0.2.3"; }
         // get api level
         auto GetAPILevel() const noexcept { return m_lvAPI; }
         // get message
@@ -93,22 +93,25 @@ namespace WrapAL {
         APILevel                    m_lvAPI = APILevel::Level_Unknown;
     public: // Audio Clip
         // create new clip with audio stream
-        // if using streaming audio, do not release the stream, this clip will do it
-        auto CreateClip(XALPCMStream*, AudioClipFlag, const char* group_name) noexcept ->ALHandle;
+        auto CreateClip(XALAudioStream*, AudioClipFlag, const char* group_name) noexcept ->ALHandle;
         // create new clip with file name
-        auto CreateClip(AudioFormat, const wchar_t*, AudioClipFlag, const char* group_name) noexcept->ALHandle;
+        auto CreateClip(EncodingFormat, const wchar_t*, AudioClipFlag, const char* group_name) noexcept->ALHandle;
+        // create new clip with file stream
+        auto CreateClip(EncodingFormat, IALFileStream*, AudioClipFlag, const char* group_name) noexcept->ALHandle;
         // create new clip in memory with move
-        auto CreateClipMove(const PCMFormat&, uint8_t*&, size_t, AudioClipFlag, const char* group_name) noexcept->ALHandle;
+        auto CreateClipMove(const AudioFormat&, uint8_t*&, size_t, AudioClipFlag, const char* group_name) noexcept->ALHandle;
         // create new clip in memory
-        auto CreateClip(const PCMFormat& format, const uint8_t* src, size_t size, AudioClipFlag, const char* group_name) noexcept->ALHandle;
+        auto CreateClip(const AudioFormat& format, const uint8_t* src, size_t size, AudioClipFlag, const char* group_name) noexcept->ALHandle;
     private: // Audio Clip
-        // recreate with file
+        // recreate with file name
         bool ac_recreate(ALHandle clip_id, const wchar_t* file_name) noexcept;
-        // recreate with stream
-        bool ac_recreate(ALHandle clip_id, XALPCMStream* stream) noexcept;
+        // recreate with file stream
+        bool ac_recreate(ALHandle clip_id, IALFileStream* file_stream) noexcept;
+        // recreate with audio stream
+        bool ac_recreate(ALHandle clip_id, XALAudioStream* stream) noexcept;
         // recreate with memory: same format with new buffer!
         bool ac_recreate(ALHandle clip_id, uint8_t* buffer, size_t length) noexcept;
-        // recreate with move-able memory : same format with new buffer!
+        // recreate with malloc-ed move-able memory : same format with new buffer!
         bool ac_recreate_move(ALHandle clip_id, uint8_t*& buffer, size_t length) noexcept;
         // destroy the clip
         bool ac_destroy(ALHandle clip_id) noexcept;

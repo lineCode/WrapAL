@@ -13,7 +13,7 @@ int main() {
     {
         // create audio clip
         auto clip = WrapAL::CreateAudioClip(
-            WrapAL::AudioFormat::Format_OggVorbis,
+            WrapAL::EncodingFormat::Format_OggVorbis,
             L"NationalAnthemOfRussia.ogg",
             WrapAL::Flag_StreamingReading | WrapAL::Flag_LoopInfinite,
             "BGM"

@@ -33,9 +33,9 @@ namespace WrapAL {
     struct AudioSourceGroupReal {
         // ctor
         AudioSourceGroupReal() noexcept { ::memset(name, 0, sizeof(name)); };
-        // dtor
 #ifdef _DEBUG
-        ~AudioSourceGroupReal() { assert(!voice && "not released!"); }
+        // dtor
+        ~AudioSourceGroupReal() { assert(!voice && "not be released!"); }
 #endif
         // Release
         auto Release() noexcept { WrapAL::SafeDestroyVoice(voice); }

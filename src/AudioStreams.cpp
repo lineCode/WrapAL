@@ -21,7 +21,7 @@ struct MemoryLeakDetector {
 } g_detector;
 #endif
 
-#ifdef WRAPAL_INCLUDE_DEFAULT_PCM_STREAM
+#ifdef WRAPAL_INCLUDE_DEFAULT_AUDIO_STREAM
 // Ogg Vorbis
 #include "../3rdparty/libvorbis/include/vorbis/codec.h"
 #include "../3rdparty/libvorbis/include/vorbis/vorbisfile.h"
@@ -44,13 +44,13 @@ namespace WrapAL {
     // alignedsize
     constexpr auto alignedsize(const size_t n, const size_t a) { return (((((n)-1) / (a)) + 1)*(a)); }
     // Basic Audio Stream
-    class WRAPAL_NOVTABLE CALBasicAudioStream : public XALPCMStream {
+    class WRAPAL_NOVTABLE CALBasicAudioStream : public XALAudioStream {
         // super class
-        using Super = XALPCMStream;
+        using Super = XALAudioStream;
     public:
         // ctor
         CALBasicAudioStream(IALFileStream* stream) noexcept :Super(stream)  { assert(stream);  }
-    public: // interface impl for XALPCMStream
+    public: // interface impl for XALAudioStream
         // release this
         virtual auto Release() noexcept->int32_t override;
         // get last error infomation, return false if no error
@@ -59,14 +59,14 @@ namespace WrapAL {
         // last error code
         DefErrorCode            m_code = DefErrorCode::Code_Ok;
     };
-    // Audio Stream for wave file(PCM only)
+    // Audio Stream for wave file(PCM/IEEE_FLOAT only)
     class CALWavAudioStream final : public CALBasicAudioStream {
         // super class define
         using Super = CALBasicAudioStream;
     public:
         // ctor
         CALWavAudioStream(IALFileStream*) noexcept;
-    public: // interface impl for XALPCMStream
+    public: // interface impl for XALAudioStream
         // release this
         //virtual auto Release() noexcept->int32_t override;
         // seek stream in byte, return false if out of range
@@ -84,7 +84,7 @@ namespace WrapAL {
     public:
         // ctor
         CALOggAudioStream(IALFileStream*) noexcept;
-    public: // interface impl for XALPCMStream
+    public: // interface impl for XALAudioStream
         // release this
         virtual auto Release() noexcept->int32_t override;
         // seek stream in byte, return false if out of range
@@ -102,7 +102,7 @@ namespace WrapAL {
     public:
         // ctor
         CALMp3AudioStream(IALFileStream*) noexcept;
-    public: // interface impl for XALPCMStream
+    public: // interface impl for XALAudioStream
         // release this
         virtual auto Release() noexcept->int32_t override;
         // seek stream in byte, return false if out of range
@@ -266,11 +266,11 @@ WrapAL::CALWavAudioStream::CALWavAudioStream(IALFileStream* file_stream) noexcep
     }
     // 复制数据
     if (code == DefErrorCode::Code_Ok) {
-        m_pcmFormat.nSamplesPerSec = header.nSamplesPerSec;
-        m_pcmFormat.nAvgBytesPerSec = header.nAvgBytesPerSec;
-        m_pcmFormat.nBlockAlign = header.nBlockAlign;
-        m_pcmFormat.nChannels = uint8_t(header.nChannels);
-        m_pcmFormat.nFormatTag = FormatWave(header.wFormatTag);
+        m_audioFormat.nSamplesPerSec = header.nSamplesPerSec;
+        m_audioFormat.nAvgBytesPerSec = header.nAvgBytesPerSec;
+        m_audioFormat.nBlockAlign = header.nBlockAlign;
+        m_audioFormat.nChannels = uint8_t(header.nChannels);
+        m_audioFormat.nFormatTag = FormatWave(header.wFormatTag);
     }
     m_code = code;
 }
@@ -316,18 +316,18 @@ WrapAL::CALOggAudioStream::CALOggAudioStream(IALFileStream* file_stream) noexcep
         //char **ptr = ov_comment(&ovfile, -1)->user_comments;
         vorbis_info *vi = ov_info(&m_ovfile, -1);
         // 获取声道数
-        m_pcmFormat.nChannels = vi->channels;
+        m_audioFormat.nChannels = vi->channels;
         // 获取采样率
-        m_pcmFormat.nSamplesPerSec = vi->rate;
+        m_audioFormat.nSamplesPerSec = vi->rate;
         // 区块对齐
-        m_pcmFormat.nBlockAlign = m_pcmFormat.nChannels * sizeof(int16_t);
+        m_audioFormat.nBlockAlign = m_audioFormat.nChannels * sizeof(int16_t);
         // bps
-        m_pcmFormat.nAvgBytesPerSec = m_pcmFormat.nSamplesPerSec * m_pcmFormat.nBlockAlign;
+        m_audioFormat.nAvgBytesPerSec = m_audioFormat.nSamplesPerSec * m_audioFormat.nBlockAlign;
         // 编码: PCM
-        m_pcmFormat.nFormatTag = Wave_PCM;
+        m_audioFormat.nFormatTag = Wave_PCM;
         // 数据大小
         m_cTotalSize = static_cast<decltype(m_cTotalSize)>(::ov_pcm_total(&m_ovfile, -1)) *
-            static_cast<decltype(m_cTotalSize)>(m_pcmFormat.nBlockAlign);
+            static_cast<decltype(m_cTotalSize)>(m_audioFormat.nBlockAlign);
     }
     // 非法文件
     else {
@@ -345,7 +345,7 @@ auto WrapAL::CALOggAudioStream::Release() noexcept -> int32_t {
 auto WrapAL::CALOggAudioStream::Seek(int32_t off, Move method) noexcept -> uint32_t {
     // 不用移动
     if (!(off == 0 && method == Move_Current)) {
-        auto code = ::ov_pcm_seek(&m_ovfile, off / m_pcmFormat.nBlockAlign);
+        auto code = ::ov_pcm_seek(&m_ovfile, off / m_audioFormat.nBlockAlign);
         // TODO: ERROR
         if (code) {
 
@@ -412,8 +412,8 @@ WrapAL::CALMp3AudioStream::CALMp3AudioStream(IALFileStream* file_stream) noexcep
     if (!error_code) {
         long rate = 0; int ch = 0;
         error_code = Mpg123::mpg123_getformat(m_hMpg123, &rate, &ch, &encoding);
-        m_pcmFormat.nChannels = ch;
-        m_pcmFormat.nSamplesPerSec = rate;
+        m_audioFormat.nChannels = ch;
+        m_audioFormat.nSamplesPerSec = rate;
     }
     // 检查编码支持
     if (!error_code) {
@@ -430,8 +430,8 @@ WrapAL::CALMp3AudioStream::CALMp3AudioStream(IALFileStream* file_stream) noexcep
     if (!error_code) {
         error_code = Mpg123::mpg123_format(
             m_hMpg123, 
-            m_pcmFormat.nSamplesPerSec,
-            m_pcmFormat.nChannels,
+            m_audioFormat.nSamplesPerSec,
+            m_audioFormat.nChannels,
             encoding
             );
     }
@@ -439,30 +439,30 @@ WrapAL::CALMp3AudioStream::CALMp3AudioStream(IALFileStream* file_stream) noexcep
     if (!error_code) {
         // 获取深度
         if (encoding & ENCODE_ENUM_FLOAT_64) {
-            m_pcmFormat.nBlockAlign = 8 * m_pcmFormat.nChannels;
-            m_pcmFormat.nFormatTag = Wave_IEEEFloat;
+            m_audioFormat.nBlockAlign = 8 * m_audioFormat.nChannels;
+            m_audioFormat.nFormatTag = Wave_IEEEFloat;
         }
         else if (encoding & ENCODE_ENUM_FLOAT_32) {
-            m_pcmFormat.nBlockAlign = 4 * m_pcmFormat.nChannels;
-            m_pcmFormat.nFormatTag = Wave_IEEEFloat;
+            m_audioFormat.nBlockAlign = 4 * m_audioFormat.nChannels;
+            m_audioFormat.nFormatTag = Wave_IEEEFloat;
         }
         else if (encoding & ENCODE_ENUM_16) {
-            m_pcmFormat.nBlockAlign = 2 * m_pcmFormat.nChannels;
-            m_pcmFormat.nFormatTag = Wave_PCM;
+            m_audioFormat.nBlockAlign = 2 * m_audioFormat.nChannels;
+            m_audioFormat.nFormatTag = Wave_PCM;
         }
         else {
-            m_pcmFormat.nBlockAlign = 1 * m_pcmFormat.nChannels;
-            m_pcmFormat.nFormatTag = Wave_PCM;
+            m_audioFormat.nBlockAlign = 1 * m_audioFormat.nChannels;
+            m_audioFormat.nFormatTag = Wave_PCM;
         }
         // 数据率
-        m_pcmFormat.nAvgBytesPerSec = m_pcmFormat.nSamplesPerSec * m_pcmFormat.nBlockAlign;
+        m_audioFormat.nAvgBytesPerSec = m_audioFormat.nSamplesPerSec * m_audioFormat.nBlockAlign;
     }
     // 计算长度
     if (!error_code) {
         auto length_in_sample = Mpg123::mpg123_length(m_hMpg123);
         // 有效
         if (length_in_sample > 0) {
-            m_cTotalSize = length_in_sample * m_pcmFormat.nBlockAlign / m_pcmFormat.nChannels;
+            m_cTotalSize = length_in_sample * m_audioFormat.nBlockAlign / m_audioFormat.nChannels;
         }
         // 错误
         else {
@@ -498,7 +498,7 @@ auto WrapAL::CALMp3AudioStream::Release() noexcept -> int32_t {
 auto WrapAL::CALMp3AudioStream::Seek(int32_t off, Move method) noexcept -> uint32_t {
     // 不用移动
     if (!(off == 0 && method == Move_Current)) {
-        off_t pos_in_sample = off / m_pcmFormat.nBlockAlign;
+        off_t pos_in_sample = off / m_audioFormat.nBlockAlign;
         Mpg123::mpg123_seek(m_hMpg123, pos_in_sample, SEEK_SET);
     }
     return uint32_t(Mpg123::mpg123_tell(m_hMpg123));
@@ -519,46 +519,46 @@ auto WrapAL::CALMp3AudioStream::ReadNext(uint32_t len, void* buf) noexcept -> ui
 }
 
 // 默认音频流创建函数
-auto WrapAL::DefCreatePCMStream(
-    AudioFormat audio_format, 
+auto WrapAL::DefCreateAudioStream(
+    EncodingFormat audio_format, 
     IALFileStream* file_stream, 
     wchar_t error_info[WrapAL::ErrorInfoLength]
-    ) noexcept -> XALPCMStream* {
-    assert(uint32_t(audio_format) < uint32_t(AudioFormat::Format_UserDefined) && file_stream && error_info && "bad arguments");
-    XALPCMStream* pcm_stream = reinterpret_cast<XALPCMStream*>(ASPool.Alloc());
-    if (!pcm_stream || !file_stream) {
+    ) noexcept -> XALAudioStream* {
+    assert(uint32_t(audio_format) < uint32_t(EncodingFormat::Format_UserDefined) && file_stream && error_info && "bad arguments");
+    XALAudioStream* audio_stream = reinterpret_cast<XALAudioStream*>(ASPool.Alloc());
+    if (!audio_stream || !file_stream) {
         CALAudioEngine::FormatErrorOOM(error_info, __FUNCTION__);
         return nullptr;
     }
-    *reinterpret_cast<size_t*>(pcm_stream) = 0;
+    *reinterpret_cast<size_t*>(audio_stream) = 0;
     switch (audio_format)
     {
-    case WrapAL::AudioFormat::Format_Wave:
-        new(pcm_stream) CALWavAudioStream(file_stream);
+    case WrapAL::EncodingFormat::Format_Wave:
+        new(audio_stream) CALWavAudioStream(file_stream);
         break;
-    case WrapAL::AudioFormat::Format_OggVorbis:
-        new(pcm_stream) CALOggAudioStream(file_stream);
+    case WrapAL::EncodingFormat::Format_OggVorbis:
+        new(audio_stream) CALOggAudioStream(file_stream);
         break;
-    case WrapAL::AudioFormat::Format_Mpg123:
-        new(pcm_stream) CALMp3AudioStream(file_stream);
+    case WrapAL::EncodingFormat::Format_Mpg123:
+        new(audio_stream) CALMp3AudioStream(file_stream);
         break;
     default:
         // 格式不支持
         std::swprintf(error_info, ErrorInfoLength, L"Unsupported Format : 0x%08X", audio_format);
     }
     // 检查错误
-    if (*reinterpret_cast<size_t*>(pcm_stream)) {
-        pcm_stream->GetLastErrorInfo(error_info);
+    if (*reinterpret_cast<size_t*>(audio_stream)) {
+        audio_stream->GetLastErrorInfo(error_info);
     }
-    return pcm_stream;
+    return audio_stream;
 }
 
 
 // 创建音频流
-auto WrapAL::CALDefConfigure::CreatePCMStream(
-    AudioFormat format, IALFileStream* stream
-    ) noexcept -> XALPCMStream* {
-    return WrapAL::DefCreatePCMStream(format, stream, m_szLastError);
+auto WrapAL::CALDefConfigure::CreateAudioStream(
+    EncodingFormat format, IALFileStream* stream
+    ) noexcept -> XALAudioStream* {
+    return WrapAL::DefCreateAudioStream(format, stream, m_szLastError);
 }
 
 // 获取最近一次错误

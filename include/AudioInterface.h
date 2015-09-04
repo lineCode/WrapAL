@@ -27,8 +27,8 @@
 
 // wrapal namespace
 namespace WrapAL {
-    // Stream for reading PCM data
-    class XALPCMStream;
+    // Stream for reading Audio data
+    class XALAudioStream;
     // WrapAL Interface
     struct WRAPAL_NOVTABLE IALInterface {
         // release this
@@ -63,8 +63,8 @@ namespace WrapAL {
         virtual auto SmallFree(void* address) noexcept ->void = 0;
         // choose device, return index, if out of range, choose default device
         virtual auto ChooseDevice(const AudioDeviceInfo devices[/*count*/], UINT count/* <= DeviceMaxCount*/) noexcept ->UINT = 0;
-        // create pcm audio stream from file stream, stream won't be null
-        virtual auto CreatePCMStream(AudioFormat format, IALFileStream* stream) noexcept->XALPCMStream* =0;
+        // create audio stream from file stream, stream won't be null
+        virtual auto CreateAudioStream(EncodingFormat format, IALFileStream* stream) noexcept->XALAudioStream* =0;
         // get last error infomation, return false if no error
         virtual auto GetLastErrorInfo(wchar_t info[/*ErrorInfoLength*/])noexcept->bool = 0;
         // output error infomation
@@ -74,8 +74,8 @@ namespace WrapAL {
         // get the "libmpg123.dll" path
         virtual auto GetLibmpg123Path(wchar_t path[/*MAX_PATH*/])noexcept->void = 0;
     };
-    // PCM Audio Stream, X for "Mixed but like a interface"
-    class WRAPAL_NOVTABLE XALPCMStream : public IALStream {
+    // Audio Stream, X for "Mixed but like a interface"
+    class WRAPAL_NOVTABLE XALAudioStream : public IALStream {
     public:
         // get size in byte, final override
         auto GetSizeInByte() noexcept ->uint32_t override final { return m_cTotalSize; }
@@ -89,16 +89,16 @@ namespace WrapAL {
         }
     public:
         // ctor
-        XALPCMStream(IALFileStream* stream) noexcept : m_pFileStream(stream) {};
+        XALAudioStream(IALFileStream* stream) noexcept : m_pFileStream(stream) {};
         // dtor
-        ~XALPCMStream() noexcept { WrapAL::SafeRelease(m_pFileStream); };
+        ~XALAudioStream() noexcept { WrapAL::SafeRelease(m_pFileStream); };
         // get format
-        auto GetFormat() const noexcept -> const PCMFormat& { return m_pcmFormat; }
+        auto GetFormat() const noexcept -> const AudioFormat& { return m_audioFormat; }
     protected:
         // audio file
         IALFileStream*          m_pFileStream = nullptr;
-        // the format of pcm
-        PCMFormat               m_pcmFormat = { 0 };
+        // the format of audio
+        AudioFormat             m_audioFormat = { 0 };
         // total size in byte
         uint32_t                m_cTotalSize = 0;
     };

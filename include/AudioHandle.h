@@ -129,30 +129,25 @@ namespace WrapAL {
     };
     // create new clip with audio stream wrapped function
     // if using streaming audio, do not release the stream, this clip will do it
-    static inline auto CreateAudioClip(XALPCMStream* stream, AudioClipFlag flags = Flag_None, const char* group = "BGM") noexcept {
-        return std::move(CALAudioSourceClip(WrapALAudioEngine.CreateClip(stream, flags, group)));
+    static inline auto CreateAudioClip(XALAudioStream* stream, AudioClipFlag flags = Flag_None, const char* group = "BGM") noexcept {
+        return (CALAudioSourceClip(WrapALAudioEngine.CreateClip(stream, flags, group)));
     }
     // create new clip with file name wrapped function
-    static inline auto CreateAudioClip(AudioFormat f, const wchar_t* p, AudioClipFlag flags = Flag_None, const char* group = "BGM") noexcept {
-        return std::move(CALAudioSourceClip(WrapALAudioEngine.CreateClip(f, p, flags, group)));
+    static inline auto CreateAudioClip(EncodingFormat format, const wchar_t* name, AudioClipFlag flags = Flag_None, const char* group = "BGM") noexcept {
+        return (CALAudioSourceClip(WrapALAudioEngine.CreateClip(format, name, flags, group)));
+    }
+    // create new clip with file stream wrapped function
+    static inline auto CreateAudioClip(EncodingFormat format, IALFileStream* stream, AudioClipFlag flags = Flag_None, const char* group = "BGM") noexcept {
+        return (CALAudioSourceClip(WrapALAudioEngine.CreateClip(format, stream, flags, group)));
     }
     // create new clip in memory wrapped function
     // for this, can't be in streaming mode
-    static inline auto CreateAudioClip(const PCMFormat& format, const uint8_t* src, size_t size, AudioClipFlag flags = Flag_None, const char* group = "BGM") noexcept {
-        return std::move(CALAudioSourceClip(WrapALAudioEngine.CreateClip(format, src, size, flags, group)));
+    static inline auto CreateAudioClip(const AudioFormat& format, const uint8_t* src, size_t size, AudioClipFlag flags = Flag_None, const char* group = "BGM") noexcept {
+        return (CALAudioSourceClip(WrapALAudioEngine.CreateClip(format, src, size, flags, group)));
     }
-    // create new clip in memory with move wrapped function
+    // create new clip in memory with move wrapped function, buffer must be malloc-ed
     // for this, can't be in streaming mode
-    static inline auto CreateAudioClipMove(const PCMFormat& f, uint8_t*& p, size_t l, AudioClipFlag flags = Flag_None, const char* group = "BGM") noexcept {
-        return std::move(CALAudioSourceClip(WrapALAudioEngine.CreateClipMove(f, p, l, flags, group)));
-    }
-    // create new clip with audio stream wrapped function
-    // if using streaming audio, do not release the stream, this clip will do it
-    static inline auto CreateStreamingAudioClip(XALPCMStream* stream, AudioClipFlag flags = Flag_None, const char* group = "BGM") noexcept {
-        return std::move(CALAudioSourceClip(WrapALAudioEngine.CreateClip(stream, flags | WrapAL::Flag_StreamingReading, group)));
-    }
-    // create new clip with file name wrapped function
-    static inline auto CreateStreamingAudioClip(AudioFormat f, const wchar_t* p, AudioClipFlag flags = Flag_None, const char* group = "BGM") noexcept {
-        return std::move(CALAudioSourceClip(WrapALAudioEngine.CreateClip(f, p, flags | WrapAL::Flag_StreamingReading, group)));
+    static inline auto CreateAudioClipMove(const AudioFormat& f, uint8_t*& p, size_t l, AudioClipFlag flags = Flag_None, const char* group = "BGM") noexcept {
+        return (CALAudioSourceClip(WrapALAudioEngine.CreateClipMove(f, p, l, flags, group)));
     }
 }

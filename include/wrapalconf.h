@@ -4,8 +4,8 @@
 // include WrapAL::CALDefConfigure
 #define WRAPAL_INCLUDE_DEFAULT_CONFIGURE
 
-// include WrapAL::DefCreatePCMStream
-#define WRAPAL_INCLUDE_DEFAULT_PCM_STREAM
+// include WrapAL::DefCreateAudioStream
+#define WRAPAL_INCLUDE_DEFAULT_AUDIO_STREAM
 
 // use AudioEngine marco
 #define WRAPAL_USE_AUDIOENGINE_MARCO

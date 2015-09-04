@@ -96,8 +96,8 @@ namespace WrapAL {
         // IEEE FLOAT[supported]
         Wave_IEEEFloat,
     };
-    // pcm format, WAVE_FORMAT_PCM
-    struct PCMFormat {
+    // audio format
+    struct AudioFormat {
         // make wave format
         auto MakeWave(WAVEFORMATEX& wave) const noexcept {
             wave.wFormatTag = WORD(nFormatTag);
@@ -145,8 +145,8 @@ namespace WrapAL {
         PROPVARIANT id;
 #endif
     };
-    // audio format
-    enum class AudioFormat : uint32_t {
+    // Encoding format
+    enum class EncodingFormat : uint32_t {
         // [WrapAL default] stream from *.wav file stream
         Format_Wave = 0,
         // [WrapAL default] stream from *.ogg file stream

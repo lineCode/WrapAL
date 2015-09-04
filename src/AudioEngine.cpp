@@ -416,7 +416,7 @@ void WrapAL::CALAudioEngine::UnInitialize() noexcept {
 }
 
 // 创建音频片段
-auto WrapAL::CALAudioEngine::CreateClip(XALPCMStream* stream, AudioClipFlag flags, const char* group_name) noexcept -> ALHandle {
+auto WrapAL::CALAudioEngine::CreateClip(XALAudioStream* stream, AudioClipFlag flags, const char* group_name) noexcept -> ALHandle {
     assert(stream && "bad argument");
     wchar_t error[ErrorInfoLength]; error[0] = 0;
     ALHandle id = ALInvalidHandle;
@@ -492,28 +492,35 @@ auto WrapAL::CALAudioEngine::CreateClip(XALPCMStream* stream, AudioClipFlag flag
 }
 
 // 创建音频片段
-auto WrapAL::CALAudioEngine::CreateClip(AudioFormat format, const wchar_t* file_path, AudioClipFlag flags, const char* group_name) noexcept ->ALHandle {
-    ALHandle clip(ALInvalidHandle);
+auto WrapAL::CALAudioEngine::CreateClip(EncodingFormat format, const wchar_t* file_path, AudioClipFlag flags, const char* group_name) noexcept ->ALHandle {
     // 创建音频流
     auto file_stream = this->CreatStreamFromFile(file_path);
     // 内存不足?
     if (!file_stream) {
         this->OutputErrorOOM(__FUNCTION__);
-        return clip;
+        return ALHandle(ALInvalidHandle);
     }
+    // 嫁接
+    return this->CreateClip(format, file_stream, flags, group_name);
+}
+
+// 创建音频片段
+auto WrapAL::CALAudioEngine::CreateClip(EncodingFormat format, IALFileStream* file_stream, AudioClipFlag flags, const char* group_name) noexcept ->ALHandle {
+    assert(file_stream && "bad argument");
+    ALHandle clip(ALInvalidHandle);
     // 错误(已报错)
     if (!file_stream->OK()) {
         file_stream->Release();
         return clip;
     }
-    // 创建PCM流
-    auto pcm_stream = this->configure->CreatePCMStream(format, file_stream);
-    if (pcm_stream) {
-        clip = this->CreateClip(pcm_stream, flags, group_name);
+    // 创建音频流
+    auto audio_stream = this->configure->CreateAudioStream(format, file_stream);
+    if (audio_stream) {
+        clip = this->CreateClip(audio_stream, flags, group_name);
         // 安全释放
         CALAudioSourceClip clip_handle(clip);
         if (!clip_handle->stream) {
-            WrapAL::SafeRelease(pcm_stream);
+            WrapAL::SafeRelease(audio_stream);
         }
     }
     // 出现错误
@@ -524,7 +531,7 @@ auto WrapAL::CALAudioEngine::CreateClip(AudioFormat format, const wchar_t* file_
 }
 
 // 创建音频片段
-auto WrapAL::CALAudioEngine::CreateClipMove(const PCMFormat& format, uint8_t*& buf, size_t len, AudioClipFlag flags, const char* group_name) noexcept -> ALHandle {
+auto WrapAL::CALAudioEngine::CreateClipMove(const AudioFormat& format, uint8_t*& buf, size_t len, AudioClipFlag flags, const char* group_name) noexcept -> ALHandle {
     // 直接使用缓冲区不能只用流模式
     assert(!(flags & WrapAL::Flag_StreamingReading) && "directly buffer can't be streaming mode");
     AudioSourceClipReal* real = m_acAllocator.Alloc();
@@ -564,7 +571,7 @@ auto WrapAL::CALAudioEngine::CreateClipMove(const PCMFormat& format, uint8_t*& b
 
 
 // 创建片段
-auto WrapAL::CALAudioEngine::CreateClip(const PCMFormat & format, const uint8_t* src, size_t size, AudioClipFlag config, const char* group_name) noexcept ->ALHandle {
+auto WrapAL::CALAudioEngine::CreateClip(const AudioFormat & format, const uint8_t* src, size_t size, AudioClipFlag config, const char* group_name) noexcept ->ALHandle {
     uint8_t* new_src = reinterpret_cast< uint8_t*>(::malloc(size));
     if (new_src) {
         ::memcpy(new_src, src, size);
@@ -747,16 +754,57 @@ auto WrapAL::CALAudioEngine::ac_ratio(ALHandle id, float ratio) noexcept -> floa
     return ratio;
 }
 
+// namesapce!
+namespace WrapAL {
+    // stop clip anyway
+    WRAPAL_NOINLINE auto StopClipAnyway(ALHandle clip_id) {
+        assert(clip_id != ALInvalidHandle);
+        if (clip_id != ALInvalidHandle) {
+            auto clip = reinterpret_cast<AudioSourceClipReal*>(clip_id);
+            clip->source_voice->Stop(0);
+            clip->source_voice->FlushSourceBuffers();
+            clip->playing = false;
+            clip->end_of_buffer = false;
+        }
+    }
+}
 
 // 利用文件重建片段
-bool WrapAL::CALAudioEngine::ac_recreate(ALHandle clip_id, const wchar_t * file_name) noexcept {
+bool WrapAL::CALAudioEngine::ac_recreate(ALHandle clip_id, const wchar_t* file_name) noexcept {
+    assert(clip_id != ALInvalidHandle && file_name);
+    // 创建文件流
+    auto file_stream = this->CreatStreamFromFile(file_name);
+    // 有效
+    if (file_stream) {
+        return this->ac_recreate(clip_id, file_stream);
+    }
+    // 内存不足
+    else {
+        this->OutputErrorOOM(__FUNCTION__);
+        return false;
+    }
+}
 
+// 利用文件流重建片段
+bool WrapAL::CALAudioEngine::ac_recreate(ALHandle clip_id, IALFileStream* file_stream) noexcept {
+    assert(clip_id != ALInvalidHandle && file_stream);
     return false;
 }
 
-// 利用流重建片段
-bool WrapAL::CALAudioEngine::ac_recreate(ALHandle clip_id, XALPCMStream* stream) noexcept {
+// 利用音频流重建片段
+bool WrapAL::CALAudioEngine::ac_recreate(ALHandle clip_id, XALAudioStream* stream) noexcept {
+    assert(clip_id != ALInvalidHandle && stream);
+    if (stream) {
+        WrapAL::StopClipAnyway(clip_id);
+        auto clip = reinterpret_cast<AudioSourceClipReal*>(clip_id);
+        // 检查新旧格式是否一致
+        WAVEFORMATEX format; stream->GetFormat().MakeWave(format);
+        // 不一致?
+        if (std::memcmp(&format, &clip->wave, sizeof(format))) {
+            clip->wave = format;
 
+        }
+    }
     return false;
 }
 
@@ -772,7 +820,12 @@ bool WrapAL::CALAudioEngine::ac_recreate(ALHandle id, uint8_t* buf, size_t len) 
 
 // 利用可移动缓冲片段重建片段
 bool WrapAL::CALAudioEngine::ac_recreate_move(ALHandle id, uint8_t*& buf, size_t len) noexcept {
-
+    assert(id && buf && "bad arguments");
+    if (buf) {
+        assert(!"noimpl");
+        ::free(buf);
+        buf = nullptr;
+    }
     return false;
 }
 

@@ -55,10 +55,31 @@ int main() {
             auto name = clip.GetGroup().Name();
             // play the clip
             clip.Play();
-            clip.Volume(0.5f);
-            float ratio = 1.f;
-            while (std::wscanf(L"%f", &ratio) != EOF) {
-                clip.Ratio(ratio);
+            float value = 1.f;
+            wchar_t control = 0;
+            std::wprintf(L"Audio clip duration: %5.3f sec.\r\n", clip.Duration());
+            while ((std::wscanf(L"%c %f", &control, &value) != EOF)) {
+                switch (control)
+                {
+                case 'r':
+                    clip.Ratio(value);
+                    break;
+                case 'v':
+                    clip.Volume(value);
+                    break;
+                case 's':
+                    clip.Seek(value);
+                    break;
+                case 'S':
+                    clip.Stop();
+                    break;
+                case 'p':
+                    clip.Pause();
+                    break;
+                case 'P':
+                    clip.Play();
+                    break;
+                }
             }
             // destroy clip(optional)
             //clip.Destroy();

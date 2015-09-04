@@ -38,3 +38,17 @@ core management class in WrapAL, see [CALAudioEngine.md](./CALAudioEngine.md)
 in `WrapAL::CALAudioEngine::Initialize`, yeah, you use `AudioEngine.Initialize()` in 
 easy way, but, IALConfigure provided some **Configure**, you may implement it. 
 more detail see [IALConfigure.md](./CALAudioEngine.md)
+
+### Auto-Task
+to call `WrapAL::CALAudioEngine::Update`, you can do some auto-task but **not forced** include:
+  1. (**in plan**)auto-destroy audio clip that created with flag `WrapAL::AudioClipFlag::Flag_AutoDestroyEOP`  
+    - yeah, you can guess that clip destroyed in this method
+    - you can play some "audio effect" through this
+  2. (**in plan**)call clip's `.FadeTo`
+    - you can do "fade in/out" effect
+  
+**remarks**  
+  
+  - be careful for thread-safety, if update in same thread with clip, you can define `WRAPAL_SAME_THREAD_UPDATE`
+  - if in other thread, you should undef `WRAPAL_SAME_THREAD_UPDATE` and implement `WrapAL::CALLocker`(optional, if you want lock on the other way)
+  - if `WrapAL::IALConfigure::IsAutoUpdate` return `true`, audio engine would take the job that call `WrapAL::CALAudioEngine::Update` in a independent thread,  you must undef `WRAPAL_SAME_THREAD_UPDATE`

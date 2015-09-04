@@ -56,6 +56,10 @@ constexpr uint32_t operator"" _wrapal32(const char* src, size_t len) {
 
 // wrapal namespace
 namespace WrapAL {
+    // windows error code to HRESULT
+    static auto WinCode2HRESULT(UINT x) noexcept ->HRESULT {
+        return ((HRESULT)(x) <= 0 ? ((HRESULT)(x)) : ((HRESULT)(((x)& 0x0000FFFF) | (FACILITY_WIN32 << 16) | 0x80000000)));
+    }
     // Mpg123 dll, using dynamic-linking to avoid LGPL
     class Mpg123 {
     public:
@@ -123,9 +127,6 @@ namespace WrapAL {
     // default al configure
     class CALDefConfigure : public IALConfigure {
     public:
-        // default audio stream creation func
-        static auto DefCreateAudioStream(AudioFormat, const wchar_t*, wchar_t info[/*ErrorInfoLength*/])noexcept->XALAudioStream*;
-    public:
         // cotr
         CALDefConfigure() { m_szLastError[0] = 0; };
         // dotr
@@ -135,10 +136,14 @@ namespace WrapAL {
         virtual auto Release() noexcept ->int32_t override { return 1; }
         // auto update? return true if you want and must undef "WRAPAL_SAME_THREAD_UPDATE"
         virtual auto IsAutoUpdate() noexcept ->bool override { return false; };
+        // alloc a small space less than 128-byte
+        virtual auto SmallAlloc(size_t length) noexcept ->void* override { return ::malloc(length); };
+        // free space that alloced via "SmallAlloc"
+        virtual auto SmallFree(void* address) noexcept ->void override { ::free(address); };
         // choose device, return index, if out of range, choose default device
         virtual auto ChooseDevice(const AudioDeviceInfo [/*count*/], UINT count/* <= DeviceMaxCount*/) noexcept ->UINT override { return count; };
-        // create audio stream from file
-        virtual auto CreateAudioStream(AudioFormat, const wchar_t*) noexcept->XALAudioStream* override;
+        // create pcm audio stream from file stream
+        virtual auto CreatePCMStream(AudioFormat, IALFileStream*) noexcept->XALPCMStream* override;
         // get last error infomation, return false if no error
         virtual auto GetLastErrorInfo(wchar_t info[/*ErrorInfoLength*/])noexcept->bool override;
         // output error infomation

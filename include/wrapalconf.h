@@ -1,8 +1,11 @@
 ﻿#pragma once
 // THIS FILE IS NONE-LICENSE
 
-// include CALDefConfigure
+// include WrapAL::CALDefConfigure
 #define WRAPAL_INCLUDE_DEFAULT_CONFIGURE
+
+// include WrapAL::DefCreatePCMStream
+#define WRAPAL_INCLUDE_DEFAULT_PCM_STREAM
 
 // use AudioEngine marco
 #define WRAPAL_USE_AUDIOENGINE_MARCO
@@ -20,6 +23,10 @@
 // need support vista/win7 ? define it!
 //#define WRAPAL_XAUDIO2_7_SUPPORT
 
+
+// [invalid yet] 
+// support for creating WrapAL::IALStream from COM IStream
+//#define WRAPAL_COM_ISTREAM_SUPPORT
 
 
 #ifndef WRAPAL_SAME_THREAD_UPDATE
@@ -46,6 +53,8 @@ namespace WrapAL {
         GroupMaxSize = 8,
         // devie max count
         DeviceMaxCount = 256,
+        // small space threshold for IALConfigure::SmallAlloc/SmallFree
+        SmallSpaceThreshold = 128,
     };
     // message for runtime
     enum RuntimeMessage : unsigned int {

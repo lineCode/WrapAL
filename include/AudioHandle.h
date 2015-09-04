@@ -83,7 +83,7 @@ namespace WrapAL {
         // get group
         auto GetGroup() const noexcept { return CALAudioSourceGroup(m_handle ? reinterpret_cast<ALHandle>((*this)->group) : ALInvalidHandle); }
         // destroy this clip, free the memory in engine
-        auto Destroy()noexcept { CheckHandle; WrapALAudioEngine.ac_destroy(m_handle);  (m_handle) = ALInvalidHandle; }
+        auto Destroy() noexcept { CheckHandle; WrapALAudioEngine.ac_destroy(m_handle);  (m_handle) = ALInvalidHandle; }
         // play this clip
         auto Play() const noexcept { CheckHandle; return WrapALAudioEngine.ac_play(m_handle); }
         // stop this clip
@@ -129,7 +129,7 @@ namespace WrapAL {
     };
     // create new clip with audio stream wrapped function
     // if using streaming audio, do not release the stream, this clip will do it
-    static inline auto CreateAudioClip(XALAudioStream* stream, AudioClipFlag flags = Flag_None, const char* group = "BGM") noexcept {
+    static inline auto CreateAudioClip(XALPCMStream* stream, AudioClipFlag flags = Flag_None, const char* group = "BGM") noexcept {
         return std::move(CALAudioSourceClip(WrapALAudioEngine.CreateClip(stream, flags, group)));
     }
     // create new clip with file name wrapped function
@@ -148,7 +148,7 @@ namespace WrapAL {
     }
     // create new clip with audio stream wrapped function
     // if using streaming audio, do not release the stream, this clip will do it
-    static inline auto CreateStreamingAudioClip(XALAudioStream* stream, AudioClipFlag flags = Flag_None, const char* group = "BGM") noexcept {
+    static inline auto CreateStreamingAudioClip(XALPCMStream* stream, AudioClipFlag flags = Flag_None, const char* group = "BGM") noexcept {
         return std::move(CALAudioSourceClip(WrapALAudioEngine.CreateClip(stream, flags | WrapAL::Flag_StreamingReading, group)));
     }
     // create new clip with file name wrapped function

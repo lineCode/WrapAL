@@ -1,10 +1,8 @@
 ﻿#pragma once
 
 /*
-WrapAL designed for static link, because of lightweight
+WrapAL designed for static-link, because of lightweight
 enough, It's not recommended to export to dll
-
-Version: 0.0.1
 */
 
 /**
@@ -87,12 +85,23 @@ namespace WrapAL {
     using ALHandle = size_t;
     // invalid handle
     static constexpr ALHandle ALInvalidHandle = 0;
+    // wave format
+    enum FormatWave : uint8_t {
+        // unknown [error]
+        Wave_Unknown = 0,
+        // pcm [supported]
+        Wave_PCM,
+        // MS-ADPCM [decode by youself]
+        Wave_MSADPCM,
+        // IEEE FLOAT[supported]
+        Wave_IEEEFloat,
+    };
     // pcm format, WAVE_FORMAT_PCM
     struct PCMFormat {
         // make wave format
         auto MakeWave(WAVEFORMATEX& wave) const noexcept {
-            wave.wFormatTag = WAVE_FORMAT_PCM;
-            wave.nChannels = this->nChannels;
+            wave.wFormatTag = WORD(nFormatTag);
+            wave.nChannels = WORD(this->nChannels);
             wave.nSamplesPerSec = this->nSamplesPerSec;
             wave.nAvgBytesPerSec = this->nAvgBytesPerSec;
             wave.nBlockAlign = this->nBlockAlign;
@@ -106,7 +115,9 @@ namespace WrapAL {
         // block size of data
         uint16_t    nBlockAlign;
         // number of channels (i.e. mono, stereo...)
-        uint16_t    nChannels;
+        uint8_t     nChannels;
+        // wave format
+        FormatWave  nFormatTag;
     };
     // CALAudioEngine
     class CALAudioEngine;
@@ -136,17 +147,15 @@ namespace WrapAL {
     };
     // audio format
     enum class AudioFormat : uint32_t {
-        // [WrapAL default] stream from memory
-        Format_ByteStream = 0,
-        // [WrapAL default] stream from *.wav file
-        Format_Wave,
-        // [WrapAL default] stream from *.ogg file
+        // [WrapAL default] stream from *.wav file stream
+        Format_Wave = 0,
+        // [WrapAL default] stream from *.ogg file stream
         Format_OggVorbis,
-        // [WrapAL default] stream from *.mp3 or some file,
+        // [WrapAL default] stream from *.mp3 or some file stream,
         // remarks: mpg123 will use stderr to display error infomation, be careful
         Format_Mpg123,
-        // stream for user defined, you should define
-        Format_User,
+        // stream for user defined
+        Format_UserDefined,
     };
     // Audio Clip Flag
     enum AudioClipFlag : uint32_t {

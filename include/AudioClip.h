@@ -68,7 +68,7 @@ namespace WrapAL {
         // source
         IXAudio2SourceVoice*        source_voice = nullptr;
         // audio stream for streaming
-        XALAudioStream*             stream = nullptr;
+        XALPCMStream*             stream = nullptr;
         // group of this
         AudioSourceGroupReal*           group = nullptr;
         // audio data

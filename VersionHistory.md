@@ -7,6 +7,8 @@
     - 2015-08-11: 0.1.2 - add "ChooseDevice" for `IALConfigure`
     - 2015-08-28: 0.1.3 - use "WrapALAudioEngine" instead of "AudioEngine"
   3. Version 0.2  
-    - 2015-09-01: 0.2.0-pre - add XAudio2 2.7 support in DXSDK preliminarily
+    - 2015-09-01: 0.2.0p- add XAudio2 2.7 support in DXSDK preliminarily
     - 2015-09-02: 0.2.0 - add XAudio2 2.9 support 
     - 2015-09-03: 0.2.1 - generalized error message
+    - 2015-09-04: 0.2.2 - add IALStream! big bang! 
+    

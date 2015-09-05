@@ -769,6 +769,7 @@ namespace WrapAL {
     }
 }
 
+#ifdef WRAPAL_IN_PLAN
 // 利用文件重建片段
 bool WrapAL::CALAudioEngine::ac_recreate(ALHandle clip_id, const wchar_t* file_name) noexcept {
     assert(clip_id != ALInvalidHandle && file_name);
@@ -788,6 +789,7 @@ bool WrapAL::CALAudioEngine::ac_recreate(ALHandle clip_id, const wchar_t* file_n
 // 利用文件流重建片段
 bool WrapAL::CALAudioEngine::ac_recreate(ALHandle clip_id, IALFileStream* file_stream) noexcept {
     assert(clip_id != ALInvalidHandle && file_stream);
+    assert(!"noimpl");
     return false;
 }
 
@@ -802,9 +804,9 @@ bool WrapAL::CALAudioEngine::ac_recreate(ALHandle clip_id, XALAudioStream* strea
         // 不一致?
         if (std::memcmp(&format, &clip->wave, sizeof(format))) {
             clip->wave = format;
-
         }
     }
+    assert(!"noimpl");
     return false;
 }
 
@@ -815,6 +817,7 @@ bool WrapAL::CALAudioEngine::ac_recreate(ALHandle id, uint8_t* buf, size_t len) 
         ::memcpy(new_buffer, buf, len);
         return this->ac_recreate_move(id, new_buffer, len);
     }
+    assert(!"noimpl");
     return false;
 }
 
@@ -828,7 +831,7 @@ bool WrapAL::CALAudioEngine::ac_recreate_move(ALHandle id, uint8_t*& buf, size_t
     }
     return false;
 }
-
+#endif
 
 // 设置或获取总音量
 auto WrapAL::CALAudioEngine::Volume(float volume) noexcept -> float {

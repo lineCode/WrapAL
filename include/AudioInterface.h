@@ -82,11 +82,13 @@ namespace WrapAL {
     public:
         // get last error infomation, return false if no error
         virtual auto GetLastErrorInfo(wchar_t info[/*ErrorInfoLength*/])noexcept->bool = 0;
+#ifdef WRAPAL_IN_PLAN
         // recreate
         virtual auto Recreate(IALFileStream* stream)noexcept->void {
             WrapAL::SafeRelease(m_pFileStream);
             m_pFileStream = stream;
         }
+#endif
     public:
         // ctor
         XALAudioStream(IALFileStream* stream) noexcept : m_pFileStream(stream) {};

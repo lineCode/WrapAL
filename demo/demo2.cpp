@@ -25,7 +25,7 @@ int main() {
                 uindex = UINT(index);
             }
             if (uindex < count) {
-                std::wprintf(L"[%ls][%ls]\r\n", list[uindex].Name(), list[uindex].Id() );
+                std::wprintf(L"%ls\r\n%ls\r\n", list[uindex].Name(), list[uindex].Id());
             }
             else {
                 std::wprintf(L"Set default device.\r\n");

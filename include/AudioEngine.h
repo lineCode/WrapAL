@@ -103,6 +103,7 @@ namespace WrapAL {
         // create new clip in memory
         auto CreateClip(const AudioFormat& format, const uint8_t* src, size_t size, AudioClipFlag, const char* group_name) noexcept->ALHandle;
     private: // Audio Clip
+#ifdef WRAPAL_IN_PLAN
         // recreate with file name
         bool ac_recreate(ALHandle clip_id, const wchar_t* file_name) noexcept;
         // recreate with file stream
@@ -113,6 +114,7 @@ namespace WrapAL {
         bool ac_recreate(ALHandle clip_id, uint8_t* buffer, size_t length) noexcept;
         // recreate with malloc-ed move-able memory : same format with new buffer!
         bool ac_recreate_move(ALHandle clip_id, uint8_t*& buffer, size_t length) noexcept;
+#endif
         // destroy the clip
         bool ac_destroy(ALHandle clip_id) noexcept;
         // play the clip

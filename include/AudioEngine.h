@@ -94,14 +94,14 @@ namespace WrapAL {
     public: // Audio Clip
         // create new clip with audio stream
         auto CreateClip(XALAudioStream*, AudioClipFlag, const char* group_name) noexcept ->ALHandle;
-        // create new clip with file name
-        auto CreateClip(EncodingFormat, const wchar_t*, AudioClipFlag, const char* group_name) noexcept->ALHandle;
         // create new clip with file stream
         auto CreateClip(EncodingFormat, IALFileStream*, AudioClipFlag, const char* group_name) noexcept->ALHandle;
+        // create new clip with file name
+        auto CreateClip(EncodingFormat, const wchar_t*, AudioClipFlag, const char* group_name) noexcept->ALHandle;
+        // create new clip in memory
+        auto CreateClip(const AudioFormat&, const uint8_t*, size_t, AudioClipFlag, const char* group_name) noexcept->ALHandle;
         // create new clip in memory with move
         auto CreateClipMove(const AudioFormat&, uint8_t*&, size_t, AudioClipFlag, const char* group_name) noexcept->ALHandle;
-        // create new clip in memory
-        auto CreateClip(const AudioFormat& format, const uint8_t* src, size_t size, AudioClipFlag, const char* group_name) noexcept->ALHandle;
     private: // Audio Clip
 #ifdef WRAPAL_IN_PLAN
         // recreate with file name

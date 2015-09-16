@@ -180,8 +180,7 @@ namespace WrapAL {
     inline auto&operator |=(AudioClipFlag& a, AudioClipFlag b) noexcept {
         return a = a | b;
     }
-    template<typename T>
-    auto LoadProc(T& pointer, HMODULE dll, const char* name) noexcept {
+    template<typename T> static inline auto LoadProc(T& pointer, HMODULE dll, const char* name) noexcept {
         pointer = reinterpret_cast<T>(::GetProcAddress(dll, name));
     }
     // safe release interface

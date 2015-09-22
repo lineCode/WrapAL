@@ -36,6 +36,10 @@ enough, It's not recommended to export to dll
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
+#ifndef _DEBUG
+#define NDEBUG
+#endif
+
 // default library
 #include <cstdlib>
 // default define

@@ -12,4 +12,5 @@
     - 2015-09-03: 0.2.1 - generalized error message
     - 2015-09-04: 0.2.2 - add IALStream! big bang! 
     - 2015-09-05: 0.2.3 - **rename** AudioFormat->EncodingFormat, PCM->Audio because of adding IEEE_FLOAT support
+    - 2015-09-23: 0.2.4 - add dllexport for MSC only
     

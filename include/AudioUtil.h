@@ -125,7 +125,7 @@ namespace WrapAL {
     };
 #ifdef WRAPAL_INCLUDE_DEFAULT_CONFIGURE
     // default al configure
-    class CALDefConfigure : public IALConfigure {
+    class WRAPALAPI CALDefConfigure : public IALConfigure {
     public:
         // cotr
         CALDefConfigure() { m_szLastError[0] = 0; };

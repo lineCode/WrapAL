@@ -27,8 +27,6 @@
 // DEBUG
 #ifdef _DEBUG
 #include <list>
-#else
-#define NDEBUG
 #endif
 
 // wrapal namespace
@@ -53,7 +51,7 @@ namespace WrapAL {
     auto DefCreateAudioStream(EncodingFormat format, IALFileStream* stream, wchar_t error_info[ErrorInfoLength]) noexcept->XALAudioStream* ;
 #endif
     // Audio Engine
-    class CALAudioEngine {
+    class WRAPALAPI CALAudioEngine {
         // audio clip pool
         using ACPool = ObjectPool<AudioSourceClipReal, AudioStreamBucketSize>;
         // friend class
@@ -64,7 +62,7 @@ namespace WrapAL {
         friend class CALDefConfigure;
     public:
         // get version
-        auto GetVersion() const noexcept -> const char* { return "0.2.3"; }
+        auto GetVersion() const noexcept -> const char* { return "0.2.4"; }
         // get api level
         auto GetAPILevel() const noexcept { return m_lvAPI; }
         // get message

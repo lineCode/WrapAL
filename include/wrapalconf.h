@@ -33,6 +33,16 @@
 #include <Windows.h>
 #endif
 
+// API
+// #define WRAPALAPI __declspec(dllimport)
+#ifndef WRAPALAPI
+#ifdef WRAPALAPIDLL
+#define WRAPALAPI __declspec(dllexport)
+#else
+#define WRAPALAPI
+#endif
+#endif
+
 // name
 namespace WrapAL {
     // some config

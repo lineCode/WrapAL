@@ -566,6 +566,11 @@ auto WrapAL::CALAudioEngine::CreateClip(const AudioFormat& format, uint8_t*&& bu
             this->OutputErrorHR(__FUNCTION__, hr);
         }
     }
+    // 依然有效?
+    if (buf) {
+        ::free(buf);
+        buf = nullptr;
+    }
     return reinterpret_cast<ALHandle>(real);
 }
 

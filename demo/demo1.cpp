@@ -26,10 +26,6 @@ auto create_biiiiii(float f) {
     auto clip = WrapAL::CreateAudioClip(
         format, std::move(buffer), length, WrapAL::Flag_LoopInfinite
         );
-    if (buffer) {
-        // some error maked clip created failed
-        ::free(buffer);
-    }
     return clip;
 }
 

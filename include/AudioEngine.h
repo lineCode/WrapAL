@@ -70,7 +70,7 @@ namespace WrapAL {
         // init
         auto Initialize(IALConfigure* config=nullptr) noexcept ->HRESULT;
         // un-init
-        void UnInitialize() noexcept;
+        void Uninitialize() noexcept;
         // update audio engine if you want to do some auto-task, call this more than 20Hz
         void Update() noexcept;
         // create stream form file
@@ -85,7 +85,7 @@ namespace WrapAL {
         // ctor
         CALAudioEngine() = default;
         // dtor
-        ~CALAudioEngine() noexcept { if(this->configure) this->UnInitialize(); }
+        ~CALAudioEngine() noexcept { if(this->configure) this->Uninitialize(); }
     private:
         // audio api leve
         APILevel                    m_lvAPI = APILevel::Level_Unknown;
@@ -98,8 +98,8 @@ namespace WrapAL {
         auto CreateClip(EncodingFormat, const wchar_t*, AudioClipFlag, const char* group_name) noexcept->ALHandle;
         // create new clip in memory
         auto CreateClip(const AudioFormat&, const uint8_t*, size_t, AudioClipFlag, const char* group_name) noexcept->ALHandle;
-        // create new clip in memory with move
-        auto CreateClipMove(const AudioFormat&, uint8_t*&, size_t, AudioClipFlag, const char* group_name) noexcept->ALHandle;
+        // create new clip in memory
+        auto CreateClip(const AudioFormat&, uint8_t*&&, size_t, AudioClipFlag, const char* group_name) noexcept->ALHandle;
     private: // Audio Clip
 #ifdef WRAPAL_IN_PLAN
         // recreate with file name

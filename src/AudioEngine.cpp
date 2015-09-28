@@ -385,7 +385,7 @@ auto WrapAL::CALAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESUL
 
 
 // 反初始化
-void WrapAL::CALAudioEngine::UnInitialize() noexcept {
+void WrapAL::CALAudioEngine::Uninitialize() noexcept {
     // 摧毁所有有效片段
 #ifdef _DEBUG
     m_acAllocator.Release([this](AudioSourceClipReal* real) {
@@ -475,7 +475,7 @@ auto WrapAL::CALAudioEngine::CreateClip(XALAudioStream* stream, AudioClipFlag fl
             if (buffer) {
                 stream->ReadNext(size_in_byte, buffer);
                 stream->GetLastErrorInfo(error);
-                id = this->CreateClipMove(stream->GetFormat(), buffer, size_in_byte, flags, group_name);
+                id = this->CreateClip(stream->GetFormat(), std::move(buffer), size_in_byte, flags, group_name);
             }
             // OOM
             else {
@@ -531,7 +531,7 @@ auto WrapAL::CALAudioEngine::CreateClip(EncodingFormat format, IALFileStream* fi
 }
 
 // 创建音频片段
-auto WrapAL::CALAudioEngine::CreateClipMove(const AudioFormat& format, uint8_t*& buf, size_t len, AudioClipFlag flags, const char* group_name) noexcept -> ALHandle {
+auto WrapAL::CALAudioEngine::CreateClip(const AudioFormat& format, uint8_t*&& buf, size_t len, AudioClipFlag flags, const char* group_name) noexcept -> ALHandle {
     // 直接使用缓冲区不能只用流模式
     assert(!(flags & WrapAL::Flag_StreamingReading) && "directly buffer can't be streaming mode");
     AudioSourceClipReal* real = m_acAllocator.Alloc();
@@ -575,7 +575,7 @@ auto WrapAL::CALAudioEngine::CreateClip(const AudioFormat & format, const uint8_
     uint8_t* new_src = reinterpret_cast< uint8_t*>(::malloc(size));
     if (new_src) {
         ::memcpy(new_src, src, size);
-        return this->CreateClipMove(format, new_src, size, config, group_name);
+        return this->CreateClip(format, std::move(new_src), size, config, group_name);
     }
     else {
         this->OutputErrorOOM(__FUNCTION__);

@@ -107,15 +107,13 @@ namespace WrapAL {
             wave.wFormatTag = WORD(nFormatTag);
             wave.nChannels = WORD(this->nChannels);
             wave.nSamplesPerSec = this->nSamplesPerSec;
-            wave.nAvgBytesPerSec = this->nAvgBytesPerSec;
+            wave.nAvgBytesPerSec = this->nSamplesPerSec * this->nBlockAlign;
             wave.nBlockAlign = this->nBlockAlign;
             wave.wBitsPerSample = wave.nBlockAlign / wave.nChannels * 8;
             wave.cbSize = 0;
         }
         // sample rate
         uint32_t    nSamplesPerSec;
-        // for buffer estimation
-        uint32_t    nAvgBytesPerSec;
         // block size of data
         uint16_t    nBlockAlign;
         // number of channels (i.e. mono, stereo...)

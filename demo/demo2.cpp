@@ -85,7 +85,7 @@ int main() {
             //clip.Destroy();
 
             // Uninitialize WrapAL WrapALAudioEngine
-            AudioEngine.UnInitialize();
+            AudioEngine.Uninitialize();
         }
         // Uninitialize the COM Interface
         ::CoUninitialize();

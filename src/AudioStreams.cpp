@@ -267,7 +267,7 @@ WrapAL::CALWavAudioStream::CALWavAudioStream(IALFileStream* file_stream) noexcep
     // 复制数据
     if (code == DefErrorCode::Code_Ok) {
         m_audioFormat.nSamplesPerSec = header.nSamplesPerSec;
-        m_audioFormat.nAvgBytesPerSec = header.nAvgBytesPerSec;
+        //m_audioFormat.nAvgBytesPerSec = header.nAvgBytesPerSec;
         m_audioFormat.nBlockAlign = header.nBlockAlign;
         m_audioFormat.nChannels = uint8_t(header.nChannels);
         m_audioFormat.nFormatTag = FormatWave(header.wFormatTag);
@@ -322,7 +322,7 @@ WrapAL::CALOggAudioStream::CALOggAudioStream(IALFileStream* file_stream) noexcep
         // 区块对齐
         m_audioFormat.nBlockAlign = m_audioFormat.nChannels * sizeof(int16_t);
         // bps
-        m_audioFormat.nAvgBytesPerSec = m_audioFormat.nSamplesPerSec * m_audioFormat.nBlockAlign;
+        //m_audioFormat.nAvgBytesPerSec = m_audioFormat.nSamplesPerSec * m_audioFormat.nBlockAlign;
         // 编码: PCM
         m_audioFormat.nFormatTag = Wave_PCM;
         // 数据大小
@@ -455,7 +455,7 @@ WrapAL::CALMp3AudioStream::CALMp3AudioStream(IALFileStream* file_stream) noexcep
             m_audioFormat.nFormatTag = Wave_PCM;
         }
         // 数据率
-        m_audioFormat.nAvgBytesPerSec = m_audioFormat.nSamplesPerSec * m_audioFormat.nBlockAlign;
+        //m_audioFormat.nAvgBytesPerSec = m_audioFormat.nSamplesPerSec * m_audioFormat.nBlockAlign;
     }
     // 计算长度
     if (!error_code) {
@@ -572,9 +572,13 @@ auto WrapAL::CALDefConfigure::GetLastErrorInfo(wchar_t info[]) noexcept -> bool 
 
 // 获取默认libmpg123位置
 auto WrapAL::CALDefConfigure::GetLibmpg123Path(wchar_t path[]) noexcept -> void {
+#if 0
     path += ::GetCurrentDirectoryW(MAX_PATH, path);
     const auto* __restrict real = L"\\libmpg123.dll";
     while ((*path = *real)) { ++path; ++real; }
+#else
+    path[0] = 0;
+#endif
 }
 
 #endif

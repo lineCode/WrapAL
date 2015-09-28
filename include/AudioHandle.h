@@ -145,9 +145,9 @@ namespace WrapAL {
     static inline auto CreateAudioClip(const AudioFormat& format, const uint8_t* src, size_t size, AudioClipFlag flags = Flag_None, const char* group = "BGM") noexcept {
         return (CALAudioSourceClip(WrapALAudioEngine.CreateClip(format, src, size, flags, group)));
     }
-    // create new clip in memory with move wrapped function, buffer must be malloc-ed
+    // create new clip in memory with giveup memory life control wrapped function, buffer must be malloc-ed
     // for this, can't be in streaming mode
-    static inline auto CreateAudioClipMove(const AudioFormat& f, uint8_t*& p, size_t l, AudioClipFlag flags = Flag_None, const char* group = "BGM") noexcept {
-        return (CALAudioSourceClip(WrapALAudioEngine.CreateClipMove(f, p, l, flags, group)));
+    static inline auto CreateAudioClip(const AudioFormat& f, uint8_t*&& p, size_t l, AudioClipFlag flags = Flag_None, const char* group = "BGM") noexcept {
+        return (CALAudioSourceClip(WrapALAudioEngine.CreateClip(f, std::move(p), l, flags, group)));
     }
 }

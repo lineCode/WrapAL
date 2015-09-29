@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeLite_Workspace Name="Project_CodeLite" Database="">
+  <Project Name="libogg" Path="libogg/libogg.project"/>
+  <Project Name="libvorbis" Path="libvorbis/libvorbis.project"/>
+  <Project Name="demo1" Path="demo1/demo1.project" Active="No"/>
+  <Project Name="wrapal" Path="wrapal/wrapal.project"/>
+  <Project Name="demo2" Path="demo2/demo2.project" Active="Yes"/>
+  <BuildMatrix>
+    <WorkspaceConfiguration Name="Debug" Selected="yes">
+      <Project Name="libogg" ConfigName="Debug"/>
+      <Project Name="libvorbis" ConfigName="Debug"/>
+      <Project Name="demo1" ConfigName="Debug"/>
+      <Project Name="wrapal" ConfigName="Debug"/>
+      <Project Name="demo2" ConfigName="Debug"/>
+    </WorkspaceConfiguration>
+    <WorkspaceConfiguration Name="Release" Selected="yes">
+      <Project Name="libogg" ConfigName="Release"/>
+      <Project Name="libvorbis" ConfigName="Release"/>
+      <Project Name="demo1" ConfigName="Release"/>
+      <Project Name="wrapal" ConfigName="Release"/>
+      <Project Name="demo2" ConfigName="Release"/>
+    </WorkspaceConfiguration>
+  </BuildMatrix>
+</CodeLite_Workspace>

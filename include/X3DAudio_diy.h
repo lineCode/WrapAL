@@ -1,4 +1,21 @@
-﻿#pragma once
+#pragma once
+
+#ifndef _In_reads_bytes_
+#define _In_reads_bytes_(x)
+#endif
+
+#ifndef _Out_writes_bytes_
+#define _Out_writes_bytes_(x)
+#endif
+
+#ifndef _In_
+#define _In_
+#endif
+
+#ifndef _Inout_
+#define _Inout_
+#endif
+
 
 // speaker geometry configuration flags, specifies assignment of channels to speaker positions, defined as per WAVEFORMATEXTENSIBLE.dwChannelMask
 #if !defined(_SPEAKER_POSITIONS_)

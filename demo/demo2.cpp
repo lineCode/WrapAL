@@ -1,4 +1,4 @@
-﻿#ifdef _MSC_VER
+#ifdef _MSC_VER
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 #include <cstdio>
@@ -6,7 +6,7 @@
 #include "wrapal.h"
 
 // App Entrance
-int main() {
+int main(int argc, char* argv[]) {
     // my os is in chinese, std::wprintf is on the bad way
     std::setlocale(LC_ALL, "chs");
     // my config
@@ -21,7 +21,7 @@ int main() {
             UINT uindex = 0u;
             {
                 int index = count;
-                std::wscanf(L"%d", &index);
+                std::scanf("%d", &index);
                 uindex = UINT(index);
             }
             if (uindex < count) {
@@ -56,9 +56,9 @@ int main() {
             // play the clip
             clip.Play();
             float value = 1.f;
-            wchar_t control = 0;
+            char control = 0;
             std::wprintf(L"Audio clip duration: %5.3f sec.\r\n", clip.Duration());
-            while ((std::wscanf(L"%c %f", &control, &value) != EOF)) {
+            while ((std::scanf("%c %f", &control, &value) != EOF)) {
                 switch (control)
                 {
                 case 'r':

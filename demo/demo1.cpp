@@ -1,4 +1,4 @@
-﻿#ifdef _MSC_VER
+#ifdef _MSC_VER
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 #include <cstdio>
@@ -19,7 +19,7 @@ auto create_biiiiii(float f) {
         auto float_buffer = reinterpret_cast<float*>(buffer);
         for (auto i = 0u; i < length; ++i) {
             float time = float(i) / float(length);
-            float_buffer[i] = std::sinf(time * 2.f * pi * f);
+            float_buffer[i] = std::sin(time * 2.f * pi * f);
         }
         float_buffer = nullptr;
     }

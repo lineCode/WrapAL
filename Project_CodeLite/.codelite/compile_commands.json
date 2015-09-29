@@ -1,9 +1,0 @@
-[{
-  "directory": "D:\\Documents\\GitHub\\WrapAL\\Project_CodeLite\\demo2",
-  "command": "C:/SB/TDM-GCC-64/bin/g++.exe -g -O0 -std=c++14 -Wall -I. -I. -I./../../include/ -I./../3rdparty/libogg/include/ -MG -MP -MT./Debug/demo_demo2.cpp.o -MF./Debug/demo_demo2.cpp.o.d -MM ../../demo/demo2.cpp",
-  "file": "D:\\Documents\\GitHub\\WrapAL\\Project_CodeLite\\demo2\\..\\..\\demo\\demo2.cpp"
- }, {
-  "directory": "D:\\Documents\\GitHub\\WrapAL\\Project_CodeLite\\demo2",
-  "command": "C:/SB/TDM-GCC-64/bin/g++.exe -c D:/Documents/GitHub/WrapAL/demo/demo2.cpp -g -O0 -std=c++14 -Wall -o ./Debug/demo_demo2.cpp.o -I. -I. -I./../../include/ -I./../3rdparty/libogg/include/",
-  "file": "D:\\Documents\\GitHub\\WrapAL\\demo\\demo2.cpp"
- }]

@@ -7,7 +7,7 @@
 
 // App Entrance
 int main(int argc, char* argv[]) {
-    // my os is in chinese, std::wprintf is on the bad way
+    // my os is in chinese, std::wprintf is in the bad way
     std::setlocale(LC_ALL, "chs");
     // my config
     class MyConfig : public WrapAL::CALDefConfigure {

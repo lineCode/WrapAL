@@ -12,6 +12,8 @@
 [Dd]ebugPublic/
 [Rr]elease/
 [Rr]eleases/
+.codelite/
+.clang/
 x64/
 x86/
 build/

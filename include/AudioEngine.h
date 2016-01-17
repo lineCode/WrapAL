@@ -46,6 +46,8 @@ namespace WrapAL {
         // [invalid yet]Direct Sound in early sdk
         Level_DirectSound,
     };
+    // get api level string
+    auto GetApiLevelString(APILevel) noexcept -> const char*;
 #ifdef WRAPAL_INCLUDE_DEFAULT_AUDIO_STREAM
     // create default audio stream
     auto DefCreateAudioStream(EncodingFormat format, IALFileStream* stream, wchar_t error_info[ErrorInfoLength]) noexcept->XALAudioStream* ;

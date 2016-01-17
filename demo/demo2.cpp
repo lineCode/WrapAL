@@ -83,7 +83,6 @@ int main(int argc, char* argv[]) {
             }
             // destroy clip(optional)
             //clip.Destroy();
-
             // Uninitialize WrapAL WrapALAudioEngine
             AudioEngine.Uninitialize();
         }

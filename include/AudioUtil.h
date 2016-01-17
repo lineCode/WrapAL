@@ -57,7 +57,7 @@ constexpr uint32_t operator"" _wrapal32(const char* src, size_t len) {
 // wrapal namespace
 namespace WrapAL {
     // windows error code to HRESULT
-    static auto WinCode2HRESULT(UINT x) noexcept ->HRESULT {
+    inline auto WinCode2HRESULT(UINT x) noexcept ->HRESULT {
         return ((HRESULT)(x) <= 0 ? ((HRESULT)(x)) : ((HRESULT)(((x)& 0x0000FFFF) | (FACILITY_WIN32 << 16) | 0x80000000)));
     }
     // Mpg123 dll, using dynamic-linking to avoid LGPL

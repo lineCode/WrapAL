@@ -1,6 +1,27 @@
 ﻿#include "wrapal.h"
 #include <mmdeviceapi.h>
 
+// 获取API等级字符串
+auto WrapAL::GetApiLevelString(APILevel level) noexcept -> const char* {
+    switch (level)
+    {
+    case WrapAL::APILevel::Level_Unknown:
+        return "Unknown";
+    case WrapAL::APILevel::Level_XAudio2_7:
+        return "XAudio 2.7";
+    case WrapAL::APILevel::Level_XAudio2_8:
+        return "XAudio 2.8";
+    case WrapAL::APILevel::Level_XAudio2_9:
+        return "XAudio 2.9";
+    case WrapAL::APILevel::Level_OpenAL:
+        return "OpenAL";
+    case WrapAL::APILevel::Level_DirectSound:
+        return "Direct Sound";
+    default:
+        return "ERROR";
+    }
+}
+
 // WRAPAL: DEFINE_GUID
 #define WRAPAL_DEFINE_GUID(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
     static const GUID name = { l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } }

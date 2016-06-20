@@ -25,6 +25,13 @@
 */
 
 
+// assert
+#include <cassert>
+// common
+#include "wrapal_common.h"
+// engine
+#include "AudioEngine.h"
+
 // wrapal namespace
 namespace WrapAL {
     // check it
@@ -33,13 +40,13 @@ namespace WrapAL {
     class CALAudioSourceGroup {
     public:
         // ctor
-        /*explicit*/ CALAudioSourceGroup(ALHandle data) noexcept : m_handle(data) {};
+        CALAudioSourceGroup(ALHandle data) noexcept : m_handle(data) {};
         // ctor
         ~CALAudioSourceGroup() noexcept { m_handle = ALInvalidHandle; };
         // copy ctor
-        CALAudioSourceGroup(const CALAudioSourceGroup& group)noexcept : m_handle(group.m_handle) {}
+        CALAudioSourceGroup(const CALAudioSourceGroup& group) noexcept : m_handle(group.m_handle) {}
         // move ctor
-        CALAudioSourceGroup(CALAudioSourceGroup&& group)noexcept : m_handle(group.m_handle) { (group.m_handle) = ALInvalidHandle; }
+        CALAudioSourceGroup(CALAudioSourceGroup&& group) noexcept : m_handle(group.m_handle) { (group.m_handle) = ALInvalidHandle; }
         // operator = copy
         auto operator =(const CALAudioSourceGroup& group) noexcept ->CALAudioSourceGroup& { (m_handle) = group.m_handle; return *this; }
         // operator = move
@@ -62,28 +69,47 @@ namespace WrapAL {
     };
     // Audio Clip Handle Class, managed by engine, don't care about the releasing
     class CALAudioSourceClip {
+        // safe release
+        void safe_release() noexcept { if (*this) WrapALAudioEngine.ac_release(m_handle); }
+        // safe add ref
+        void safe_addref() noexcept { if (*this) WrapALAudioEngine.ac_addref(m_handle); }
+        // operatr ->
+        auto operator ->() const noexcept { CheckHandle; return reinterpret_cast<const CALAudioSourceClipImpl*>(m_handle); }
     public:
         // copy ctor
-        CALAudioSourceClip(const CALAudioSourceClip& clip)noexcept : m_handle(clip.m_handle) {}
+        CALAudioSourceClip(const CALAudioSourceClip& clip) noexcept : m_handle(clip.m_handle) { 
+            this->safe_addref();
+        }
         // move ctor
-        CALAudioSourceClip(CALAudioSourceClip&& clip)noexcept : m_handle(clip.m_handle) { (clip.m_handle) = ALInvalidHandle; }
+        CALAudioSourceClip(CALAudioSourceClip&& clip) noexcept : m_handle(clip.m_handle) { 
+            clip.m_handle = ALInvalidHandle; 
+        }
         // operator = copy
-        auto operator =(const CALAudioSourceClip& clip) noexcept ->CALAudioSourceClip& { (m_handle) = clip.m_handle; return *this; }
+        auto operator =(const CALAudioSourceClip& clip) noexcept ->CALAudioSourceClip& { 
+            this->safe_release();
+            (m_handle) = clip.m_handle; 
+            this->safe_addref();
+            return *this; 
+        }
         // operator = move
-        auto operator =(CALAudioSourceClip&& clip) noexcept ->CALAudioSourceClip& { m_handle = clip.m_handle;  (clip.m_handle) = ALInvalidHandle; return *this; }
+        auto operator =(CALAudioSourceClip&& clip) noexcept ->CALAudioSourceClip& { 
+            this->safe_release();
+            m_handle = clip.m_handle;
+            (clip.m_handle) = ALInvalidHandle; 
+            return *this; 
+        }
     public:
         // ctor
-        /*explicit*/ CALAudioSourceClip(ALHandle data) noexcept : m_handle(data) {};
+        CALAudioSourceClip(ALHandle data) noexcept : m_handle(data) {};
         // ctor
-        ~CALAudioSourceClip() noexcept { m_handle = ALInvalidHandle; };
+        ~CALAudioSourceClip() noexcept { this->Dispose(); };
         // operatr bool()
         operator bool() const noexcept { return m_handle != ALInvalidHandle; }
-        // operatr ->
-        auto operator ->() const noexcept { CheckHandle; return reinterpret_cast<const AudioSourceClipReal*>(m_handle); }
         // get group
-        auto GetGroup() const noexcept { return CALAudioSourceGroup(m_handle ? reinterpret_cast<ALHandle>((*this)->group) : ALInvalidHandle); }
-        // destroy this clip, free the memory in engine
-        auto Destroy() noexcept { CheckHandle; WrapALAudioEngine.ac_destroy(m_handle);  (m_handle) = ALInvalidHandle; }
+        auto GetGroup() const noexcept->CALAudioSourceGroup;
+        // dispose this handle
+        void Dispose() noexcept { this->safe_release();  (m_handle) = ALInvalidHandle; }
+    public:
         // play this clip
         auto Play() const noexcept { CheckHandle; return WrapALAudioEngine.ac_play(m_handle); }
         // stop this clip

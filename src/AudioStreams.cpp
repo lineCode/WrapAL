@@ -1,4 +1,4 @@
-﻿#include "wrapal.h"
+﻿#include "AudioEngine.h"
 
 // Memory leak detector
 #if defined(_DEBUG) && defined(_MSC_VER) && defined(WRAPAL_MEMDEBUG_IN_MSC)
@@ -21,6 +21,18 @@ struct MemoryLeakDetector {
 } g_detector;
 #endif
 
+
+// the _wrapal32
+constexpr uint32_t operator"" _wrapal32(const char* src, size_t len) {
+    return len == 2 ?
+        static_cast<uint32_t>(src[0]) << (8 * 0) |
+        static_cast<uint32_t>(src[1]) << (8 * 1) :
+        static_cast<uint32_t>(src[0]) << (8 * 0) |
+        static_cast<uint32_t>(src[1]) << (8 * 1) |
+        static_cast<uint32_t>(src[2]) << (8 * 2) |
+        static_cast<uint32_t>(src[3]) << (8 * 3);
+}
+
 #ifdef WRAPAL_INCLUDE_DEFAULT_AUDIO_STREAM
 // Ogg Vorbis
 #include "../3rdparty/libvorbis/include/vorbis/codec.h"
@@ -42,22 +54,39 @@ namespace WrapAL {
         Code_OutOfMemory,
     };
     // alignedsize
-    constexpr auto alignedsize(const size_t n, const size_t a) { return (((((n)-1) / (a)) + 1)*(a)); }
+    constexpr auto alignedsize(const size_t n, const size_t a) noexcept { 
+        return (((((n)-1) / (a)) + 1)*(a)); 
+    }
     // Basic Audio Stream
     class WRAPAL_NOVTABLE CALBasicAudioStream : public XALAudioStream {
         // super class
         using Super = XALAudioStream;
     public:
         // ctor
-        CALBasicAudioStream(IALFileStream* stream) noexcept :Super(stream)  { assert(stream);  }
+        CALBasicAudioStream(IALFileStream* stream) noexcept : Super(stream) { 
+            assert(stream); 
+        }
+        // dtor
+        ~CALBasicAudioStream() noexcept = default;
+        // get code
+        auto GetErrorCode() const noexcept { return m_code; }
     public: // interface impl for XALAudioStream
-        // release this
-        virtual auto Release() noexcept->int32_t override;
+        // add ref-count 
+        virtual auto AddRef() noexcept ->uint32_t override final;
         // get last error infomation, return false if no error
-        virtual auto GetLastErrorInfo(wchar_t info[/*ErrorInfoLength*/])noexcept->bool override;
+        virtual auto GetLastErrorInfo(wchar_t info[/*ErrorInfoLength*/]) noexcept ->bool override;
+    protected:
+        // release helper
+        template<typename T> auto release_helper(T call) noexcept ->uint32_t {
+            auto count = --m_cRefCount;
+            if (!count) call();
+            return count;
+        }
     protected:
         // last error code
         DefErrorCode            m_code = DefErrorCode::Code_Ok;
+        // ref-count
+        uint32_t                m_cRefCount = 1;
     };
     // Audio Stream for wave file(PCM/IEEE_FLOAT only)
     class CALWavAudioStream final : public CALBasicAudioStream {
@@ -66,13 +95,27 @@ namespace WrapAL {
     public:
         // ctor
         CALWavAudioStream(IALFileStream*) noexcept;
+        // create this
+        static auto Create(IALFileStream* s) noexcept {
+            using athis_t = CALWavAudioStream;
+            auto c = WrapALAudioEngine.configure;
+            if (const auto ptr = c->SmallAlloc<athis_t>()) {
+                return new (ptr) athis_t(s);
+            }
+            return (CALWavAudioStream*)(nullptr);
+        }
     public: // interface impl for XALAudioStream
         // release this
-        //virtual auto Release() noexcept->int32_t override;
+        virtual auto Release() noexcept ->uint32_t override {
+            return this->release_helper([=]() noexcept { 
+                this->~CALWavAudioStream();
+                WrapALAudioEngine.configure->SmallFree(this);
+            });
+;        }
         // seek stream in byte, return false if out of range
-        virtual auto Seek(int32_t off, Move method) noexcept->uint32_t override;
+        virtual auto Seek(int32_t off, Move method) noexcept ->uint32_t override;
         // read stream, return byte count read
-        virtual auto ReadNext(uint32_t l, void* b) noexcept->uint32_t override { return m_pFileStream->ReadNext(l, b); }
+        virtual auto ReadNext(uint32_t l, void* b) noexcept ->uint32_t override { return m_pFileStream->ReadNext(l, b); }
     private:
         // zero postion offset
         int32_t             m_zeroPosOffset = 0;
@@ -84,13 +127,23 @@ namespace WrapAL {
     public:
         // ctor
         CALOggAudioStream(IALFileStream*) noexcept;
+        // dtor
+        ~CALOggAudioStream() noexcept { ::ov_clear(&m_ovfile); }
+        // create this
+        static auto Create(IALFileStream* s) noexcept {
+            using athis_t = CALOggAudioStream;
+            if (const auto ptr = std::malloc(sizeof(athis_t))) {
+                return new (ptr) athis_t(s);
+            }
+            return (CALOggAudioStream*)(nullptr);
+        }
     public: // interface impl for XALAudioStream
         // release this
-        virtual auto Release() noexcept->int32_t override;
+        virtual auto Release() noexcept ->uint32_t override;
         // seek stream in byte, return false if out of range
-        virtual auto Seek(int32_t off, Move method) noexcept->uint32_t override;
+        virtual auto Seek(int32_t off, Move method) noexcept ->uint32_t override;
         // read stream, return byte count read
-        virtual auto ReadNext(uint32_t, void*) noexcept->uint32_t override;
+        virtual auto ReadNext(uint32_t, void*) noexcept ->uint32_t override;
     private:
         // ogg file
         OggVorbis_File          m_ovfile;
@@ -102,30 +155,33 @@ namespace WrapAL {
     public:
         // ctor
         CALMp3AudioStream(IALFileStream*) noexcept;
+        // dtor
+        ~CALMp3AudioStream() noexcept {
+            if (m_hMpg123) {
+                Mpg123::mpg123_delete(m_hMpg123);
+                m_hMpg123 = nullptr;
+            }
+        }
+        // create this
+        static auto Create(IALFileStream* s) noexcept {
+            using athis_t = CALMp3AudioStream;
+            auto c = WrapALAudioEngine.configure;
+            if (const auto ptr = c->SmallAlloc<athis_t>()) {
+                return new (ptr) athis_t(s);
+            }
+            return (CALMp3AudioStream*)(nullptr);
+        }
     public: // interface impl for XALAudioStream
         // release this
-        virtual auto Release() noexcept->int32_t override;
+        virtual auto Release() noexcept ->uint32_t override;
         // seek stream in byte, return false if out of range
-        virtual auto Seek(int32_t off, Move method) noexcept->uint32_t override;
+        virtual auto Seek(int32_t off, Move method) noexcept ->uint32_t override;
         // read stream, return byte count read
-        virtual auto ReadNext(uint32_t, void*) noexcept->uint32_t override;
+        virtual auto ReadNext(uint32_t, void*) noexcept ->uint32_t override;
     private:
         // mpg123 file
         mpg123_handle*         m_hMpg123 = nullptr;
     };
-    // total buffer
-    union DefAudioStreamBuffer {
-        // using buffer
-        size_t              buf[1];
-        // buffer for wave
-        uint8_t             wav[alignedsize(sizeof(CALWavAudioStream), sizeof(void*))];
-        // buffer for ogg vorbis
-        uint8_t             ogg[alignedsize(sizeof(CALOggAudioStream), sizeof(void*))];
-        // buffer for mpg123
-        uint8_t             mp3[alignedsize(sizeof(CALMp3AudioStream), sizeof(void*))];
-    };
-    // audio stream pool
-    ObjectPool<DefAudioStreamBuffer, AudioStreamBucketSize> ASPool;
 }
 
 // mpg123 编码
@@ -148,14 +204,23 @@ enum ENCODE_ENUM {
     | ENCODE_ENUM_FLOAT_32 | ENCODE_ENUM_FLOAT_64)
 };
 
-// 基本释放
-auto WrapAL::CALBasicAudioStream::Release() noexcept -> int32_t {
-    this->~CALBasicAudioStream();
-    ASPool.Free(reinterpret_cast<WrapAL::DefAudioStreamBuffer*>(this));
-    return 0;
+/// <summary>
+/// Adds the reference.
+/// </summary>
+/// <returns></returns>
+auto WrapAL::CALBasicAudioStream::AddRef() noexcept -> uint32_t {
+    auto count = ++m_cRefCount;
+    assert(count < 255 && "too large");
+    return count;
 }
 
-// 获取最近一次错误
+
+/// <summary>
+/// Gets the last error information.
+/// 获取最近一次错误
+/// </summary>
+/// <param name="des_info">The des_info.</param>
+/// <returns></returns>
 bool WrapAL::CALBasicAudioStream::GetLastErrorInfo(wchar_t des_info[]) noexcept {
     if (m_code != DefErrorCode::Code_Ok) {
         const wchar_t* info = nullptr;
@@ -179,13 +244,17 @@ bool WrapAL::CALBasicAudioStream::GetLastErrorInfo(wchar_t des_info[]) noexcept 
         default:
             info = L"Unknown Error";
         }
-        ::wcscpy(des_info, info);
+        std::wcscpy(des_info, info);
         return true;
     }
     return false;
 }
 
-// CALWavAudioStream 构造函数
+/// <summary>
+/// Initializes a new instance of the <see cref="CALWavAudioStream"/> class.
+/// <see cref="CALWavAudioStream"/> 构造函数
+/// </summary>
+/// <param name="file_stream">The file_stream.</param>
 WrapAL::CALWavAudioStream::CALWavAudioStream(IALFileStream* file_stream) noexcept : Super(file_stream) {
     // 检查错误
     if (m_code != DefErrorCode::Code_Ok) return;
@@ -275,7 +344,13 @@ WrapAL::CALWavAudioStream::CALWavAudioStream(IALFileStream* file_stream) noexcep
     m_code = code;
 }
 
-// 设置读取位置
+/// <summary>
+/// Seeks the specified offset.
+/// 设置读取位置
+/// </summary>
+/// <param name="off">The off.</param>
+/// <param name="method">The method.</param>
+/// <returns></returns>
 auto WrapAL::CALWavAudioStream::Seek(int32_t off, Move method) noexcept -> uint32_t {
     if (method == Move_Begin) {
         off += m_zeroPosOffset;
@@ -308,7 +383,11 @@ namespace WrapAL {
     };
 }
 
-// CALOggAudioStream 构造函数
+/// <summary>
+/// Initializes a new instance of the <see cref="CALOggAudioStream"/> class.
+/// <see cref="CALOggAudioStream"/> 构造函数
+/// </summary>
+/// <param name="file_stream">The file_stream.</param>
 WrapAL::CALOggAudioStream::CALOggAudioStream(IALFileStream* file_stream) noexcept : Super(file_stream) {
     // 检查错误
     if (m_code != DefErrorCode::Code_Ok) return;
@@ -335,13 +414,25 @@ WrapAL::CALOggAudioStream::CALOggAudioStream(IALFileStream* file_stream) noexcep
     }
 }
 
-// CALOggAudioStream 释放数据
-auto WrapAL::CALOggAudioStream::Release() noexcept -> int32_t {
-    ::ov_clear(&m_ovfile);
-    return Super::Release();
+/// <summary>
+/// Releases this instance.
+/// CALOggAudioStream 释放数据
+/// </summary>
+/// <returns></returns>
+auto WrapAL::CALOggAudioStream::Release() noexcept -> uint32_t {
+    return this->release_helper([this]() noexcept { 
+        this->~CALOggAudioStream(); 
+        std::free(this);
+    });
 }
 
-// CALOggAudioStream 定位
+/// <summary>
+/// Seeks the specified off.
+/// CALOggAudioStream 定位
+/// </summary>
+/// <param name="off">The off.</param>
+/// <param name="method">The method.</param>
+/// <returns></returns>
 auto WrapAL::CALOggAudioStream::Seek(int32_t off, Move method) noexcept -> uint32_t {
     // 不用移动
     if (!(off == 0 && method == Move_Current)) {
@@ -355,13 +446,27 @@ auto WrapAL::CALOggAudioStream::Seek(int32_t off, Move method) noexcept -> uint3
     return 0;
 }
 
-// CALOggAudioStream 读取数据
+/// <summary>
+/// Reads the next.
+/// CALOggAudioStream 读取数据
+/// </summary>
+/// <param name="len">The length.</param>
+/// <param name="buf">The buf.</param>
+/// <returns></returns>
 auto WrapAL::CALOggAudioStream::ReadNext(uint32_t len, void* buf) noexcept -> uint32_t {
+#ifdef _DEBUG
+    const auto oldbuf = reinterpret_cast<char*>(buf);
+    const auto oldlen = size_t(len);
+#endif
     uint32_t read = 0;
     // 循环读取数据
     while (len) {
         int bitstream = 0;
-        auto code = ::ov_read(&m_ovfile, reinterpret_cast<char*>(buf), len, 0, 2, 1, &bitstream);
+        auto charbuf = reinterpret_cast<char*>(buf);
+#ifdef _DEBUG
+        auto bk = charbuf - oldbuf;
+#endif
+        auto code = ::ov_read(&m_ovfile, charbuf, len, 0, 2, 1, &bitstream);
         // EOF?
         if (!code) break;
         // Error?
@@ -379,7 +484,11 @@ auto WrapAL::CALOggAudioStream::ReadNext(uint32_t len, void* buf) noexcept -> ui
     return read;
 }
 
-// CALMp3AudioStream 构造函数
+/// <summary>
+/// Initializes a new instance of the <see cref="CALMp3AudioStream"/> class.
+/// <see cref="CALMp3AudioStream"/> 构造函数
+/// </summary>
+/// <param name="file_stream">The file_stream.</param>
 WrapAL::CALMp3AudioStream::CALMp3AudioStream(IALFileStream* file_stream) noexcept : Super(file_stream) {
     // 检查错误
     if (m_code != DefErrorCode::Code_Ok) return;
@@ -485,16 +594,25 @@ WrapAL::CALMp3AudioStream::CALMp3AudioStream(IALFileStream* file_stream) noexcep
     }
 }
 
-// CALMp3AudioStream 释放
-auto WrapAL::CALMp3AudioStream::Release() noexcept -> int32_t {
-    if (m_hMpg123) {
-        Mpg123::mpg123_delete(m_hMpg123);
-        m_hMpg123 = nullptr;
-    }
-    return Super::Release();
+/// <summary>
+/// Releases this instance.
+/// CALMp3AudioStream 释放
+/// </summary>
+/// <returns></returns>
+auto WrapAL::CALMp3AudioStream::Release() noexcept -> uint32_t {
+    return this->release_helper([this]() noexcept { 
+        this->~CALMp3AudioStream();
+        WrapALAudioEngine.configure->SmallFree(this);
+    });
 }
 
-// 定位
+/// <summary>
+/// Seeks the specified off.
+/// 定位
+/// </summary>
+/// <param name="off">The off.</param>
+/// <param name="method">The method.</param>
+/// <returns></returns>
 auto WrapAL::CALMp3AudioStream::Seek(int32_t off, Move method) noexcept -> uint32_t {
     // 不用移动
     if (!(off == 0 && method == Move_Current)) {
@@ -504,7 +622,13 @@ auto WrapAL::CALMp3AudioStream::Seek(int32_t off, Move method) noexcept -> uint3
     return uint32_t(Mpg123::mpg123_tell(m_hMpg123));
 }
 
-// 读取下一部分
+/// <summary>
+/// Reads the next.
+/// 读取下一部分
+/// </summary>
+/// <param name="len">The length.</param>
+/// <param name="buf">The buf.</param>
+/// <returns></returns>
 auto WrapAL::CALMp3AudioStream::ReadNext(uint32_t len, void* buf) noexcept -> uint32_t {
     size_t real_size = 0;
     if (auto i = Mpg123::mpg123_read(m_hMpg123, reinterpret_cast<unsigned char*>(buf), len, &real_size)) {
@@ -518,59 +642,84 @@ auto WrapAL::CALMp3AudioStream::ReadNext(uint32_t len, void* buf) noexcept -> ui
     return uint32_t(real_size);
 }
 
-// 默认音频流创建函数
+/// <summary>
+/// Definitions the create audio stream.
+/// 默认音频流创建函数
+/// </summary>
+/// <param name="audio_format">The audio_format.</param>
+/// <param name="file_stream">The file_stream.</param>
+/// <param name="error_info">The error_info.</param>
+/// <returns></returns>
 auto WrapAL::DefCreateAudioStream(
     EncodingFormat audio_format, 
     IALFileStream* file_stream, 
     wchar_t error_info[WrapAL::ErrorInfoLength]
     ) noexcept -> XALAudioStream* {
-    assert(uint32_t(audio_format) < uint32_t(EncodingFormat::Format_UserDefined) && file_stream && error_info && "bad arguments");
-    XALAudioStream* audio_stream = reinterpret_cast<XALAudioStream*>(ASPool.Alloc());
-    if (!audio_stream || !file_stream) {
-        CALAudioEngine::FormatErrorOOM(error_info, __FUNCTION__);
-        return nullptr;
-    }
-    *reinterpret_cast<size_t*>(audio_stream) = 0;
+    bool lenok = int(audio_format) < int(EncodingFormat::Format_UserDefined);
+    assert(lenok && file_stream && error_info && "bad arguments");
+    XALAudioStream* astream = nullptr;
     switch (audio_format)
     {
     case WrapAL::EncodingFormat::Format_Wave:
-        new(audio_stream) CALWavAudioStream(file_stream);
+        astream = CALWavAudioStream::Create(file_stream);
         break;
     case WrapAL::EncodingFormat::Format_OggVorbis:
-        new(audio_stream) CALOggAudioStream(file_stream);
+        astream = CALOggAudioStream::Create(file_stream);
         break;
     case WrapAL::EncodingFormat::Format_Mpg123:
-        new(audio_stream) CALMp3AudioStream(file_stream);
+        astream = CALMp3AudioStream::Create(file_stream);
         break;
     default:
         // 格式不支持
         std::swprintf(error_info, ErrorInfoLength, L"Unsupported Format : 0x%08X", audio_format);
+        return nullptr;
     }
-    // 检查错误
-    if (*reinterpret_cast<size_t*>(audio_stream)) {
-        audio_stream->GetLastErrorInfo(error_info);
+    // OOM
+    if (!astream) {
+        CALAudioEngine::FormatErrorOOM(error_info, __FUNCTION__);
     }
-    return audio_stream;
+    // ERROR
+    else if (static_cast<CALBasicAudioStream*>(astream)->GetErrorCode()
+        != DefErrorCode::Code_Ok) {
+        astream->GetLastErrorInfo(error_info);
+    }
+    return astream;
 }
 
 
-// 创建音频流
+/// <summary>
+/// Creates the audio stream.
+/// 创建音频流
+/// </summary>
+/// <param name="format">The format.</param>
+/// <param name="stream">The stream.</param>
+/// <returns></returns>
 auto WrapAL::CALDefConfigure::CreateAudioStream(
     EncodingFormat format, IALFileStream* stream
     ) noexcept -> XALAudioStream* {
     return WrapAL::DefCreateAudioStream(format, stream, m_szLastError);
 }
 
-// 获取最近一次错误
+/// <summary>
+/// Gets the last error information.
+/// 获取最近一次错误
+/// </summary>
+/// <param name="info">The information.</param>
+/// <returns></returns>
 auto WrapAL::CALDefConfigure::GetLastErrorInfo(wchar_t info[]) noexcept -> bool {
     if (*m_szLastError) {
-        ::wcscpy(info, m_szLastError);
+        std::wcscpy(info, m_szLastError);
         return true;
     }
     return false;
 }
 
-// 获取默认libmpg123位置
+/// <summary>
+/// Gets the libmpg123 path.
+/// 获取默认libmpg123位置
+/// </summary>
+/// <param name="path">The path.</param>
+/// <returns></returns>
 auto WrapAL::CALDefConfigure::GetLibmpg123Path(wchar_t path[]) noexcept -> void {
 #if 0
     path += ::GetCurrentDirectoryW(MAX_PATH, path);
@@ -581,14 +730,43 @@ auto WrapAL::CALDefConfigure::GetLibmpg123Path(wchar_t path[]) noexcept -> void 
 #endif
 }
 
+
+/// <summary>
+/// Outputs the error.
+/// </summary>
+/// <param name="err">The error.</param>
+/// <returns></returns>
+void WrapAL::CALDefConfigure::OutputError(const wchar_t* err) noexcept {
+    ::MessageBoxW(nullptr, err, L"Error!", MB_ICONERROR);
+}
+
+/// <summary>
+/// Smalls the alloc.
+/// </summary>
+/// <param name="length">The length.</param>
+/// <returns></returns>
+void*  WrapAL::CALDefConfigure::SmallAlloc(size_t length) noexcept {
+    return std::malloc(length);
+}
+
+/// <summary>
+/// Smalls the free.
+/// </summary>
+/// <param name="ptr">The PTR.</param>
+/// <returns></returns>
+void WrapAL::CALDefConfigure::SmallFree(void* ptr) noexcept {
+    std::free(ptr);
+}
+
 #endif
 
+// wrapal namespace
 namespace WrapAL {
     // small single object
     class CALSingleSmallAlloc {
     public:
         // nothrow new 
-        auto operator new(size_t size, std::nothrow_t) noexcept ->void* {
+        auto operator new (size_t size, std::nothrow_t) noexcept ->void* {
             assert(size < WrapAL::SmallSpaceThreshold);
             return WrapALAudioEngine.configure->SmallAlloc(size);
         }
@@ -597,7 +775,7 @@ namespace WrapAL {
             return WrapALAudioEngine.configure->SmallFree(address);
         }
         // throw new []
-        auto operator new(size_t size) noexcept ->void* = delete;
+        auto operator new (size_t size) noexcept ->void* = delete;
         // throw new []
         auto operator new[](size_t size) noexcept ->void* = delete;
         // delete []
@@ -612,9 +790,11 @@ namespace WrapAL {
         bool OK() noexcept { return m_hFile != INVALID_HANDLE_VALUE; }
     public:
         // release this
-        auto Release() noexcept ->int32_t override { delete this; return 0; };
+        auto AddRef() noexcept ->uint32_t override { return 1; };
+        // release this
+        auto Release() noexcept ->uint32_t override { delete this; return 0; };
         // seek stream in byte, return false if out of range
-        auto Seek(int32_t pos, Move method) noexcept->uint32_t override {
+        auto Seek(int32_t pos, Move method) noexcept ->uint32_t override {
             // tell
             if (method == Move_Current && pos == 0) return m_cOffset;
             // sad
@@ -650,7 +830,7 @@ namespace WrapAL {
             }
         }
         // read stream, return false if end of file/stream
-        auto ReadNext(uint32_t len, void* buf) noexcept->uint32_t override {
+        auto ReadNext(uint32_t len, void* buf) noexcept ->uint32_t override {
             if (this->OK()) {
                 DWORD read = 0;
                 ::ReadFile(m_hFile, buf, len, &read, nullptr);
@@ -682,7 +862,7 @@ namespace WrapAL {
     };
     // 从文件创建流
     auto CALAudioEngine::CreatStreamFromFile(const wchar_t * file_name) noexcept -> IALFileStream* {
-        return new(std::nothrow) CALFileStream(file_name);
+        return new (std::nothrow) CALFileStream(file_name);
     }
     // CALFileStream 构造函数
     WrapAL::CALFileStream::CALFileStream(const wchar_t* file_name) noexcept {
@@ -710,9 +890,9 @@ namespace WrapAL {
         // release this
         auto Release() noexcept ->int32_t override { delete this; return 0; };
         // seek stream in byte, return false if out of range
-        auto Seek(int32_t pos, Move method) noexcept->bool override;
+        auto Seek(int32_t pos, Move method) noexcept ->bool override;
         // read stream, return false if end of file/stream
-        auto ReadNext(uint32_t, uint8_t*) noexcept->bool override;
+        auto ReadNext(uint32_t, uint8_t*) noexcept ->bool override;
         // get total size in byte in 32-bit(sorry for file over 4GB :) )
         auto GetSizeInByte() noexcept ->uint32_t override;
     public:
@@ -726,7 +906,7 @@ namespace WrapAL {
     };
     // 从流创建流
     auto CALAudioEngine::CreatStreamFromStream(IStream * stream) noexcept -> IALStream* {
-        return new(std::nothrow) CALStreamStream(stream);
+        return new (std::nothrow) CALStreamStream(stream);
     }*/
 #endif
 }

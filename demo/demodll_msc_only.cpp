@@ -5,7 +5,8 @@ static_assert(false, "MSC support __declspec(dllimport) only");
 #include <cstdio>
 #include <clocale>
 #define WRAPALAPI __declspec(dllimport)
-#include "wrapal.h"
+#include "AudioEngine.h"
+#include "AudioHandle.h"
 
 // App Entrance
 int main() {

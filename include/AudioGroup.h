@@ -24,18 +24,31 @@
 * OTHER DEALINGS IN THE SOFTWARE.
 */
 
+// IXAudio2SubmixVoice
+struct IXAudio2SubmixVoice;
+
+// assert
+#include <cassert>
+// memory
+#include <memory>
+// include the config
+#include "wrapalconf.h"
+// include the config
+#include "wrapal_common.h"
+
+
 
 // wrapal namespace
 namespace WrapAL {
     // Audio Source Group Handle
     class CALAudioSourceGroup;
     // group of audio clip
-    struct AudioSourceGroupReal {
+    struct AudioSourceGroupImpl {
         // ctor
-        AudioSourceGroupReal() noexcept { ::memset(name, 0, sizeof(name)); };
+        AudioSourceGroupImpl() noexcept { std::memset(name, 0, sizeof(name)); };
 #ifdef _DEBUG
         // dtor
-        ~AudioSourceGroupReal() { assert(!voice && "not be released!"); }
+        ~AudioSourceGroupImpl() { assert(!voice && "not be released!"); }
 #endif
         // Release
         auto Release() noexcept { WrapAL::SafeDestroyVoice(voice); }

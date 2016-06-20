@@ -2,7 +2,8 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 #include <cstdio>
-#include "wrapal.h"
+#include "AudioEngine.h"
+#include "AudioHandle.h"
 #include <cmath>
 
 auto create_biiiiii(float f) {

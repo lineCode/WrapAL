@@ -3,10 +3,12 @@
 #endif
 #include <cstdio>
 #include <clocale>
-#include "wrapal.h"
+#include "AudioHandle.h"
+#include "AudioEngine.h"
 
 // App Entrance
 int main(int argc, char* argv[]) {
+    std::srand(::GetTickCount());
     // my os is in chinese, std::wprintf is in the bad way
     std::setlocale(LC_ALL, "chs");
     // my config
@@ -51,6 +53,16 @@ int main(int argc, char* argv[]) {
                 | WrapAL::Flag_LoopInfinite
                 , "BGM"
                 );
+            {
+                auto test_refcount = clip;
+                decltype(clip) rest_ref1(test_refcount);
+                decltype(clip) rest_ref2(std::move(test_refcount));
+                rest_ref1 = std::move(rest_ref2);
+                int bk = 9;
+            }
+            {
+                auto test_refcount = clip;
+            }
             auto dur = clip.Duration();
             auto name = clip.GetGroup().Name();
             // play the clip
@@ -58,6 +70,7 @@ int main(int argc, char* argv[]) {
             float value = 1.f;
             char control = 0;
             std::wprintf(L"Audio clip duration: %5.3f sec.\r\n", clip.Duration());
+            std::fseek(stdin, 0, SEEK_END);
             while ((std::scanf("%c %f", &control, &value) != EOF)) {
                 switch (control)
                 {
@@ -81,8 +94,9 @@ int main(int argc, char* argv[]) {
                     break;
                 }
             }
-            // destroy clip(optional)
-            //clip.Destroy();
+            // dispose all clips before uninitialize the audio-engine
+            if (std::rand() & 1) { clip.Dispose(); }
+            else { decltype(clip) release_clip(std::move(clip)); }
             // Uninitialize WrapAL WrapALAudioEngine
             AudioEngine.Uninitialize();
         }

@@ -30,65 +30,21 @@ enough, It's not recommended to export to dll
 * OTHER DEALINGS IN THE SOFTWARE.
 */
 
-
-// Namespace wrapped std-lib
-#ifndef _CRT_SECURE_NO_WARNINGS
-#define _CRT_SECURE_NO_WARNINGS
-#endif
-
-#ifndef _DEBUG
-#define NDEBUG
-#endif
-
-// default library
-#include <cstdlib>
-// default define
-#include <cstddef>
-// for [u]intXX_t
+// int
 #include <cstdint>
-// for assert
-#include <cassert>
-// for FILE
-#include <cstdio>
-// for atomic for thread safety
-#include <atomic>
-// for replacement new
-#include <memory>
-
-// include the config
-#include "wrapalconf.h"
-
 // XAudio
 //#include <xaudio2.h>
 #include "XAudio2_diy.h"
 #include "X3DAudio_diy.h"
 
-
-// 检查
-#ifndef WRAPAL_NOVTABLE
-#   if (_MSC_VER >= 1100) && defined(__cplusplus)
-#       define WRAPAL_NOVTABLE __declspec(novtable)
-#   else
-#       define WRAPAL_NOVTABLE
-#   endif
-#endif
-
-#ifndef WRAPAL_NOINLINE
-#   if (_MSC_VER >= 1300) && defined(__cplusplus)
-#       define WRAPAL_NOINLINE __declspec(noinline)
-#   else
-#       define WRAPAL_NOINLINE
-#   endif
-#endif
-
 // wrapal namespace
 namespace WrapAL {
     // clip
-    struct AudioSourceClipReal;
+    class CALAudioSourceClipImpl;
     // Audio Handle ID, managed by engine, don't care about the releasing
     using ALHandle = size_t;
     // invalid handle
-    static constexpr ALHandle ALInvalidHandle = 0;
+    enum : ALHandle { ALInvalidHandle = 0 };
     // wave format
     enum FormatWave : uint8_t {
         // unknown [error]
@@ -204,9 +160,22 @@ namespace WrapAL {
     // force cast
     template<typename T> T& force_cast(const T&t) { return const_cast<T&>(t); }
 }
+
+
+/*/ default library
+#include <cstdlib>
+// default define
+#include <cstddef>
+// for FILE
+#include <cstdio>
+// for atomic for thread safety
+#include <atomic>
+// for replacement new
+#include <memory>
+
 #include "AudioInterface.h"
 #include "AudioUtil.h"
 #include "AudioGroup.h"
 #include "AudioClip.h"
 #include "AudioEngine.h"
-#include "AudioHandle.h"
+#include "AudioHandle.h"*/

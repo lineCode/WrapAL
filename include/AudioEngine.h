@@ -24,10 +24,17 @@
 * OTHER DEALINGS IN THE SOFTWARE.
 */
 
-// DEBUG
-#ifdef _DEBUG
-#include <list>
-#endif
+// STDMETHODCALLTYPE
+
+// include the config
+#include "wrapalconf.h"
+// WrapAL interface
+#include "AudioInterface.h"
+// group
+#include "AudioGroup.h"
+// util
+#include "AudioUtil.h"
+
 
 // wrapal namespace
 namespace WrapAL {
@@ -50,16 +57,14 @@ namespace WrapAL {
     auto GetApiLevelString(APILevel) noexcept -> const char*;
 #ifdef WRAPAL_INCLUDE_DEFAULT_AUDIO_STREAM
     // create default audio stream
-    auto DefCreateAudioStream(EncodingFormat format, IALFileStream* stream, wchar_t error_info[ErrorInfoLength]) noexcept->XALAudioStream* ;
+    auto DefCreateAudioStream(EncodingFormat format, IALFileStream* stream, wchar_t error_info[ErrorInfoLength]) noexcept ->XALAudioStream* ;
 #endif
     // Audio Engine
     class WRAPALAPI CALAudioEngine {
-        // audio clip pool
-        using ACPool = ObjectPool<AudioSourceClipReal, AudioStreamBucketSize>;
-        // friend class
-        friend class CALAudioSourceClip;
         // friend class
         friend class CALAudioSourceGroup;
+        // friend class
+        friend class CALAudioSourceClip;
         // friend class
         friend class CALDefConfigure;
     public:
@@ -76,12 +81,12 @@ namespace WrapAL {
         // update audio engine if you want to do some auto-task, call this more than 20Hz
         void Update() noexcept;
         // create stream form file
-        static auto CreatStreamFromFile(const wchar_t* file_name) noexcept->IALFileStream*;
+        static auto CreatStreamFromFile(const wchar_t* file_name) noexcept ->IALFileStream*;
 #ifdef WRAPAL_COM_ISTREAM_SUPPORT
         // create alstream form istream
-        static auto CreatStreamFromStream(IStream* stream) noexcept->IALStream*;
+        static auto CreatStreamFromStream(IStream* stream) noexcept ->IALStream*;
         // create stream form stream
-        //auto CreatStreamFromStream(IALStream* stream) noexcept->IStream*;
+        //auto CreatStreamFromStream(IALStream* stream) noexcept ->IStream*;
 #endif
     public:
         // ctor
@@ -95,13 +100,13 @@ namespace WrapAL {
         // create new clip with audio stream
         auto CreateClip(XALAudioStream*, AudioClipFlag, const char* group_name) noexcept ->ALHandle;
         // create new clip with file stream
-        auto CreateClip(EncodingFormat, IALFileStream*, AudioClipFlag, const char* group_name) noexcept->ALHandle;
+        auto CreateClip(EncodingFormat, IALFileStream*, AudioClipFlag, const char* group_name) noexcept ->ALHandle;
         // create new clip with file name
-        auto CreateClip(EncodingFormat, const wchar_t*, AudioClipFlag, const char* group_name) noexcept->ALHandle;
+        auto CreateClip(EncodingFormat, const wchar_t*, AudioClipFlag, const char* group_name) noexcept ->ALHandle;
         // create new clip in memory
-        auto CreateClip(const AudioFormat&, const uint8_t*, size_t, AudioClipFlag, const char* group_name) noexcept->ALHandle;
+        auto CreateClip(const AudioFormat&, const uint8_t*, size_t, AudioClipFlag, const char* group_name) noexcept ->ALHandle;
         // create new clip in memory
-        auto CreateClip(const AudioFormat&, uint8_t*&&, size_t, AudioClipFlag, const char* group_name) noexcept->ALHandle;
+        auto CreateClip(const AudioFormat&, uint8_t*&&, size_t, AudioClipFlag, const char* group_name) noexcept ->ALHandle;
     private: // Audio Clip
 #ifdef WRAPAL_IN_PLAN
         // recreate with file name
@@ -115,8 +120,10 @@ namespace WrapAL {
         // recreate with malloc-ed move-able memory : same format with new buffer!
         bool ac_recreate_move(ALHandle clip_id, uint8_t*& buffer, size_t length) noexcept;
 #endif
-        // destroy the clip
-        bool ac_destroy(ALHandle clip_id) noexcept;
+        // add ref-count for the clip
+        bool ac_addref(ALHandle clip_id) noexcept;
+        // release the clip
+        bool ac_release(ALHandle clip_id) noexcept;
         // play the clip
         bool ac_play(ALHandle clip_id) noexcept;
         // pause the clip
@@ -130,7 +137,7 @@ namespace WrapAL {
         // get the duration of clip  in sec.
         auto ac_duration(ALHandle clip_id) noexcept ->float;
         // set or get volume of clip
-        auto ac_volume(ALHandle clip_id, float = -1.f) noexcept->float;
+        auto ac_volume(ALHandle clip_id, float = -1.f) noexcept ->float;
         // set or get ratio of clip
         auto ac_ratio(ALHandle clip_id, float ratio) noexcept -> float;
     public: // Master
@@ -146,11 +153,9 @@ namespace WrapAL {
         auto ag_volume(ALHandle group_id, float volume = -1.f) noexcept -> float;
     private:
         // find group by group name
-        auto find_group(const char* name) noexcept->AudioSourceGroupReal*;
-        // real destroy the clip
-        void destroy_clip_real(AudioSourceClipReal* clip) noexcept;
+        auto find_group(const char* name) noexcept ->AudioSourceGroupImpl*;
         // set clip group
-        auto set_clip_group(AudioSourceClipReal& clip, const char* group) noexcept->HRESULT;
+        auto set_clip_group(CALAudioSourceClipImpl& clip, const char* group) noexcept ->HRESULT;
     public: // XAudio2 API
         // XAudio2Create
         static decltype(&::XAudio2Create) XAudio2Create;
@@ -158,7 +163,7 @@ namespace WrapAL {
         static decltype(&::X3DAudioInitialize) X3DAudioInitialize;
     private: // XAudio2 API
         // create source void
-        auto create_source_voice(AudioSourceClipReal& clip, const char* group_name) noexcept->HRESULT;
+        auto create_source_voice(CALAudioSourceClipImpl& clip, const char* group_name) noexcept ->HRESULT;
         // XAudio2
         HMODULE                     m_hXAudio2 = nullptr;
         // XAudio2 interface
@@ -174,15 +179,9 @@ namespace WrapAL {
         HMODULE             const   libmpg123 = nullptr;
     private: // Common
         // group
-        AudioSourceGroupReal        m_aGroup[GroupMaxSize];
+        AudioSourceGroupImpl        m_aGroup[GroupMaxSize];
         // count of it
         size_t                      m_cGroupCount = 0;
-#ifdef _DEBUG
-        // debug list
-        std::list<void*>            m_listAC;
-#endif
-        // allocator for audio clip
-        ACPool                      m_acAllocator;
 #ifdef WRAPAL_INCLUDE_DEFAULT_CONFIGURE
         // default config
         CALDefConfigure             m_config;

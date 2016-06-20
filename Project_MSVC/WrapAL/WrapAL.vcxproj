@@ -29,7 +29,6 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{E3A417FD-6961-4184-A37F-DF1242C338A2}</ProjectGuid>
     <RootNamespace>WrapAL</RootNamespace>
-    <TargetPlatformVersion>10.0.10240.0</TargetPlatformVersion>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -147,6 +146,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -179,6 +179,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -214,7 +215,7 @@
     <ClInclude Include="..\..\include\AudioHandle.h" />
     <ClInclude Include="..\..\include\AudioInterface.h" />
     <ClInclude Include="..\..\include\AudioUtil.h" />
-    <ClInclude Include="..\..\include\wrapal.h" />
+    <ClInclude Include="..\..\include\wrapal_common.h" />
     <ClInclude Include="..\..\include\wrapalconf.h" />
     <ClInclude Include="..\..\include\X3DAudio_diy.h" />
     <ClInclude Include="..\..\include\XAudio2_diy.h" />

@@ -3,7 +3,12 @@
 #include "AudioHandle.h"
 #include <mmdeviceapi.h>
 
-// 获取API等级字符串
+/// <summary>
+/// Gets the API level string.
+/// 获取API等级字符串
+/// </summary>
+/// <param name="level">The level.</param>
+/// <returns></returns>
 auto WrapAL::GetApiLevelString(APILevel level) noexcept -> const char* {
     switch (level)
     {
@@ -53,6 +58,20 @@ WRAPAL_DEFINE_GUID(IID_IAudioCaptureClient, 0xc8adbd64, 0xe71e, 0x48a0, 0xa4, 0x
 
 // WrapAL 命名空间
 namespace WrapAL {
+    // impl
+    namespace impl {
+        // read any
+        template<typename T, size_t I, typename U>
+        auto read_any(const U* ptr) noexcept {
+            const auto data = reinterpret_cast<const T*>(ptr);
+            return data[I];
+        }
+        // read any
+        template<typename T, typename U>
+        auto read_any(const U* ptr) noexcept {
+            return impl::read_any<T, 0>(ptr);
+        }
+    }
     // CLSID_MMDeviceEnumerator
     WRAPAL_DEFINE_GUID(CLSID_MMDeviceEnumerator, 0xBCDE0395, 0xE52F, 0x467C,
         0x8E, 0x3D, 0xC4, 0x57, 0x92, 0x91, 0x69, 0x2E);
@@ -80,6 +99,7 @@ namespace WrapAL {
 void* WrapAL::CALAudioSourceClipImpl::s_vtable = nullptr;
 #endif
 
+
 /// <summary>
 /// Releases this instance.
 /// </summary>
@@ -101,6 +121,38 @@ void WrapAL::CALAudioSourceClipImpl::destroy() noexcept {
     WrapALAudioEngine.configure->SmallFree(ptr);
 }
 
+
+/// <summary>
+/// Cals the audio source clip implementation.
+/// </summary>
+/// <param name="buf">The buf.</param>
+/// <param name="stream">The stream.</param>
+/// <param name="flag">The flag.</param>
+/// <param name="buflen">The buflen.</param>
+/// <returns></returns>
+WrapAL::CALAudioSourceClipImpl::CALAudioSourceClipImpl(
+    uint8_t*&& buf,
+    XALAudioStream* stream,
+    AudioClipFlag flag,
+    uint32_t buflen
+) noexcept : flags(flag), 
+m_pAudioData(buf),
+m_pStream(Acquire(stream)),
+m_uBufferLength(buflen) {
+    buf = nullptr;
+    // 加入调试链表
+#ifdef _DEBUG
+    this->s_vtable = impl::read_any<void*>(this);
+    const auto last_node = &WrapALAudioEngine.last_clip__dbg;
+    auto prve = last_node->prev;
+    prve->next = this;
+    this->prev = prve;
+    this->next = last_node;
+    last_node->prev = this;
+#endif
+}
+
+
 /// <summary>
 /// Cals the audio source clip implementation.
 /// </summary>
@@ -110,8 +162,12 @@ WrapAL::CALAudioSourceClipImpl::~CALAudioSourceClipImpl() {
     WrapAL::SafeRelease(m_pStream); 
     std::free(m_pAudioData); 
     m_pAudioData = nullptr;
+    // 链接前后指针
+#ifdef _DEBUG
+    this->prev->next = this->next;
+    this->next->prev = this->prev;
+#endif
 }
-
 
 /// <summary>
 /// Seeks the specified position.
@@ -283,10 +339,19 @@ auto WrapAL::CALAudioSourceClipImpl::LoadAndBufferData(uint16_t id) noexcept ->H
 }
 
 
-// 初始化
+/// <summary>
+/// Initializes the specified configuration.
+/// </summary>
+/// <param name="config">The configuration.</param>
+/// <returns></returns>
 auto WrapAL::CALAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESULT {
     wchar_t error[ErrorInfoLength]; error[0] = 0;
     HRESULT hr = S_OK;
+    // 调试节点
+#ifdef _DEBUG
+    this->first_clip__dbg.next = &this->last_clip__dbg;
+    this->last_clip__dbg.prev = &this->first_clip__dbg;
+#endif
     // 检查配置信息
 #ifdef WRAPAL_INCLUDE_DEFAULT_CONFIGURE
     force_cast(this->configure) = config ? config : &m_config;
@@ -547,8 +612,17 @@ auto WrapAL::CALAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESUL
 }
 
 
-// 反初始化
+/// <summary>
+/// Uninitializes this instance.
+/// 反初始化
+/// </summary>
+/// <returns></returns>
 void WrapAL::CALAudioEngine::Uninitialize() noexcept {
+#ifdef _DEBUG
+    bool linked1 = first_clip__dbg.next == &last_clip__dbg;
+    bool linked2 = last_clip__dbg.prev == &first_clip__dbg;
+    assert(linked1 && linked2 && "clips not disposed");
+#endif
     // 释放
     for (auto& group : m_aGroup) { group.Release(); }
     WrapAL::SafeDestroyVoice(m_pMasterVoice);
@@ -896,17 +970,17 @@ bool WrapAL::CALAudioEngine::ac_recreate(ALHandle clip_id, XALAudioStream* m_pSt
 
 // 利用缓冲片段重建片段
 bool WrapAL::CALAudioEngine::ac_recreate(ALHandle id, uint8_t* buf, size_t len) noexcept {
-    auto new_buffer = reinterpret_cast<uint8_t*>(::malloc(len));
+    auto new_buffer = reinterpret_cast<uint8_t*>(std::malloc(len));
     if (new_buffer) {
         std::memcpy(new_buffer, buf, len);
-        return this->ac_recreate_move(id, new_buffer, len);
+        return this->ac_recreate(id, std::move(new_buffer), len);
     }
     assert(!"noimpl");
     return false;
 }
 
 // 利用可移动缓冲片段重建片段
-bool WrapAL::CALAudioEngine::ac_recreate_move(ALHandle id, uint8_t*& buf, size_t len) noexcept {
+bool WrapAL::CALAudioEngine::ac_recreate(ALHandle id, uint8_t*& buf, size_t len) noexcept {
     assert(id && buf && "bad arguments");
     if (buf) {
         assert(!"noimpl");

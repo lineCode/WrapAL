@@ -37,8 +37,6 @@
 #include <Windows.h>
 #endif
 
-
-
 // Namespace wrapped std-lib
 #ifndef _CRT_SECURE_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS

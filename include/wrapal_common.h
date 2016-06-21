@@ -56,6 +56,13 @@ namespace WrapAL {
         // IEEE FLOAT[supported]
         Wave_IEEEFloat,
     };
+    // clip node
+    struct Node {
+#ifdef _DEBUG
+        // node for prev/next
+        Node* prev,* next;
+#endif
+    };
     // audio format
     struct AudioFormat {
         // make wave format

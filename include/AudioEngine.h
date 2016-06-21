@@ -28,6 +28,8 @@
 
 // include the config
 #include "wrapalconf.h"
+// include the config
+#include "wrapal_common.h"
 // WrapAL interface
 #include "AudioInterface.h"
 // group
@@ -69,7 +71,7 @@ namespace WrapAL {
         friend class CALDefConfigure;
     public:
         // get version
-        auto GetVersion() const noexcept -> const char* { return "0.2.4"; }
+        auto GetVersion() const noexcept -> const char* { return "0.3.0"; }
         // get api level
         auto GetAPILevel() const noexcept { return m_lvAPI; }
         // get message
@@ -116,9 +118,9 @@ namespace WrapAL {
         // recreate with audio stream
         bool ac_recreate(ALHandle clip_id, XALAudioStream* stream) noexcept;
         // recreate with memory: same format with new buffer!
-        bool ac_recreate(ALHandle clip_id, uint8_t* buffer, size_t length) noexcept;
+        bool ac_recreate(ALHandle clip_id, const uint8_t* buffer, size_t length) noexcept;
         // recreate with malloc-ed move-able memory : same format with new buffer!
-        bool ac_recreate_move(ALHandle clip_id, uint8_t*& buffer, size_t length) noexcept;
+        bool ac_recreate(ALHandle clip_id, uint8_t*& buffer, size_t length) noexcept;
 #endif
         // add ref-count for the clip
         bool ac_addref(ALHandle clip_id) noexcept;
@@ -165,26 +167,32 @@ namespace WrapAL {
         // create source void
         auto create_source_voice(CALAudioSourceClipImpl& clip, const char* group_name) noexcept ->HRESULT;
         // XAudio2
-        HMODULE                     m_hXAudio2 = nullptr;
+        HMODULE                 m_hXAudio2 = nullptr;
         // XAudio2 interface
-        IXAudio2*                   m_pXAudio2Engine = nullptr;
+        IXAudio2*               m_pXAudio2Engine = nullptr;
         // XAudio2 Mastering Voice interface
-        IXAudio2MasteringVoice*     m_pMasterVoice = nullptr;
+        IXAudio2MasteringVoice* m_pMasterVoice = nullptr;
     private: // OpenAL -- maybe support
     private: // DirectSound -- maybe not support
     public:
         // now config
-        IALConfigure*       const   configure = nullptr;
+        IALConfigure*   const   configure = nullptr;
         // libmpg123.dll handle
-        HMODULE             const   libmpg123 = nullptr;
+        HMODULE         const   libmpg123 = nullptr;
+#ifdef _DEBUG
+        // debug linked node: first
+        Node                    first_clip__dbg = { nullptr };
+        // debug linked node: last
+        Node                    last_clip__dbg = { nullptr };
+#endif
     private: // Common
         // group
-        AudioSourceGroupImpl        m_aGroup[GroupMaxSize];
+        AudioSourceGroupImpl    m_aGroup[GroupMaxSize];
         // count of it
-        size_t                      m_cGroupCount = 0;
+        size_t                  m_cGroupCount = 0;
 #ifdef WRAPAL_INCLUDE_DEFAULT_CONFIGURE
         // default config
-        CALDefConfigure             m_config;
+        CALDefConfigure         m_config;
 #endif
     public: // format helper 
         // format error with hr code

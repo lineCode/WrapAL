@@ -31,9 +31,10 @@
 #include <cassert>
 // for atomic
 #include <atomic>
-
 // include the config
 #include "wrapalconf.h"
+// include the config
+#include "wrapal_common.h"
 // WrapAL interface
 #include "AudioInterface.h"
 
@@ -50,7 +51,8 @@ namespace WrapAL {
     // impl for group
     struct AudioSourceGroupImpl;
     // Audio Source Clip implement
-    class CALAudioSourceClipImpl final : public IXAudio2VoiceCallback {
+    class CALAudioSourceClipImpl final : public Node,
+        public IXAudio2VoiceCallback {
     public: // impl for callback
         // Called just before this voice's processing pass begins.
         void STDMETHODCALLTYPE OnVoiceProcessingPassStart(UINT32 SamplesRequired) noexcept override;
@@ -82,15 +84,7 @@ namespace WrapAL {
             XALAudioStream* stream,
             AudioClipFlag flag,
             uint32_t buflen
-        ) noexcept : flags(flag), 
-            m_pAudioData(buf),
-            m_pStream(Acquire(stream)),
-            m_uBufferLength(buflen) {
-            buf = nullptr;
-#ifdef _DEBUG
-            this->s_vtable = *reinterpret_cast<void**>(this);
-#endif
-        }
+        ) noexcept;
     public:
         // dtor
         ~CALAudioSourceClipImpl() noexcept;

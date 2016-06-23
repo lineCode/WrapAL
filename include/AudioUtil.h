@@ -143,7 +143,7 @@ namespace WrapAL {
         // free space that alloced via "SmallAlloc"
         virtual void SmallFree(void* address) noexcept override;
         // choose device, return index, if out of range, choose default device
-        virtual auto ChooseDevice(const AudioDeviceInfo[], UINT count) noexcept ->UINT override { return count; };
+        virtual auto ChooseDevice(const AudioDeviceInfo[], uint32_t count) noexcept ->uint32_t override { return count; };
         // create audio stream from file stream
         virtual auto CreateAudioStream(EncodingFormat, IALFileStream*) noexcept ->XALAudioStream* override;
         // get last error infomation, return false if no error

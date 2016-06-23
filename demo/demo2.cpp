@@ -15,16 +15,18 @@ int main(int argc, char* argv[]) {
     class MyConfig : public WrapAL::CALDefConfigure {
     public:
         // choose device, return index, if out of range, choose default device
-        virtual auto ChooseDevice(const WrapAL::AudioDeviceInfo list[], UINT count) noexcept ->UINT override {
+        virtual auto ChooseDevice(
+            const WrapAL::AudioDeviceInfo list[], 
+            UINT count) noexcept ->uint32_t override {
             std::wprintf(L"Please choose the device(type index. set default device if out of range):\r\n");
-            for (UINT i = 0; i < count; ++i) {
+            for (uint32_t i = 0; i < count; ++i) {
                 std::wprintf(L"%d. %ls\r\n", int(i), list[i].Name());
             }
-            UINT uindex = 0u;
+            uint32_t uindex = 0u;
             {
                 int index = count;
                 std::scanf("%d", &index);
-                uindex = UINT(index);
+                uindex = uint32_t(index);
             }
             if (uindex < count) {
                 std::wprintf(L"%ls\r\n%ls\r\n", list[uindex].Name(), list[uindex].Id());

@@ -138,7 +138,7 @@ namespace WrapAL {
         Flag_3D = 1 << 3,
     };
     // operator for AudioClipFlag
-    inline auto operator |(AudioClipFlag a, AudioClipFlag b) noexcept   {
+    inline auto operator |(AudioClipFlag a, AudioClipFlag b) noexcept {
         return static_cast<AudioClipFlag>(static_cast<uint32_t>(a) | static_cast<uint32_t>(b));
     }
     // operator for AudioClipFlag

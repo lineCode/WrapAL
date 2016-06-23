@@ -6,28 +6,30 @@
 #include "AudioHandle.h"
 #include <cmath>
 
-auto create_biiiiii(float f) {
+// create normal sine wave
+auto create_sine_wave(float frequency) {
+    // setup the format
     WrapAL::AudioFormat format;
+    // CD
     format.nSamplesPerSec = 44100;
+    // a block = a float var
     format.nBlockAlign = sizeof(float);
+    // one channel
     format.nChannels = 1;
+    // single float
     format.nFormatTag = WrapAL::Wave_IEEEFloat;
-    auto length = format.nSamplesPerSec * format.nBlockAlign;
-    auto* buffer = reinterpret_cast<uint8_t*>(::malloc(length * sizeof(float)));
-    if (!buffer) return WrapAL::CALAudioSourceClip(WrapAL::ALInvalidHandle);
-    {
+    // get length of buffer
+    uint32_t countlen = format.nSamplesPerSec * format.nBlockAlign ;
+    auto bytelen = countlen * sizeof(float);
+    // make & create the clip
+    return WrapAL::CreateAudioClip(format, [=](uint8_t* buffer) noexcept {
         constexpr float pi = float(3.1415926536);
         auto float_buffer = reinterpret_cast<float*>(buffer);
-        for (auto i = 0u; i < length; ++i) {
-            float time = float(i) / float(length);
-            float_buffer[i] = std::sin(time * 2.f * pi * f);
+        for (auto i = 0u; i < countlen; ++i) {
+            float time = float(i) / float(countlen);
+            float_buffer[i] = std::sin(time * 2.f * pi * frequency);
         }
-        float_buffer = nullptr;
-    }
-    auto clip = WrapAL::CreateAudioClip(
-        format, std::move(buffer), length, WrapAL::Flag_LoopInfinite
-        );
-    return clip;
+    }, bytelen, WrapAL::Flag_LoopInfinite);
 }
 
 // App Entrance
@@ -36,20 +38,13 @@ int main() {
     ::CoInitialize(nullptr);
     AudioEngine.Initialize();
     {
-        // create audio clip
-        /*auto clip = WrapAL::CreateAudioClip(
-            WrapAL::EncodingFormat::Format_OggVorbis,
-            L"NationalAnthemOfRussia.ogg",
-            WrapAL::Flag_StreamingReading | WrapAL::Flag_LoopInfinite,
-            "BGM"
-            );*/
-        auto clip = create_biiiiii(500.f);
+        auto clip = create_sine_wave(500.f);
         // play the clip
         clip.Play();
         // until get char
         std::getchar();
-        // destroy clip(optional)
-        //clip.Destroy();
+        // destroy clip manually(optional)
+        // clip.Destroy();
     }
     // Uninitialize
     AudioEngine.Uninitialize();

@@ -15,7 +15,7 @@ Wrapped Audio Library, to make easier to play audio
 ##How to build
 1. for visual studio:  
   - open the `Project_MSVC` and build it
-2. for code lite"
+2. for code lite:
   - open the `Project_CodeLite` and build it
 3. for mingw-w64(WrapAL need some dxsdk/winsdk headers)  
   - use rakefile to build, you may download ruby/rake at first

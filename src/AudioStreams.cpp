@@ -745,7 +745,7 @@ void WrapAL::CALDefConfigure::OutputError(const wchar_t* err) noexcept {
 /// </summary>
 /// <param name="length">The length.</param>
 /// <returns></returns>
-void*  WrapAL::CALDefConfigure::SmallAlloc(size_t length) noexcept {
+void*WrapAL::CALDefConfigure::SmallAlloc(size_t length) noexcept {
     return std::malloc(length);
 }
 

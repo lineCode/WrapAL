@@ -2,21 +2,21 @@
 ## Auto Generated makefile by CodeLite IDE
 ## any manual changes will be erased      
 ##
-## Debug
-ProjectName            :=wrapal
-ConfigurationName      :=Debug
-WorkspacePath          := "D:\Documents\GitHub\WrapAL\Project_CodeLite"
-ProjectPath            := "D:\Documents\GitHub\WrapAL\Project_CodeLite\wrapal"
-IntermediateDirectory  :=./Debug
+## Release
+ProjectName            :=WrapAL
+ConfigurationName      :=Release
+WorkspacePath          :=D:/github/WrapAL/Project_CodeLite
+ProjectPath            :=D:/github/WrapAL/Project_CodeLite/WrapAL
+IntermediateDirectory  :=./Release
 OutDir                 := $(IntermediateDirectory)
 CurrentFileName        :=
 CurrentFilePath        :=
 CurrentFileFullPath    :=
-User                   :=DUST
-Date                   :=2015-09-29
-CodeLitePath           :="C:\Program Files\CodeLite"
-LinkerName             :=C:/SB/TDM-GCC-64/bin/g++.exe
-SharedObjectLinkerName :=C:/SB/TDM-GCC-64/bin/g++.exe -shared -fPIC
+User                   :=dustpg
+Date                   :=14/01/2017
+CodeLitePath           :="C:/Program Files/CodeLite"
+LinkerName             :=C:/TDM-GCC-64/bin/g++.exe
+SharedObjectLinkerName :=C:/TDM-GCC-64/bin/g++.exe -shared -fPIC
 ObjectSuffix           :=.o
 DependSuffix           :=.o.d
 PreprocessSuffix       :=.i
@@ -27,42 +27,42 @@ OutputSwitch           :=-o
 LibraryPathSwitch      :=-L
 PreprocessorSwitch     :=-D
 SourceSwitch           :=-c 
-OutputFile             :=../lib/lib$(ProjectName).a
-Preprocessors          :=
+OutputFile             :=../$(IntermediateDirectory)/lib$(ProjectName).a
+Preprocessors          :=$(PreprocessorSwitch)NDEBUG 
 ObjectSwitch           :=-o 
 ArchiveOutputSwitch    := 
 PreprocessOnlySwitch   :=-E
-ObjectsFileList        :="wrapal.txt"
+ObjectsFileList        :="WrapAL.txt"
 PCHCompileFlags        :=
 MakeDirCommand         :=makedir
 RcCmpOptions           := 
-RcCompilerName         :=C:/SB/TDM-GCC-64/bin/windres.exe
+RcCompilerName         :=C:/TDM-GCC-64/bin/windres.exe
 LinkOptions            :=  
-IncludePath            :=  $(IncludeSwitch). $(IncludeSwitch). $(IncludeSwitch)./../../3rdparty/libogg/include/ $(IncludeSwitch)./../../3rdparty/libvorbis/include/ $(IncludeSwitch)./../../3rdparty/libvorbis/lib/ $(IncludeSwitch)./../../include/ 
+IncludePath            :=  $(IncludeSwitch). $(IncludeSwitch). $(IncludeSwitch)./../../include/ $(IncludeSwitch)../../3rdparty/libogg/include/ $(IncludeSwitch). 
 IncludePCH             := 
 RcIncludePath          := 
-Libs                   := $(LibrarySwitch)vorbis 
-ArLibs                 :=  "libvorbis.a" 
-LibPath                := $(LibraryPathSwitch). $(LibraryPathSwitch)../lib/ 
+Libs                   := 
+ArLibs                 :=  
+LibPath                := $(LibraryPathSwitch). 
 
 ##
 ## Common variables
 ## AR, CXX, CC, AS, CXXFLAGS and CFLAGS can be overriden using an environment variables
 ##
-AR       := C:/SB/TDM-GCC-64/bin/ar.exe rcu
-CXX      := C:/SB/TDM-GCC-64/bin/g++.exe
-CC       := C:/SB/TDM-GCC-64/bin/gcc.exe
-CXXFLAGS :=  -g -O0 -std=c++14 -Wall $(Preprocessors)
-CFLAGS   :=  -g -O0 -std=c++14 -Wall $(Preprocessors)
+AR       := C:/TDM-GCC-64/bin/ar.exe rcu
+CXX      := C:/TDM-GCC-64/bin/g++.exe
+CC       := C:/TDM-GCC-64/bin/gcc.exe
+CXXFLAGS := -std=c++14 -O2 -Wall $(Preprocessors)
+CFLAGS   := -std=c99 -O2 -Wall $(Preprocessors)
 ASFLAGS  := 
-AS       := C:/SB/TDM-GCC-64/bin/as.exe
+AS       := C:/TDM-GCC-64/bin/as.exe
 
 
 ##
 ## User defined environment variables
 ##
 CodeLiteDir:=C:\Program Files\CodeLite
-Objects0=$(IntermediateDirectory)/src_AudioEngine.cpp$(ObjectSuffix) $(IntermediateDirectory)/src_AudioStreams.cpp$(ObjectSuffix) 
+Objects0=$(IntermediateDirectory)/up_up_src_AudioClip.cpp$(ObjectSuffix) $(IntermediateDirectory)/up_up_src_AudioEngine.cpp$(ObjectSuffix) $(IntermediateDirectory)/up_up_src_AudioStreams.cpp$(ObjectSuffix) 
 
 
 
@@ -79,15 +79,15 @@ $(OutputFile): $(Objects)
 	@echo "" > $(IntermediateDirectory)/.d
 	@echo $(Objects0)  > $(ObjectsFileList)
 	$(AR) $(ArchiveOutputSwitch)$(OutputFile) @$(ObjectsFileList) $(ArLibs)
-	@$(MakeDirCommand) "D:\Documents\GitHub\WrapAL\Project_CodeLite/.build-debug"
-	@echo rebuilt > "D:\Documents\GitHub\WrapAL\Project_CodeLite/.build-debug/wrapal"
+	@$(MakeDirCommand) "D:\github\WrapAL\Project_CodeLite/.build-release"
+	@echo rebuilt > "D:\github\WrapAL\Project_CodeLite/.build-release/WrapAL"
 
 MakeIntermediateDirs:
-	@$(MakeDirCommand) "./Debug"
+	@$(MakeDirCommand) "./Release"
 
 
-./Debug:
-	@$(MakeDirCommand) "./Debug"
+./Release:
+	@$(MakeDirCommand) "./Release"
 
 PreBuild:
 
@@ -95,21 +95,29 @@ PreBuild:
 ##
 ## Objects
 ##
-$(IntermediateDirectory)/src_AudioEngine.cpp$(ObjectSuffix): ../../src/AudioEngine.cpp $(IntermediateDirectory)/src_AudioEngine.cpp$(DependSuffix)
-	$(CXX) $(IncludePCH) $(SourceSwitch) "D:/Documents/GitHub/WrapAL/src/AudioEngine.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/src_AudioEngine.cpp$(ObjectSuffix) $(IncludePath)
-$(IntermediateDirectory)/src_AudioEngine.cpp$(DependSuffix): ../../src/AudioEngine.cpp
-	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/src_AudioEngine.cpp$(ObjectSuffix) -MF$(IntermediateDirectory)/src_AudioEngine.cpp$(DependSuffix) -MM "../../src/AudioEngine.cpp"
+$(IntermediateDirectory)/up_up_src_AudioClip.cpp$(ObjectSuffix): ../../src/AudioClip.cpp $(IntermediateDirectory)/up_up_src_AudioClip.cpp$(DependSuffix)
+	$(CXX) $(IncludePCH) $(SourceSwitch) "D:/github/WrapAL/src/AudioClip.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/up_up_src_AudioClip.cpp$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/up_up_src_AudioClip.cpp$(DependSuffix): ../../src/AudioClip.cpp
+	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/up_up_src_AudioClip.cpp$(ObjectSuffix) -MF$(IntermediateDirectory)/up_up_src_AudioClip.cpp$(DependSuffix) -MM ../../src/AudioClip.cpp
 
-$(IntermediateDirectory)/src_AudioEngine.cpp$(PreprocessSuffix): ../../src/AudioEngine.cpp
-	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/src_AudioEngine.cpp$(PreprocessSuffix) "../../src/AudioEngine.cpp"
+$(IntermediateDirectory)/up_up_src_AudioClip.cpp$(PreprocessSuffix): ../../src/AudioClip.cpp
+	$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/up_up_src_AudioClip.cpp$(PreprocessSuffix) ../../src/AudioClip.cpp
 
-$(IntermediateDirectory)/src_AudioStreams.cpp$(ObjectSuffix): ../../src/AudioStreams.cpp $(IntermediateDirectory)/src_AudioStreams.cpp$(DependSuffix)
-	$(CXX) $(IncludePCH) $(SourceSwitch) "D:/Documents/GitHub/WrapAL/src/AudioStreams.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/src_AudioStreams.cpp$(ObjectSuffix) $(IncludePath)
-$(IntermediateDirectory)/src_AudioStreams.cpp$(DependSuffix): ../../src/AudioStreams.cpp
-	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/src_AudioStreams.cpp$(ObjectSuffix) -MF$(IntermediateDirectory)/src_AudioStreams.cpp$(DependSuffix) -MM "../../src/AudioStreams.cpp"
+$(IntermediateDirectory)/up_up_src_AudioEngine.cpp$(ObjectSuffix): ../../src/AudioEngine.cpp $(IntermediateDirectory)/up_up_src_AudioEngine.cpp$(DependSuffix)
+	$(CXX) $(IncludePCH) $(SourceSwitch) "D:/github/WrapAL/src/AudioEngine.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/up_up_src_AudioEngine.cpp$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/up_up_src_AudioEngine.cpp$(DependSuffix): ../../src/AudioEngine.cpp
+	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/up_up_src_AudioEngine.cpp$(ObjectSuffix) -MF$(IntermediateDirectory)/up_up_src_AudioEngine.cpp$(DependSuffix) -MM ../../src/AudioEngine.cpp
 
-$(IntermediateDirectory)/src_AudioStreams.cpp$(PreprocessSuffix): ../../src/AudioStreams.cpp
-	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/src_AudioStreams.cpp$(PreprocessSuffix) "../../src/AudioStreams.cpp"
+$(IntermediateDirectory)/up_up_src_AudioEngine.cpp$(PreprocessSuffix): ../../src/AudioEngine.cpp
+	$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/up_up_src_AudioEngine.cpp$(PreprocessSuffix) ../../src/AudioEngine.cpp
+
+$(IntermediateDirectory)/up_up_src_AudioStreams.cpp$(ObjectSuffix): ../../src/AudioStreams.cpp $(IntermediateDirectory)/up_up_src_AudioStreams.cpp$(DependSuffix)
+	$(CXX) $(IncludePCH) $(SourceSwitch) "D:/github/WrapAL/src/AudioStreams.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/up_up_src_AudioStreams.cpp$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/up_up_src_AudioStreams.cpp$(DependSuffix): ../../src/AudioStreams.cpp
+	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/up_up_src_AudioStreams.cpp$(ObjectSuffix) -MF$(IntermediateDirectory)/up_up_src_AudioStreams.cpp$(DependSuffix) -MM ../../src/AudioStreams.cpp
+
+$(IntermediateDirectory)/up_up_src_AudioStreams.cpp$(PreprocessSuffix): ../../src/AudioStreams.cpp
+	$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/up_up_src_AudioStreams.cpp$(PreprocessSuffix) ../../src/AudioStreams.cpp
 
 
 -include $(IntermediateDirectory)/*$(DependSuffix)
@@ -117,6 +125,6 @@ $(IntermediateDirectory)/src_AudioStreams.cpp$(PreprocessSuffix): ../../src/Audi
 ## Clean
 ##
 clean:
-	$(RM) -r ./Debug/
+	$(RM) -r ./Release/
 
 

@@ -32,13 +32,20 @@ enough, It's not recommended to export to dll
 
 // int
 #include <cstdint>
-// XAudio
-//#include <xaudio2.h>
-#include "XAudio2_diy.h"
-#include "X3DAudio_diy.h"
+
 
 // wrapal namespace
 namespace WrapAL {
+    // WAVEFORMATEX
+    struct WAVEFORMATEX {
+        uint16_t        wFormatTag; 
+        uint16_t        nChannels;
+        uint32_t        nSamplesPerSec;
+        uint32_t        nAvgBytesPerSec; 
+        uint16_t        nBlockAlign; 
+        uint16_t        wBitsPerSample; 
+        uint16_t        cbSize;
+    };
     // clip
     class CALAudioSourceClipImpl;
     // Audio Handle ID, managed by engine, don't care about the releasing
@@ -58,7 +65,7 @@ namespace WrapAL {
     };
     // clip node
     struct Node {
-#ifdef _DEBUG
+#ifndef NDEBUG
         // node for prev/next
         Node* prev,* next;
 #endif
@@ -67,8 +74,8 @@ namespace WrapAL {
     struct AudioFormat {
         // make wave format
         auto MakeWave(WAVEFORMATEX& wave) const noexcept {
-            wave.wFormatTag = WORD(nFormatTag);
-            wave.nChannels = WORD(this->nChannels);
+            wave.wFormatTag = uint16_t(nFormatTag);
+            wave.nChannels = uint16_t(this->nChannels);
             wave.nSamplesPerSec = this->nSamplesPerSec;
             wave.nAvgBytesPerSec = this->nSamplesPerSec * this->nBlockAlign;
             wave.nBlockAlign = this->nBlockAlign;
@@ -88,27 +95,10 @@ namespace WrapAL {
     class CALAudioEngine;
     // infomation for audio device
     struct AudioDeviceInfo {
-        // friend class
-        friend class CALAudioEngine;
-#ifdef WRAPAL_XAUDIO2_7_SUPPORT
-        // name
-        const wchar_t* Name() const noexcept { return details.DisplayName; }
-        // id
-        const wchar_t* Id() const noexcept { return details.DeviceID; }
-    private:
-        // details
-        XAUDIO2_DEVICE_DETAILS details;
-#else
-        // name
-        const wchar_t* Name() const noexcept { return name.pwszVal; }
-        // id
-        const wchar_t* Id() const noexcept { return id.pwszVal; }
-    private:
         // name of device
-        PROPVARIANT name;
+        const wchar_t* name;
         // id of device
-        PROPVARIANT id;
-#endif
+        const wchar_t* id;
     };
     // Encoding format
     enum class EncodingFormat : uint32_t {
@@ -145,22 +135,11 @@ namespace WrapAL {
     inline auto&operator |=(AudioClipFlag& a, AudioClipFlag b) noexcept {
         return a = a | b;
     }
-    template<typename T> static inline auto LoadProc(T& pointer, HMODULE dll, const char* name) noexcept {
-        pointer = reinterpret_cast<T>(::GetProcAddress(dll, name));
-    }
     // safe release interface
     template<class T>
     auto SafeRelease(T*& pointer) noexcept {
         if (pointer) {
             pointer->Release();
-            pointer = nullptr;
-        }
-    }
-    // destroy voice interface
-    template<class T>
-    auto SafeDestroyVoice(T*& pointer) noexcept {
-        if (pointer) {
-            pointer->DestroyVoice();
             pointer = nullptr;
         }
     }

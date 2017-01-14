@@ -5,6 +5,7 @@
 #include "AudioEngine.h"
 #include "AudioHandle.h"
 #include <cmath>
+#include <windows.h>
 
 // create normal sine wave
 auto create_sine_wave(float frequency) {

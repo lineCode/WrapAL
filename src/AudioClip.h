@@ -39,9 +39,13 @@
 #include "AudioInterface.h"
 
 // XAudio
-//#include <xaudio2.h>
-#include "XAudio2_diy.h"
-#include "X3DAudio_diy.h"
+#ifdef WRAPAL_XAUDIO2_7_SUPPORT
+#include "p_XAudio2_7.h"
+namespace WrapAL { using namespace xaudio2_7; }
+#else
+#include "p_XAudio2_8.h"
+namespace WrapAL { using namespace xaudio2_8; }
+#endif
 
 
 // wrapal namespace
@@ -146,7 +150,7 @@ namespace WrapAL {
     private:
         // destroy this clip
         void destroy() noexcept;
-#ifdef _DEBUG
+#ifndef NDEBUG
     public:
         // v-table address
         static void* s_vtable;
@@ -158,6 +162,7 @@ namespace WrapAL {
         }
 #endif
     private:
+        public:
         // source
         IXAudio2SourceVoice*        m_pSourceVoice = nullptr;
         // audio stream for streaming
@@ -181,9 +186,9 @@ namespace WrapAL {
         WAVEFORMATEX                wave;
     private:
         // end of buffer
-        std::atomic_bool            m_bEOB = false;
+        std::atomic_bool            m_bEOB;
         // is playing
-        std::atomic_bool            m_bPlaying = false;
+        std::atomic_bool            m_bPlaying ;
 #if defined _M_IX86
 
 #elif defined _M_X64

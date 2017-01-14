@@ -9,11 +9,11 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
-    <Filter Include="Header Files\diy_header">
-      <UniqueIdentifier>{d108a93f-96e7-47f2-8758-d59295729a7d}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\Core">
       <UniqueIdentifier>{3597e541-31ae-4900-8474-a478b51fc1d1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\privaite">
+      <UniqueIdentifier>{9987d360-dcf1-4106-adae-faf1ae217027}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -23,21 +23,15 @@
     <ClCompile Include="..\..\src\AudioEngine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\AudioClip.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\wrapalconf.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\XAudio2_diy.h">
-      <Filter>Header Files\diy_header</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\AudioEngine.h">
-      <Filter>Header Files\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\AudioGroup.h">
-      <Filter>Header Files\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\AudioClip.h">
       <Filter>Header Files\Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\AudioHandle.h">
@@ -49,11 +43,23 @@
     <ClInclude Include="..\..\include\AudioUtil.h">
       <Filter>Header Files\Core</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\X3DAudio_diy.h">
-      <Filter>Header Files\diy_header</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\wrapal_common.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\AudioClip.h">
+      <Filter>Header Files\privaite</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\AudioGroup.h">
+      <Filter>Header Files\privaite</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\p_XAudio2_8.h">
+      <Filter>Header Files\privaite</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\p_XAudio2_base.h">
+      <Filter>Header Files\privaite</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\p_XAudio2_7.h">
+      <Filter>Header Files\privaite</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

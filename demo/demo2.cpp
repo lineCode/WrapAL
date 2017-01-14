@@ -1,8 +1,12 @@
 #ifdef _MSC_VER
 #define _CRT_SECURE_NO_WARNINGS
 #endif
+#include <Windows.h>
 #include <cstdio>
+#include <cwchar>
+#include <cstdlib>
 #include <clocale>
+#include <utility>
 #include "AudioHandle.h"
 #include "AudioEngine.h"
 
@@ -20,7 +24,7 @@ int main(int argc, char* argv[]) {
             UINT count) noexcept ->uint32_t override {
             std::wprintf(L"Please choose the device(type index. set default device if out of range):\r\n");
             for (uint32_t i = 0; i < count; ++i) {
-                std::wprintf(L"%d. %ls\r\n", int(i), list[i].Name());
+                std::wprintf(L"%d. %ls\r\n", int(i), list[i].name);
             }
             uint32_t uindex = 0u;
             {
@@ -29,7 +33,7 @@ int main(int argc, char* argv[]) {
                 uindex = uint32_t(index);
             }
             if (uindex < count) {
-                std::wprintf(L"%ls\r\n%ls\r\n", list[uindex].Name(), list[uindex].Id());
+                std::wprintf(L"%ls\r\n%ls\r\n", list[uindex].name, list[uindex].id);
             }
             else {
                 std::wprintf(L"Set default device.\r\n");
@@ -66,7 +70,8 @@ int main(int argc, char* argv[]) {
                 auto test_refcount = clip;
             }
             auto dur = clip.Duration();
-            auto name = clip.GetGroup().Name();
+            auto g = clip.GetGroup();
+            auto name = g.Name();
             // play the clip
             clip.Play();
             float value = 1.f;

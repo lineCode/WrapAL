@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeLite_Workspace Name="wrapal" Database="" Version="10.0.0">
+  <Project Name="ogg" Path="ogg/ogg.project" Active="No"/>
+  <Project Name="vorbis" Path="vorbis/vorbis.project" Active="No"/>
+  <Project Name="WrapAL" Path="WrapAL/WrapAL.project" Active="No"/>
+  <Project Name="demo1" Path="demo1/demo1.project" Active="No"/>
+  <Project Name="demo2" Path="demo2/demo2.project" Active="Yes"/>
+  <BuildMatrix>
+    <WorkspaceConfiguration Name="Debug" Selected="no">
+      <Environment/>
+      <Project Name="ogg" ConfigName="Debug"/>
+      <Project Name="vorbis" ConfigName="Debug"/>
+      <Project Name="WrapAL" ConfigName="Debug"/>
+      <Project Name="demo1" ConfigName="Debug"/>
+      <Project Name="demo2" ConfigName="Debug"/>
+    </WorkspaceConfiguration>
+    <WorkspaceConfiguration Name="Release" Selected="yes">
+      <Environment/>
+      <Project Name="ogg" ConfigName="Release"/>
+      <Project Name="vorbis" ConfigName="Release"/>
+      <Project Name="WrapAL" ConfigName="Release"/>
+      <Project Name="demo1" ConfigName="Release"/>
+      <Project Name="demo2" ConfigName="Release"/>
+    </WorkspaceConfiguration>
+  </BuildMatrix>
+</CodeLite_Workspace>

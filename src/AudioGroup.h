@@ -30,11 +30,13 @@ struct IXAudio2SubmixVoice;
 // assert
 #include <cassert>
 // memory
-#include <memory>
+#include <cstring>
 // include the config
 #include "wrapalconf.h"
 // include the config
 #include "wrapal_common.h"
+// clip
+#include "AudioClip.h"
 
 
 
@@ -46,12 +48,12 @@ namespace WrapAL {
     struct AudioSourceGroupImpl {
         // ctor
         AudioSourceGroupImpl() noexcept { std::memset(name, 0, sizeof(name)); };
-#ifdef _DEBUG
+#ifndef NDEBUG
         // dtor
         ~AudioSourceGroupImpl() { assert(!voice && "not be released!"); }
 #endif
         // Release
-        auto Release() noexcept { WrapAL::SafeDestroyVoice(voice); }
+        auto Release() noexcept { if (voice) voice->DestroyVoice(); voice = nullptr; }
         // name
         char                    name[GroupNameMaxLength + 1];
         // XAudio2

@@ -32,14 +32,18 @@
 #include "wrapal_common.h"
 // WrapAL interface
 #include "AudioInterface.h"
-// group
-#include "AudioGroup.h"
 // util
 #include "AudioUtil.h"
 
 
 // wrapal namespace
 namespace WrapAL {
+    // impl for AudioSourceGroup
+    struct AudioSourceGroupImpl;
+    // group
+    class CALAudioSourceGroup;
+    // impl for engine
+    struct engine_impl;
     // API level
     enum class APILevel : size_t {
         // NO API
@@ -77,7 +81,7 @@ namespace WrapAL {
         // get message
         auto GetRuntimeMessage(RuntimeMessage msg) const noexcept { return this->configure->GetRuntimeMessage(msg); }
         // init
-        auto Initialize(IALConfigure* config=nullptr) noexcept ->HRESULT;
+        auto Initialize(IALConfigure* config=nullptr) noexcept ->ECode;
         // un-init
         void Uninitialize() noexcept;
         // update audio engine if you want to do some auto-task, call this more than 20Hz
@@ -157,53 +161,32 @@ namespace WrapAL {
         // find group by group name
         auto find_group(const char* name) noexcept ->AudioSourceGroupImpl*;
         // set clip group
-        auto set_clip_group(CALAudioSourceClipImpl& clip, const char* group) noexcept ->HRESULT;
-    public: // XAudio2 API
-        // XAudio2Create
-        static decltype(&::XAudio2Create) XAudio2Create;
-        // X3DAudioInitialize
-        static decltype(&::X3DAudioInitialize) X3DAudioInitialize;
-    private: // XAudio2 API
+        auto set_clip_group(CALAudioSourceClipImpl& clip, const char* group) noexcept ->ECode;
+    private: 
         // create source void
-        auto create_source_voice(CALAudioSourceClipImpl& clip, const char* group_name) noexcept ->HRESULT;
-        // XAudio2
-        HMODULE                 m_hXAudio2 = nullptr;
-        // XAudio2 interface
-        IXAudio2*               m_pXAudio2Engine = nullptr;
-        // XAudio2 Mastering Voice interface
-        IXAudio2MasteringVoice* m_pMasterVoice = nullptr;
-    private: // OpenAL -- maybe support
-    private: // DirectSound -- maybe not support
+        auto create_source_voice(CALAudioSourceClipImpl& clip, const char* group_name) noexcept ->ECode;
     public:
         // now config
         IALConfigure*   const   configure = nullptr;
-        // libmpg123.dll handle
-        HMODULE         const   libmpg123 = nullptr;
-#ifdef _DEBUG
+#ifndef NDEBUG
         // debug linked node: first
-        Node                    first_clip__dbg = { nullptr };
+        Node                    first_clip__dbg;
         // debug linked node: last
-        Node                    last_clip__dbg = { nullptr };
+        Node                    last_clip__dbg;
 #endif
-    private: // Common
-        // group
-        AudioSourceGroupImpl    m_aGroup[GroupMaxSize];
-        // count of it
-        size_t                  m_cGroupCount = 0;
-#ifdef WRAPAL_INCLUDE_DEFAULT_CONFIGURE
-        // default config
-        CALDefConfigure         m_config;
-#endif
+    private:
+        // pimpl
+        engine_impl*            m_pImpl = nullptr;
     public: // format helper 
         // format error with hr code
-        static void FormatErrorHR(wchar_t err_buf[], const char* func_name, HRESULT hr) noexcept;
+        static void FormatErrorHR(wchar_t err_buf[], const char* func_name, ECode hr) noexcept;
         // format error with file not found
         static void FormatErrorFoF(wchar_t err_buf[], const char* func_name, const wchar_t* file_name) noexcept;
         // format error with out of memory
         static void FormatErrorOOM(wchar_t err_buf[], const char* func_name) noexcept;
     public: // output helper
         // output error with hr code
-        inline auto OutputErrorHR(const char* func_name, HRESULT hr) noexcept { 
+        inline auto OutputErrorHR(const char* func_name, ECode hr) noexcept {
             wchar_t err_buf[ErrorInfoLength]; 
             this->FormatErrorHR(err_buf, func_name, hr);
             this->configure->OutputError(err_buf);

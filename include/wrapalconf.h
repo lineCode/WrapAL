@@ -32,20 +32,8 @@
 #define WRAPAL_MEMDEBUG_IN_MSC
 #endif
 
-
 #ifndef WRAPAL_SAME_THREAD_UPDATE
-#include <Windows.h>
 #endif
-
-// Namespace wrapped std-lib
-#ifndef _CRT_SECURE_NO_WARNINGS
-#define _CRT_SECURE_NO_WARNINGS
-#endif
-
-#ifndef _DEBUG
-#define NDEBUG
-#endif
-
 
 // 检查
 #ifndef WRAPAL_NOVTABLE
@@ -92,8 +80,8 @@ namespace WrapAL {
         GroupNameMaxLength = 15,
         // group max size
         GroupMaxSize = 8,
-        // devie max count
-        DeviceMaxCount = 256,
+        // device max count
+        DeviceMaxCount = 32,
         // small space threshold for IALConfigure::SmallAlloc/SmallFree
         SmallSpaceThreshold = 128,
     };
@@ -138,7 +126,7 @@ namespace WrapAL {
         auto Unlock() noexcept { }
     private:
         // unused
-        size_t          m_unused = 0;
+        void*          m_unused = nullptr;
 #else
     public:
         // ctor

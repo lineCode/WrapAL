@@ -205,20 +205,22 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\AudioClip.cpp" />
     <ClCompile Include="..\..\src\AudioEngine.cpp" />
     <ClCompile Include="..\..\src\AudioStreams.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\include\AudioClip.h" />
     <ClInclude Include="..\..\include\AudioEngine.h" />
-    <ClInclude Include="..\..\include\AudioGroup.h" />
     <ClInclude Include="..\..\include\AudioHandle.h" />
     <ClInclude Include="..\..\include\AudioInterface.h" />
     <ClInclude Include="..\..\include\AudioUtil.h" />
     <ClInclude Include="..\..\include\wrapal_common.h" />
     <ClInclude Include="..\..\include\wrapalconf.h" />
-    <ClInclude Include="..\..\include\X3DAudio_diy.h" />
-    <ClInclude Include="..\..\include\XAudio2_diy.h" />
+    <ClInclude Include="..\..\src\AudioClip.h" />
+    <ClInclude Include="..\..\src\AudioGroup.h" />
+    <ClInclude Include="..\..\src\p_XAudio2_7.h" />
+    <ClInclude Include="..\..\src\p_XAudio2_8.h" />
+    <ClInclude Include="..\..\src\p_XAudio2_base.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

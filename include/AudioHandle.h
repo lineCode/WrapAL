@@ -27,6 +27,8 @@
 
 // assert
 #include <cassert>
+// std::move
+#include <utility>
 // common
 #include "wrapal_common.h"
 // engine

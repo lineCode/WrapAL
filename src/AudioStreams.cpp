@@ -1,4 +1,18 @@
-﻿#include "AudioEngine.h"
+﻿#define WIN32_LEAN_AND_MEAN
+#define _CRT_SECURE_NO_WARNINGS
+#include <Windows.h>
+#include "AudioEngine.h"
+#include <cassert>
+#include <cwchar>
+#include <new>
+#include "mpg123.h"
+
+namespace WrapAL {
+    // load function
+    template<typename T> static inline auto load_func(T& pointer, HMODULE dll, const char* name) noexcept {
+        pointer = reinterpret_cast<T>(::GetProcAddress(dll, name));
+    }
+}
 
 // Memory leak detector
 #if defined(_DEBUG) && defined(_MSC_VER) && defined(WRAPAL_MEMDEBUG_IN_MSC)
@@ -454,7 +468,7 @@ auto WrapAL::CALOggAudioStream::Seek(int32_t off, Move method) noexcept -> uint3
 /// <param name="buf">The buf.</param>
 /// <returns></returns>
 auto WrapAL::CALOggAudioStream::ReadNext(uint32_t len, void* buf) noexcept -> uint32_t {
-#ifdef _DEBUG
+#ifndef NDEBUG
     const auto oldbuf = reinterpret_cast<char*>(buf);
     const auto oldlen = size_t(len);
 #endif
@@ -463,7 +477,7 @@ auto WrapAL::CALOggAudioStream::ReadNext(uint32_t len, void* buf) noexcept -> ui
     while (len) {
         int bitstream = 0;
         auto charbuf = reinterpret_cast<char*>(buf);
-#ifdef _DEBUG
+#ifndef NDEBUG
         auto bk = charbuf - oldbuf;
 #endif
         auto code = ::ov_read(&m_ovfile, charbuf, len, 0, 2, 1, &bitstream);
@@ -493,7 +507,7 @@ WrapAL::CALMp3AudioStream::CALMp3AudioStream(IALFileStream* file_stream) noexcep
     // 检查错误
     if (m_code != DefErrorCode::Code_Ok) return;
     // 检查dll
-    assert(WrapALAudioEngine.libmpg123);
+    assert(Mpg123::mpg123_init);;
     // 创建新的句柄
     int error_code = 0;
     m_hMpg123 = Mpg123::mpg123_new(nullptr, &error_code);
@@ -634,7 +648,7 @@ auto WrapAL::CALMp3AudioStream::ReadNext(uint32_t len, void* buf) noexcept -> ui
     if (auto i = Mpg123::mpg123_read(m_hMpg123, reinterpret_cast<unsigned char*>(buf), len, &real_size)) {
         if (i == MPG123_ERR || i > 0) {
             m_code = DefErrorCode::Code_DecodeError;
-#ifdef _DEBUG
+#ifndef NDEBUG
             std::wprintf(L"Code_DecodeError\r\n");
 #endif
         }
@@ -914,19 +928,19 @@ namespace WrapAL {
 // 初始化
 void WrapAL::Mpg123::Init(HMODULE hModule) noexcept {
     assert(hModule); if (!hModule) return;
-    WrapAL::LoadProc(Mpg123::mpg123_init, hModule, "mpg123_init");
-    WrapAL::LoadProc(Mpg123::mpg123_exit, hModule, "mpg123_exit");
-    WrapAL::LoadProc(Mpg123::mpg123_new, hModule, "mpg123_new");
-    WrapAL::LoadProc(Mpg123::mpg123_delete, hModule, "mpg123_delete");
-    WrapAL::LoadProc(Mpg123::mpg123_read, hModule, "mpg123_read");
-    WrapAL::LoadProc(Mpg123::mpg123_seek, hModule, "mpg123_seek");
-    WrapAL::LoadProc(Mpg123::mpg123_tell, hModule, "mpg123_tell");
-    WrapAL::LoadProc(Mpg123::mpg123_length, hModule, "mpg123_length");
-    WrapAL::LoadProc(Mpg123::mpg123_format, hModule, "mpg123_format");
-    WrapAL::LoadProc(Mpg123::mpg123_getformat, hModule, "mpg123_getformat");
-    WrapAL::LoadProc(Mpg123::mpg123_format_none, hModule, "mpg123_format_none");
-    WrapAL::LoadProc(Mpg123::mpg123_open_handle, hModule, "mpg123_open_handle");
-    WrapAL::LoadProc(Mpg123::mpg123_replace_reader_handle, hModule, "mpg123_replace_reader_handle");
+    load_func(Mpg123::mpg123_init, hModule, "mpg123_init");
+    load_func(Mpg123::mpg123_exit, hModule, "mpg123_exit");
+    load_func(Mpg123::mpg123_new, hModule, "mpg123_new");
+    load_func(Mpg123::mpg123_delete, hModule, "mpg123_delete");
+    load_func(Mpg123::mpg123_read, hModule, "mpg123_read");
+    load_func(Mpg123::mpg123_seek, hModule, "mpg123_seek");
+    load_func(Mpg123::mpg123_tell, hModule, "mpg123_tell");
+    load_func(Mpg123::mpg123_length, hModule, "mpg123_length");
+    load_func(Mpg123::mpg123_format, hModule, "mpg123_format");
+    load_func(Mpg123::mpg123_getformat, hModule, "mpg123_getformat");
+    load_func(Mpg123::mpg123_format_none, hModule, "mpg123_format_none");
+    load_func(Mpg123::mpg123_open_handle, hModule, "mpg123_open_handle");
+    load_func(Mpg123::mpg123_replace_reader_handle, hModule, "mpg123_replace_reader_handle");
 }
 
 
@@ -945,8 +959,6 @@ InitStaticVar(WrapAL::Mpg123::mpg123_getformat);
 InitStaticVar(WrapAL::Mpg123::mpg123_format_none);
 InitStaticVar(WrapAL::Mpg123::mpg123_open_handle);
 InitStaticVar(WrapAL::Mpg123::mpg123_replace_reader_handle);
-InitStaticVar(WrapAL::CALAudioEngine::XAudio2Create);
-InitStaticVar(WrapAL::CALAudioEngine::X3DAudioInitialize);
 
 
 

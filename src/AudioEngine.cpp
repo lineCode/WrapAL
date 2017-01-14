@@ -1,7 +1,45 @@
-﻿#include "AudioEngine.h"
-#include "AudioClip.h"
+﻿#define _CRT_SECURE_NO_WARNINGS
+#include "AudioEngine.h"
 #include "AudioHandle.h"
 #include <mmdeviceapi.h>
+#include "AudioGroup.h"
+#include "AudioClip.h"
+#include "mpg123.h"
+
+#include <new>
+#include <cwchar>
+
+namespace WrapAL {
+    // impl for engine
+    struct engine_impl {
+        // ctor
+        engine_impl() noexcept {};
+        // dtor
+        ~engine_impl() noexcept {};
+        // XAudio2
+        HMODULE                 m_hXAudio2 = nullptr;
+        // XAudio2 interface
+        IXAudio2*               m_pXAudio2Engine = nullptr;
+        // XAudio2 Mastering Voice interface
+        IXAudio2MasteringVoice* m_pMasterVoice = nullptr;
+        // libmpg123.dll handle
+        HMODULE         const   libmpg123 = nullptr;
+        // group
+        AudioSourceGroupImpl    m_aGroup[GroupMaxSize];
+        // count of it
+        size_t                  m_cGroupCount = 0;
+        // create xaduio2
+        HRESULT(__stdcall*XAudio2Create) (IXAudio2**, UINT32, XAUDIO2_PROCESSOR) = nullptr;
+#ifdef WRAPAL_INCLUDE_DEFAULT_CONFIGURE
+        // default config
+        CALDefConfigure         m_config;
+#endif
+    };
+    // load function
+    template<typename T> static inline auto load_func(T& pointer, HMODULE dll, const char* name) noexcept {
+        pointer = reinterpret_cast<T>(::GetProcAddress(dll, name));
+    }
+}
 
 /// <summary>
 /// Gets the API level string.
@@ -94,280 +132,43 @@ namespace WrapAL {
 #endif
 }
 
-#ifdef _DEBUG
-// V-Table address
-void* WrapAL::CALAudioSourceClipImpl::s_vtable = nullptr;
-#endif
-
-
-/// <summary>
-/// Releases this instance.
-/// </summary>
-/// <returns></returns>
-auto WrapAL::CALAudioSourceClipImpl::Release() noexcept -> uint32_t {
-    assert(m_cRefCount > 0 && m_cRefCount < 256 && "bad range");
-    uint32_t count = --m_cRefCount;
-    if (!count) this->destroy();
-    return count;
-}
-
-/// <summary>
-/// Destroys this instance.
-/// </summary>
-/// <returns></returns>
-void WrapAL::CALAudioSourceClipImpl::destroy() noexcept {
-    auto ptr = this;
-    this->~CALAudioSourceClipImpl();
-    WrapALAudioEngine.configure->SmallFree(ptr);
-}
-
-
-/// <summary>
-/// Cals the audio source clip implementation.
-/// </summary>
-/// <param name="buf">The buf.</param>
-/// <param name="stream">The stream.</param>
-/// <param name="flag">The flag.</param>
-/// <param name="buflen">The buflen.</param>
-/// <returns></returns>
-WrapAL::CALAudioSourceClipImpl::CALAudioSourceClipImpl(
-    uint8_t*&& buf,
-    XALAudioStream* stream,
-    AudioClipFlag flag,
-    uint32_t buflen
-) noexcept : flags(flag), 
-m_pAudioData(buf),
-m_pStream(Acquire(stream)),
-m_uBufferLength(buflen) {
-    buf = nullptr;
-    // 加入调试链表
-#ifdef _DEBUG
-    this->s_vtable = impl::read_any<void*>(this);
-    const auto last_node = &WrapALAudioEngine.last_clip__dbg;
-    auto prve = last_node->prev;
-    prve->next = this;
-    this->prev = prve;
-    this->next = last_node;
-    last_node->prev = this;
-#endif
-}
-
-
-/// <summary>
-/// Cals the audio source clip implementation.
-/// </summary>
-/// <returns></returns>
-WrapAL::CALAudioSourceClipImpl::~CALAudioSourceClipImpl() {
-    WrapAL::SafeDestroyVoice(m_pSourceVoice); 
-    WrapAL::SafeRelease(m_pStream); 
-    std::free(m_pAudioData); 
-    m_pAudioData = nullptr;
-    // 链接前后指针
-#ifdef _DEBUG
-    this->prev->next = this->next;
-    this->next->prev = this->prev;
-#endif
-}
-
-/// <summary>
-/// Seeks the specified position.
-/// </summary>
-/// <param name="pos">The position.</param>
-/// <returns></returns>
-void WrapAL::CALAudioSourceClipImpl::Seek(float pos) noexcept {
-    assert(m_pSourceVoice);
-    // 保留基本
-    bool playing = this->IsPlaying();
-    m_pSourceVoice->Stop(0);
-    m_pSourceVoice->FlushSourceBuffers();
-    // 检查采样位置
-    uint32_t pos_in_sample = static_cast<uint32_t>(static_cast<double>(pos) *
-        static_cast<double>(this->wave.nSamplesPerSec));
-    // 流模式?
-    if (this->flags & WrapAL::Flag_StreamingReading) {
-        // 输入
-        m_pStream->Seek(pos_in_sample * this->wave.nBlockAlign);
-        for (unsigned int i = 0; i < StreamingBufferCount - 1; ++i) {
-            this->LoadAndBufferData(i);
-        }
-    }
-    // 直接播放
-    else {
-        XAUDIO2_BUFFER buffer; ZeroMemory(&buffer, sizeof(buffer));
-        buffer.PlayBegin = pos_in_sample;
-        buffer.pAudioData = m_pAudioData;
-        buffer.AudioBytes = m_uBufferLength;
-        this->ProcessBufferData(buffer);
-    }
-    // 播放?
-    if (playing) {
-        m_pSourceVoice->Start();
-    }
-}
-
-/// <summary>
-/// Tells this instance.
-/// </summary>
-/// <returns></returns>
-auto WrapAL::CALAudioSourceClipImpl::Tell() const noexcept ->float {
-    assert(m_pSourceVoice);
-    XAUDIO2_VOICE_STATE state ;
-    state.SamplesPlayed = 0;
-    m_pSourceVoice->GetState(&state);
-    // 已经播放
-    double p = static_cast<double>(state.SamplesPlayed);
-    double s = static_cast<double>(this->wave.nSamplesPerSec);
-    // 计算
-    return static_cast<float>(p / s);
-}
-
-/// <summary>
-/// Durations this instance.
-/// </summary>
-/// <returns></returns>
-auto WrapAL::CALAudioSourceClipImpl::Duration() const noexcept ->float {
-    uint32_t length;
-    // 获取字节长度
-    if (this->flags & WrapAL::Flag_StreamingReading) {
-        length = m_pStream->GetSizeInByte();
-    }
-    else {
-        length = m_uBufferIndex;
-    }
-    // 计算
-    double l = static_cast<double>(length);
-    double n = static_cast<double>(this->wave.nAvgBytesPerSec);
-    // 计算时间
-    return static_cast<float>(l / n);
-}
-
-// 音频处理开始
-void WrapAL::CALAudioSourceClipImpl::OnVoiceProcessingPassStart(UINT32 SamplesRequired) noexcept {
-    if (SamplesRequired && this->IsPlaying()) {
-        // 流模式
-        if (this->flags & WrapAL::Flag_StreamingReading) {
-            m_pSourceVoice->FlushSourceBuffers();
-            auto id = m_uBufferIndex + 1;
-            if (id >= StreamingBufferCount) id -= StreamingBufferCount;
-#ifdef _DEBUG
-            //std::wprintf(L"%d", id);
-#endif
-            // [0, StreamingBufferCount)
-            assert(id >= 0 && id < StreamingBufferCount && "out of range");
-            this->LoadAndBufferData(id);
-        }
-    }
-    
-}
-
-// 音频流结束
-void WrapAL::CALAudioSourceClipImpl::OnStreamEnd() noexcept {
-    // 自动释放?
-    if (this->flags & WrapAL::Flag_AutoDestroyEOP) {
-        m_bPlaying = false;
-        return;
-    }
-    // 流模式 + 无线轮回
-    if (this->flags & (WrapAL::Flag_StreamingReading | WrapAL::Flag_LoopInfinite)) {
-        // = 重置
-        this->m_pStream->Seek(0);
-    }
-    else {
-        m_bPlaying = false;
-    }
-}
-
-/// <summary>
-/// Stops this instance.
-/// </summary>
-/// <returns></returns>
-void WrapAL::CALAudioSourceClipImpl::Terminate() noexcept {
-    m_pSourceVoice->Stop(0);
-    m_pSourceVoice->FlushSourceBuffers();
-    m_bPlaying = false;
-    m_bEOB = false;
-}
-
-// 缓冲区结束
-void WrapAL::CALAudioSourceClipImpl::OnBufferEnd(void* pBufferContext) noexcept {
-    m_bEOB = true; 
-    if (this->flags & WrapAL::Flag_StreamingReading) {
-        // todo
-    }
-    else {
-        m_bPlaying = false;
-    }
-}
-
-// 加工新的缓冲区
-auto WrapAL::CALAudioSourceClipImpl::ProcessBufferData(XAUDIO2_BUFFER& buffer, bool eos) noexcept -> HRESULT {
-    // 缓冲区配置
-    buffer.LoopCount = 0;
-    // EOS?
-    if (eos) {
-        buffer.Flags = XAUDIO2_END_OF_STREAM;
-    }
-    // 流模式
-    if (flags & WrapAL::Flag_StreamingReading) {
-        // todo
-    }
-    else {
-        // 无限轮回?
-        if (flags & WrapAL::Flag_LoopInfinite) {
-            buffer.LoopCount = XAUDIO2_LOOP_INFINITE;
-        }
-    }
-    // 提交
-    return this->m_pSourceVoice->SubmitSourceBuffer(&buffer);
-}
-
-/// <summary>
-/// Loads the and buffer data.
-/// 读取下一段
-/// </summary>
-/// <param name="id">The identifier.</param>
-/// <returns></returns>
-auto WrapAL::CALAudioSourceClipImpl::LoadAndBufferData(uint16_t id) noexcept ->HRESULT {
-    assert(m_pStream);
-    XAUDIO2_BUFFER buffer = { 0 };
-    buffer.AudioBytes = StreamingBufferSize;
-    auto data = m_pAudioData + StreamingBufferSize * (m_uBufferIndex = id);
-    buffer.pAudioData = data;
-    // 已读取
-    auto read = m_pStream->ReadNext(StreamingBufferSize, data);
-    return this->ProcessBufferData(buffer, read != StreamingBufferSize);
-}
-
 
 /// <summary>
 /// Initializes the specified configuration.
 /// </summary>
 /// <param name="config">The configuration.</param>
 /// <returns></returns>
-auto WrapAL::CALAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESULT {
+auto WrapAL::CALAudioEngine::Initialize(IALConfigure* config) noexcept -> ECode {
     wchar_t error[ErrorInfoLength]; error[0] = 0;
     HRESULT hr = S_OK;
     // 调试节点
-#ifdef _DEBUG
+#ifndef NDEBUG
+    this->first_clip__dbg = {};
+    this->last_clip__dbg = {};
     this->first_clip__dbg.next = &this->last_clip__dbg;
     this->last_clip__dbg.prev = &this->first_clip__dbg;
 #endif
+    // 申请实现空间
+    assert(m_pImpl == nullptr && "been inited");
+    if ((m_pImpl = reinterpret_cast<engine_impl*>(
+        std::malloc(sizeof(engine_impl))
+        )) == nullptr) return E_OUTOFMEMORY;
+    new(m_pImpl) engine_impl();
     // 检查配置信息
 #ifdef WRAPAL_INCLUDE_DEFAULT_CONFIGURE
-    force_cast(this->configure) = config ? config : &m_config;
+    force_cast(this->configure) = config ? config : &m_pImpl->m_config;
 #else
     force_cast(this->configure) = config;
 #endif
     assert(this->configure && "none configure");
     if (!this->configure) hr = E_INVALIDARG;
     // 提前声明
-    WrapAL::AudioDeviceInfo devices_info[WrapAL::DeviceMaxCount];
     UINT create_flags = 0;
     UINT32 device_count = 0;
     // 载入 XAudio2 动态链接库
     if (SUCCEEDED(hr)) {
 #ifdef WRAPAL_XAUDIO2_7_SUPPORT
-#ifdef _DEBUG
+#ifndef NDEBUG
         create_flags |= XAUDIO2_DEBUG_ENGINE;
 #endif
         const auto* const file_name = L"XAudio2_7.dll";
@@ -411,24 +212,24 @@ auto WrapAL::CALAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESUL
         // XAudio2.9
 #ifdef WRAPAL_DEBUG_XAUDIO2_9
         const auto* file_name = L"XAudio2_9D.dll";
-        if ((m_hXAudio2 = ::LoadLibraryW(file_name))) {
+        if ((m_pImpl->m_hXAudio2 = ::LoadLibraryW(file_name))) {
             m_lvAPI = APILevel::Level_XAudio2_9;
             create_flags |= XAUDIO2_9_DEBUG_ENGINE;
         }
 #else
         const auto* file_name = L"XAudio2_9.dll";
-        if ((m_hXAudio2 = ::LoadLibraryW(file_name))) {
+        if ((m_pImpl->m_hXAudio2 = ::LoadLibraryW(file_name))) {
             m_lvAPI = APILevel::Level_XAudio2_9;
         }
 #endif
         // XAudio2.8
-        else if ((m_hXAudio2 = ::LoadLibraryW((file_name = L"XAudio2_8.dll")))) {
+        else if ((m_pImpl->m_hXAudio2 = ::LoadLibraryW((file_name = L"XAudio2_8.dll")))) {
             m_lvAPI = APILevel::Level_XAudio2_8;
         }
         // 有效
-        if (m_hXAudio2) {
-            WrapAL::LoadProc(XAudio2Create, m_hXAudio2, "XAudio2Create");
-            WrapAL::LoadProc(X3DAudioInitialize, m_hXAudio2, "X3DAudioInitialize");
+        if (const auto xa2 = m_pImpl->m_hXAudio2) {
+            load_func(m_pImpl->XAudio2Create, xa2, "XAudio2Create");
+            //load_func(m_pImpl->X3DAudioInitialize, xa2, "X3DAudioInitialize");
         }
         // 没有找到
         else {
@@ -449,8 +250,8 @@ auto WrapAL::CALAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESUL
     }
     // 创建 XAudio2 引擎
     if (SUCCEEDED(hr)) {
-        assert(!m_pXAudio2Engine && "m_pXAudio2 must be null");
-        hr = CALAudioEngine::XAudio2Create(&m_pXAudio2Engine, 0, XAUDIO2_DEFAULT_PROCESSOR);
+        assert(!m_pImpl->m_pXAudio2Engine && "m_pXAudio2 must be null");
+        hr = m_pImpl->XAudio2Create(&m_pImpl->m_pXAudio2Engine, 0, XAUDIO2_DEFAULT_PROCESSOR);
     }
 #ifdef WRAPAL_XAUDIO2_7_SUPPORT
     // 获取数量设备
@@ -483,6 +284,10 @@ auto WrapAL::CALAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESUL
     if (SUCCEEDED(hr)) {
         hr = enumerator->EnumAudioEndpoints(eRender, DEVICE_STATE_ACTIVE, &devices);
     }
+    // 设备信息
+    AudioDeviceInfo list[WrapAL::DeviceMaxCount];
+    struct { PROPVARIANT name, id; } 
+    devices_info[WrapAL::DeviceMaxCount];
     // 获取输出设备数量
     if (SUCCEEDED(hr)) {
         hr = devices->GetCount(&device_count);
@@ -521,6 +326,13 @@ auto WrapAL::CALAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESUL
             if (SUCCEEDED(hr)) {
                 assert(info.id.vt == VT_LPWSTR && info.name.vt == VT_LPWSTR);
             }
+            // 输入统一接口
+            if (SUCCEEDED(hr)) {
+                for (uint32_t i = 0; i != device_count; ++i) {
+                    list[i].id = devices_info[i].id.pwszVal;
+                    list[i].name = devices_info[i].name.pwszVal;
+                }
+            }
             // 扫尾
             WrapAL::SafeRelease(propStore);
             WrapAL::SafeRelease(device);
@@ -530,9 +342,9 @@ auto WrapAL::CALAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESUL
     // 创建 Mastering Voice 接口
     if (SUCCEEDED(hr)) {
         // 选择设备
-        auto index = this->configure->ChooseDevice(devices_info, device_count);
-        auto device_id = index >= device_count ? nullptr : devices_info[index].Id();
-        auto device_namme = index >= device_count ? nullptr : devices_info[index].Name();
+        auto index = this->configure->ChooseDevice(list, device_count);
+        auto device_id = index >= device_count ? nullptr : list[index].id;
+        auto device_namme = index >= device_count ? nullptr : list[index].name;
 #if defined(_DEBUG) && defined(_MSC_VER)
         {
             wchar_t buffer[4096];
@@ -548,8 +360,8 @@ auto WrapAL::CALAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESUL
         }
 #endif
         // 创建
-        hr = m_pXAudio2Engine->CreateMasteringVoice(
-            &m_pMasterVoice,
+        hr = m_pImpl->m_pXAudio2Engine->CreateMasteringVoice(
+            &m_pImpl->m_pMasterVoice,
             XAUDIO2_DEFAULT_CHANNELS,
             XAUDIO2_DEFAULT_SAMPLERATE,
             create_flags, 
@@ -587,10 +399,10 @@ auto WrapAL::CALAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESUL
         wchar_t path[MAX_PATH]; path[0] = 0;
         this->configure->GetLibmpg123Path(path);
         // 载入
-        force_cast(this->libmpg123) = ::LoadLibraryW(path);
+        force_cast(m_pImpl->libmpg123) = ::LoadLibraryW(path);
         // 初始化libmpg123
-        if (this->libmpg123) {
-            Mpg123::Init(this->libmpg123);
+        if (m_pImpl->libmpg123) {
+            Mpg123::Init(m_pImpl->libmpg123);
             Mpg123::mpg123_init();
         }
         // 没有 libmpg123.dll 依然允许运行, 提供了路径则报错
@@ -618,26 +430,29 @@ auto WrapAL::CALAudioEngine::Initialize(IALConfigure* config) noexcept -> HRESUL
 /// </summary>
 /// <returns></returns>
 void WrapAL::CALAudioEngine::Uninitialize() noexcept {
-#ifdef _DEBUG
+#ifndef NDEBUG
     bool linked1 = first_clip__dbg.next == &last_clip__dbg;
     bool linked2 = last_clip__dbg.prev == &first_clip__dbg;
     assert(linked1 && linked2 && "clips not disposed");
 #endif
     // 释放
-    for (auto& group : m_aGroup) { group.Release(); }
-    WrapAL::SafeDestroyVoice(m_pMasterVoice);
-    WrapAL::SafeRelease(m_pXAudio2Engine);
+    if (m_pImpl) {
+        for (auto& group : m_pImpl->m_aGroup) { group.Release(); }
+        if (m_pImpl->m_pMasterVoice) m_pImpl->m_pMasterVoice->DestroyVoice();
+        if (m_pImpl->m_pXAudio2Engine) m_pImpl->m_pXAudio2Engine->Release();
+        // 释放dll文件
+        if (m_pImpl->libmpg123) {
+            Mpg123::mpg123_exit();
+            ::FreeLibrary(m_pImpl->libmpg123);
+        }
+        if (m_pImpl->m_hXAudio2) {
+            ::FreeLibrary(m_pImpl->m_hXAudio2);
+        }
+        // 释放实现代码
+        m_pImpl->~engine_impl();
+        std::free(m_pImpl);
+    }
     WrapAL::SafeRelease(force_cast(this->configure));
-    // 释放dll文件
-    if (this->libmpg123) {
-        Mpg123::mpg123_exit();
-        ::FreeLibrary(this->libmpg123);
-        force_cast(this->libmpg123) = nullptr;
-    }
-    if (m_hXAudio2) {
-        ::FreeLibrary(m_hXAudio2);
-        m_hXAudio2 = nullptr;
-    }
 }
 
 // 创建音频片段
@@ -759,7 +574,7 @@ auto WrapAL::CALAudioEngine::CreateClip(
         auto oldbuf = buf;
         // 置换构造
         new (real) CALAudioSourceClipImpl(
-            std::move(buf), nullptr, flags, len
+            std::move(buf), nullptr, flags, static_cast<uint32_t>(len)
         );
         // 设置
         format.MakeWave(real->wave);
@@ -993,14 +808,15 @@ bool WrapAL::CALAudioEngine::ac_recreate(ALHandle id, uint8_t*& buf, size_t len)
 
 // 设置或获取总音量
 auto WrapAL::CALAudioEngine::Volume(float volume) noexcept -> float {
-    assert(m_pMasterVoice);
+    const auto voice = m_pImpl->m_pMasterVoice;
+    assert(voice);
     // Get
     if (volume < 0.f) {
-        m_pMasterVoice->GetVolume(&volume);
+        voice->GetVolume(&volume);
     }
     // Set
     else {
-        m_pMasterVoice->SetVolume(volume);
+        voice->SetVolume(volume);
     }
     return volume;
 }
@@ -1029,7 +845,7 @@ auto WrapAL::CALAudioEngine::ag_volume(ALHandle group_id, float volume) noexcept
         voice = group->voice;
     }
     else {
-        voice = m_pMasterVoice;
+        voice = m_pImpl->m_pMasterVoice;
     }
     // 设置
     if (voice) {
@@ -1048,16 +864,17 @@ auto WrapAL::CALAudioEngine::ag_volume(ALHandle group_id, float volume) noexcept
 // 获取组指针
 auto WrapAL::CALAudioEngine::find_group(const char* name) noexcept ->AudioSourceGroupImpl* {
     // 循环
-    for (size_t i = 0u; i < m_cGroupCount; ++i) {
-        if (!::strncmp(m_aGroup[i].name, name, GroupNameMaxLength)) {
-            return m_aGroup + i;
+    for (size_t i = 0u; i < m_pImpl->m_cGroupCount; ++i) {
+        if (!::strncmp(m_pImpl->m_aGroup[i].name, name, GroupNameMaxLength)) {
+            return m_pImpl->m_aGroup + i;
         }
     }
     return nullptr;
 }
 
 // 设置clip的组ID
-auto WrapAL::CALAudioEngine::set_clip_group(CALAudioSourceClipImpl& clip, const char* group_name) noexcept ->HRESULT {
+auto WrapAL::CALAudioEngine::set_clip_group(
+    CALAudioSourceClipImpl& clip, const char* group_name) noexcept ->ECode {
     assert(clip.HasSource());
     // 参数无效
     if (!clip.HasSource()) return E_INVALIDARG;
@@ -1069,12 +886,12 @@ auto WrapAL::CALAudioEngine::set_clip_group(CALAudioSourceClipImpl& clip, const 
     // 没有就添加组别
     if (!group_id) {
         // 满了?
-        if (m_cGroupCount == GroupMaxSize) return S_FALSE;
+        if (m_pImpl->m_cGroupCount == GroupMaxSize) return S_FALSE;
         XAUDIO2_VOICE_DETAILS details = { 0 };
-        m_pMasterVoice->GetVoiceDetails(&details);
+        m_pImpl->m_pMasterVoice->GetVoiceDetails(&details);
         // 创建submix
-        auto hr = m_pXAudio2Engine->CreateSubmixVoice(
-            &m_aGroup[m_cGroupCount].voice,
+        auto hr = m_pImpl->m_pXAudio2Engine->CreateSubmixVoice(
+            &m_pImpl->m_aGroup[m_pImpl->m_cGroupCount].voice,
             details.InputChannels,
             details.InputSampleRate,
             0, 0,
@@ -1084,9 +901,9 @@ auto WrapAL::CALAudioEngine::set_clip_group(CALAudioSourceClipImpl& clip, const 
         // 失败
         assert(SUCCEEDED(hr));
         if (FAILED(hr)) return S_FALSE;
-        group_id = m_aGroup + m_cGroupCount;
+        group_id = m_pImpl->m_aGroup + m_pImpl->m_cGroupCount;
         std::strncpy(group_id->name, group_name, GroupNameMaxLength);
-        ++m_cGroupCount;
+        ++m_pImpl->m_cGroupCount;
     }
     // 设置组别
     clip.group = group_id;
@@ -1105,11 +922,11 @@ auto WrapAL::CALAudioEngine::set_clip_group(CALAudioSourceClipImpl& clip, const 
 
 // 创建源音
 auto WrapAL::CALAudioEngine::create_source_voice(
-    CALAudioSourceClipImpl& clip, const char* group_name) noexcept ->HRESULT {
+    CALAudioSourceClipImpl& clip, const char* group_name) noexcept ->ECode {
     HRESULT hr = S_OK;
     // 创建源音
     if (SUCCEEDED(hr)) {
-        hr = clip.CreateSourceVoice(m_pXAudio2Engine);
+        hr = clip.CreateSourceVoice(m_pImpl->m_pXAudio2Engine);
     }
     // 设置组别
     if (SUCCEEDED(hr)) {
@@ -1148,7 +965,8 @@ void WrapAL::CALAudioEngine::OutputErrorLast(const char* func_name) noexcept {
 }
 
 // 错误 HR 代码
-WRAPAL_NOINLINE void WrapAL::CALAudioEngine::FormatErrorHR(wchar_t err_buf[], const char* func_name, HRESULT hr) noexcept {
+WRAPAL_NOINLINE void WrapAL::CALAudioEngine::FormatErrorHR(
+    wchar_t err_buf[], const char* func_name, ECode hr) noexcept {
     // 失败
     if (FAILED(hr)) {
         std::swprintf(

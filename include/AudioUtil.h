@@ -26,8 +26,6 @@
 
 // int type
 #include <cstdint>
-// windows
-#include <Windows.h>
 // config
 #include "wrapalconf.h"
 // def config
@@ -35,65 +33,12 @@
 #include "AudioInterface.h"
 #endif
 
-// mpg123
-#include <sys\types.h>
-#ifdef _MSC_VER
-using ssize_t = std::intptr_t;
-#endif
-// MY CONFIGURE
-#if 0
-#define NO_ICY 1
-#define NO_STRING 1
-#define NO_ID3V2 1
-#define NO_WARNING 1
-#define NO_ERRORMSG 1
-#define NO_ERETURN 1
-#define NO_FEEDER 1
-#define USE_NEW_HUFFTABLE 1
-#endif
-#define MPG123_NO_CONFIGURE
-#include "../3rdparty/mpg123/mpg123.h.in"
-
+#include <cstdlib>
 
 // wrapal namespace
 namespace WrapAL {
-    // windows error code to HRESULT
-    inline auto WinCode2HRESULT(UINT x) noexcept ->HRESULT {
-        return ((HRESULT)(x) <= 0 ? ((HRESULT)(x)) : ((HRESULT)(((x)& 0x0000FFFF) | (FACILITY_WIN32 << 16) | 0x80000000)));
-    }
-    // Mpg123 dll, using dynamic-linking to avoid LGPL
-    class Mpg123 {
-    public:
-        // init
-        static void Init(HMODULE)  noexcept;
-    public: // function zone
-        // mpg123 : init
-        static decltype(&::mpg123_init) mpg123_init;
-        // mpg123 : exit
-        static decltype(&::mpg123_exit) mpg123_exit;
-        // mpg123 : new
-        static decltype(&::mpg123_new) mpg123_new;
-        // mpg123 : delete
-        static decltype(&::mpg123_delete) mpg123_delete;
-        // mpg123 : read
-        static decltype(&::mpg123_read) mpg123_read;
-        // mpg123 : seek
-        static decltype(&::mpg123_seek) mpg123_seek;
-        // mpg123 : tell
-        static decltype(&::mpg123_tell) mpg123_tell;
-        // mpg123 : length
-        static decltype(&::mpg123_length) mpg123_length;
-        // mpg123 : format
-        static decltype(&::mpg123_format) mpg123_format;
-        // mpg123 : get format
-        static decltype(&::mpg123_getformat) mpg123_getformat;
-        // mpg123 : format none
-        static decltype(&::mpg123_format_none) mpg123_format_none;
-        // mpg123 : open with handle
-        static decltype(&::mpg123_open_handle) mpg123_open_handle;
-        // mpg123 : replace reader handle
-        static decltype(&::mpg123_replace_reader_handle) mpg123_replace_reader_handle;
-    };
+    // error code
+    using ECode = int32_t;
     // small buffer
     template<typename T, size_t LEN>
     class SmallBuffer {

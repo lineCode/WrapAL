@@ -1,8 +1,12 @@
 .PHONY: clean All
 
 All:
-	@echo "----------构建项目：[demo2 - Debug ]----------"
-	@cd "demo2" && $(MAKE) -f  "demo2.mk"
+	@echo "----------Building project:[ WrapAL - Release ]----------"
+	@cd "WrapAL" && "$(MAKE)" -f  "WrapAL.mk"
+	@echo "----------Building project:[ demo2 - Release ]----------"
+	@cd "demo2" && "$(MAKE)" -f  "demo2.mk"
 clean:
-	@echo "----------清理项目：[demo2 - Debug ]----------"
-	@cd "demo2" && $(MAKE) -f  "demo2.mk" clean
+	@echo "----------Cleaning project:[ WrapAL - Release ]----------"
+	@cd "WrapAL" && "$(MAKE)" -f  "WrapAL.mk"  clean
+	@echo "----------Cleaning project:[ demo2 - Release ]----------"
+	@cd "demo2" && "$(MAKE)" -f  "demo2.mk" clean

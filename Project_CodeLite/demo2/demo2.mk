@@ -2,21 +2,21 @@
 ## Auto Generated makefile by CodeLite IDE
 ## any manual changes will be erased      
 ##
-## Debug
+## Release
 ProjectName            :=demo2
-ConfigurationName      :=Debug
-WorkspacePath          := "D:\Documents\GitHub\WrapAL\Project_CodeLite"
-ProjectPath            := "D:\Documents\GitHub\WrapAL\Project_CodeLite\demo2"
-IntermediateDirectory  :=./Debug
+ConfigurationName      :=Release
+WorkspacePath          :=D:/github/WrapAL/Project_CodeLite
+ProjectPath            :=D:/github/WrapAL/Project_CodeLite/demo2
+IntermediateDirectory  :=./Release
 OutDir                 := $(IntermediateDirectory)
 CurrentFileName        :=
 CurrentFilePath        :=
 CurrentFileFullPath    :=
-User                   :=DUST
-Date                   :=2015-09-29
-CodeLitePath           :="C:\Program Files\CodeLite"
-LinkerName             :=C:/SB/TDM-GCC-64/bin/g++.exe
-SharedObjectLinkerName :=C:/SB/TDM-GCC-64/bin/g++.exe -shared -fPIC
+User                   :=dustpg
+Date                   :=14/01/2017
+CodeLitePath           :="C:/Program Files/CodeLite"
+LinkerName             :=C:/TDM-GCC-64/bin/g++.exe
+SharedObjectLinkerName :=C:/TDM-GCC-64/bin/g++.exe -shared -fPIC
 ObjectSuffix           :=.o
 DependSuffix           :=.o.d
 PreprocessSuffix       :=.i
@@ -28,7 +28,7 @@ LibraryPathSwitch      :=-L
 PreprocessorSwitch     :=-D
 SourceSwitch           :=-c 
 OutputFile             :=$(IntermediateDirectory)/$(ProjectName)
-Preprocessors          :=
+Preprocessors          :=$(PreprocessorSwitch)NDEBUG 
 ObjectSwitch           :=-o 
 ArchiveOutputSwitch    := 
 PreprocessOnlySwitch   :=-E
@@ -36,33 +36,33 @@ ObjectsFileList        :="demo2.txt"
 PCHCompileFlags        :=
 MakeDirCommand         :=makedir
 RcCmpOptions           := 
-RcCompilerName         :=C:/SB/TDM-GCC-64/bin/windres.exe
-LinkOptions            :=  -Xlinker "-(" -llibogg -llibvorbis -lOle32 -lwrapal
-IncludePath            :=  $(IncludeSwitch). $(IncludeSwitch). $(IncludeSwitch)./../../include/ $(IncludeSwitch)./../3rdparty/libogg/include/ 
+RcCompilerName         :=C:/TDM-GCC-64/bin/windres.exe
+LinkOptions            := -Xlinker "-(" -logg -lvorbis -lOle32 -lwrapal -s
+IncludePath            :=  $(IncludeSwitch). $(IncludeSwitch)./../../include/ $(IncludeSwitch). 
 IncludePCH             := 
 RcIncludePath          := 
 Libs                   := 
 ArLibs                 :=  
-LibPath                := $(LibraryPathSwitch). $(LibraryPathSwitch)../lib/ 
+LibPath                := $(LibraryPathSwitch). $(LibraryPathSwitch)../$(IntermediateDirectory) 
 
 ##
 ## Common variables
 ## AR, CXX, CC, AS, CXXFLAGS and CFLAGS can be overriden using an environment variables
 ##
-AR       := C:/SB/TDM-GCC-64/bin/ar.exe rcu
-CXX      := C:/SB/TDM-GCC-64/bin/g++.exe
-CC       := C:/SB/TDM-GCC-64/bin/gcc.exe
-CXXFLAGS :=  -g -O0 -std=c++14 -Wall $(Preprocessors)
-CFLAGS   :=  -g -O0 -std=c++14 -Wall $(Preprocessors)
+AR       := C:/TDM-GCC-64/bin/ar.exe rcu
+CXX      := C:/TDM-GCC-64/bin/g++.exe
+CC       := C:/TDM-GCC-64/bin/gcc.exe
+CXXFLAGS := -std=c++14 -O2 -Wall $(Preprocessors)
+CFLAGS   := -std=c99 -O2 -Wall $(Preprocessors)
 ASFLAGS  := 
-AS       := C:/SB/TDM-GCC-64/bin/as.exe
+AS       := C:/TDM-GCC-64/bin/as.exe
 
 
 ##
 ## User defined environment variables
 ##
 CodeLiteDir:=C:\Program Files\CodeLite
-Objects0=$(IntermediateDirectory)/demo_demo2.cpp$(ObjectSuffix) 
+Objects0=$(IntermediateDirectory)/up_up_demo_demo2.cpp$(ObjectSuffix) 
 
 
 
@@ -74,18 +74,25 @@ Objects=$(Objects0)
 .PHONY: all clean PreBuild PrePreBuild PostBuild MakeIntermediateDirs
 all: $(OutputFile)
 
-$(OutputFile): $(IntermediateDirectory)/.d $(Objects) 
+$(OutputFile): $(IntermediateDirectory)/.d "..\.build-release\WrapAL" $(Objects) 
 	@$(MakeDirCommand) $(@D)
 	@echo "" > $(IntermediateDirectory)/.d
 	@echo $(Objects0)  > $(ObjectsFileList)
 	$(LinkerName) $(OutputSwitch)$(OutputFile) @$(ObjectsFileList) $(LibPath) $(Libs) $(LinkOptions)
 
+"..\.build-release\WrapAL":
+	@$(MakeDirCommand) "..\.build-release"
+	@echo stam > "..\.build-release\WrapAL"
+
+
+
+
 MakeIntermediateDirs:
-	@$(MakeDirCommand) "./Debug"
+	@$(MakeDirCommand) "./Release"
 
 
 $(IntermediateDirectory)/.d:
-	@$(MakeDirCommand) "./Debug"
+	@$(MakeDirCommand) "./Release"
 
 PreBuild:
 
@@ -93,13 +100,13 @@ PreBuild:
 ##
 ## Objects
 ##
-$(IntermediateDirectory)/demo_demo2.cpp$(ObjectSuffix): ../../demo/demo2.cpp $(IntermediateDirectory)/demo_demo2.cpp$(DependSuffix)
-	$(CXX) $(IncludePCH) $(SourceSwitch) "D:/Documents/GitHub/WrapAL/demo/demo2.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/demo_demo2.cpp$(ObjectSuffix) $(IncludePath)
-$(IntermediateDirectory)/demo_demo2.cpp$(DependSuffix): ../../demo/demo2.cpp
-	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/demo_demo2.cpp$(ObjectSuffix) -MF$(IntermediateDirectory)/demo_demo2.cpp$(DependSuffix) -MM "../../demo/demo2.cpp"
+$(IntermediateDirectory)/up_up_demo_demo2.cpp$(ObjectSuffix): ../../demo/demo2.cpp $(IntermediateDirectory)/up_up_demo_demo2.cpp$(DependSuffix)
+	$(CXX) $(IncludePCH) $(SourceSwitch) "D:/github/WrapAL/demo/demo2.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/up_up_demo_demo2.cpp$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/up_up_demo_demo2.cpp$(DependSuffix): ../../demo/demo2.cpp
+	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/up_up_demo_demo2.cpp$(ObjectSuffix) -MF$(IntermediateDirectory)/up_up_demo_demo2.cpp$(DependSuffix) -MM ../../demo/demo2.cpp
 
-$(IntermediateDirectory)/demo_demo2.cpp$(PreprocessSuffix): ../../demo/demo2.cpp
-	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/demo_demo2.cpp$(PreprocessSuffix) "../../demo/demo2.cpp"
+$(IntermediateDirectory)/up_up_demo_demo2.cpp$(PreprocessSuffix): ../../demo/demo2.cpp
+	$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/up_up_demo_demo2.cpp$(PreprocessSuffix) ../../demo/demo2.cpp
 
 
 -include $(IntermediateDirectory)/*$(DependSuffix)
@@ -107,6 +114,6 @@ $(IntermediateDirectory)/demo_demo2.cpp$(PreprocessSuffix): ../../demo/demo2.cpp
 ## Clean
 ##
 clean:
-	$(RM) -r ./Debug/
+	$(RM) -r ./Release/
 
 
